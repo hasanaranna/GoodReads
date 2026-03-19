@@ -1,0 +1,12 @@
+import app from "./app.js";
+import { env } from "./config/env.js";
+
+const server = app.listen(env.port, () => {
+  console.log(`Server listening on port ${env.port}`);
+});
+
+process.on("SIGINT", () => {
+  server.close(() => {
+    process.exit(0);
+  });
+});
