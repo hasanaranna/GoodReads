@@ -1,38 +1,42 @@
 services:
   frontend:
-    build: ./frontend     # Builds image from Dockerfile
+    build: ./frontend
     container_name: goodreads-frontend
     ports:
       - "5173:5173"
     volumes:
-      - /app/node_modules # Prevents local node_modules from overwriting container's
-      - ./frontend:/app    # Map the frontend folder to /app inside the container
-      
+      - /app/node_modules
+      - ./frontend:/app:z
     environment:
-      - CHOKIDAR_USEPOLLING=true # Helps with HMR on some systems (like Windows/WSL)
+      - CHOKIDAR_USEPOLLING=true
+
   backend:
-    build: ./backend      # Builds image from Dockerfile
+    build: ./backend
     container_name: goodreads-backend
     ports:
       - "8080:8080"
     volumes:
       - /app/node_modules
-      - ./backend:/app    # Map the backend folder to /app inside the container
+      - ./backend:/app:z  
     environment:
-      - SPRING_PROFILES_ACTIVE=dev # Use the 'dev' profile for development
-#       - DB_URL=jdbc:postgresql://db:5432/goodreads # Database connection URL
-#       - DB_USERNAME=postgres # Database username
-#       - DB_PASSWORD=postgres # Database password
-#   db:
-#     image: postgres:latest # Use the latest PostgreSQL image
-#     container_name: goodreads-db
-#     ports:
-#       - "5432:5432"
-#     environment:
-#       - POSTGRES_DB=goodreads # Database name
-#       - POSTGRES_USER=postgres # Database username
-#       - POSTGRES_PASSWORD=postgres # Database password
-#     volumes:
-#       - db_data:/var/lib/postgresql/data # Persist database data  
-# volumes:
-#   db_data: # Named volume for database persistence
+      - NODE_ENV=development
+      # Standard connection string format: postgres://user:password@host:port/dbname
+      - DATABASE_URL=postgresql://postgres:postgres@goodreads-db:5432/goodreads
+      - PORT=8080
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    container_name: goodreads-db
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=goodreads
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data:z
+
+volumes:
+  db_data:
