@@ -191,103 +191,106 @@ export function Header() {
           </button>
         </nav>
 
-        {/* Search */}
-        <div className="flex-1 mx-2 relative max-w-[340px]">
-          <div className="flex items-center bg-white border border-[#c9bfb0] rounded-full h-[32px] px-3 gap-2">
-            <input
-              type="text"
-              placeholder="Search books, authors..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowResults(true);
-              }}
-              onFocus={() => setShowResults(true)}
-              onBlur={() => setTimeout(() => setShowResults(false), 200)}
-              className="flex-1 outline-none text-[13px] text-gray-700 bg-transparent"
-            />
-            {searchQuery ? (
-              <X
-                size={14}
-                className="text-gray-400 cursor-pointer"
-                onClick={() => {
-                  setSearchQuery("");
-                  setDebouncedSearchQuery("");
-                  setResults([]);
-                  setSearchError("");
+        {/* Right side: Search + Icons */}
+        <div className="flex items-center gap-[1.5vw] ml-auto text-[#382110]">
+          {/* Search */}
+          <div className="relative w-[260px]">
+            <div className="flex items-center bg-[#ffffff] border border-[#c9bfb0] rounded-full py-2 px-6 gap-2">
+              <input
+                type="text"
+                placeholder="Search books, authors..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowResults(true);
                 }}
+                onFocus={() => setShowResults(true)}
+                onBlur={() => setTimeout(() => setShowResults(false), 200)}
+                className="flex-1 appearance-none outline-none border-0 shadow-none text-[13px] text-gray-700 bg-transparent"
               />
-            ) : (
-              <Search size={14} className="text-gray-400" />
+              {searchQuery ? (
+                <X
+                  size={14}
+                  className="text-gray-400 cursor-pointer"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setDebouncedSearchQuery("");
+                    setResults([]);
+                    setSearchError("");
+                  }}
+                />
+              ) : (
+                <Search size={14} className="text-gray-400" />
+              )}
+            </div>
+            {showResults && (searchQuery.trim().length > 1 || isSearching) && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-[#ffffff] border border-[#ddd] rounded shadow-lg z-50">
+                {isSearching && (
+                  <div className="px-3 py-2 text-[12px] text-gray-500">
+                    Searching...
+                  </div>
+                )}
+
+                {!isSearching && searchError && (
+                  <div className="px-3 py-2 text-[12px] text-[#b42318]">
+                    {searchError}
+                  </div>
+                )}
+
+                {!isSearching &&
+                  !searchError &&
+                  visibleResults.length === 0 && (
+                    <div className="px-3 py-2 text-[12px] text-gray-500">
+                      No books found.
+                    </div>
+                  )}
+
+                {!isSearching &&
+                  !searchError &&
+                  visibleResults.length > 0 &&
+                  visibleResults.map((book) => {
+                    const mappedBook = toLibraryBook(book);
+
+                    return (
+                      <button
+                        key={book.id}
+                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[#f4f0e6] text-left"
+                        onMouseDown={() => handleAddBook(book)}
+                      >
+                        <img
+                          src={mappedBook.coverUrl}
+                          alt={mappedBook.title}
+                          className="w-8 h-10 object-cover rounded"
+                        />
+                        <div>
+                          <div className="text-[13px] text-[#382110]">
+                            {mappedBook.title}
+                          </div>
+                          <div className="text-[11px] text-gray-500">
+                            {mappedBook.author}
+                          </div>
+                        </div>
+                        <span className="ml-auto text-[11px] text-[#00635d] border border-[#00635d] px-1.5 py-0.5 rounded">
+                          + Add
+                        </span>
+                      </button>
+                    );
+                  })}
+              </div>
             )}
           </div>
-          {showResults && (searchQuery.trim().length > 1 || isSearching) && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#ddd] rounded shadow-lg z-50">
-              {isSearching && (
-                <div className="px-3 py-2 text-[12px] text-gray-500">
-                  Searching...
-                </div>
-              )}
 
-              {!isSearching && searchError && (
-                <div className="px-3 py-2 text-[12px] text-[#b42318]">
-                  {searchError}
-                </div>
-              )}
-
-              {!isSearching && !searchError && visibleResults.length === 0 && (
-                <div className="px-3 py-2 text-[12px] text-gray-500">
-                  No books found.
-                </div>
-              )}
-
-              {!isSearching &&
-                !searchError &&
-                visibleResults.length > 0 &&
-                visibleResults.map((book) => {
-                  const mappedBook = toLibraryBook(book);
-
-                  return (
-                    <button
-                      key={book.id}
-                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[#f4f0e6] text-left"
-                      onMouseDown={() => handleAddBook(book)}
-                    >
-                      <img
-                        src={mappedBook.coverUrl}
-                        alt={mappedBook.title}
-                        className="w-8 h-10 object-cover rounded"
-                      />
-                      <div>
-                        <div className="text-[13px] text-[#382110]">
-                          {mappedBook.title}
-                        </div>
-                        <div className="text-[11px] text-gray-500">
-                          {mappedBook.author}
-                        </div>
-                      </div>
-                      <span className="ml-auto text-[11px] text-[#00635d] border border-[#00635d] px-1.5 py-0.5 rounded">
-                        + Add
-                      </span>
-                    </button>
-                  );
-                })}
-            </div>
-          )}
-        </div>
-
-        {/* Icons */}
-        <div className="flex items-center gap-3 ml-auto text-[#382110]">
-          <button className="hover:text-[#00635d]">
+          {/* Icons */}
+          <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
             <Bell size={18} />
           </button>
-          <button className="hover:text-[#00635d]">
+          <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
             <MessageSquare size={18} />
           </button>
-          <button className="hover:text-[#00635d]">
+          <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
             <Users size={18} />
           </button>
-          <button className="hover:text-[#00635d]">
+          <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
             <Menu size={18} />
           </button>
         </div>

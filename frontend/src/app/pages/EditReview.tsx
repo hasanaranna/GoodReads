@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router';
-import { ChevronDown, ChevronUp, X } from 'lucide-react';
-import { useBooks } from '../context/BooksContext';
-import { StarRating } from '../components/StarRating';
-import { Book } from '../data/initialBooks';
+import { useState } from "react";
+import { useParams, Link, useNavigate } from "react-router";
+import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { useBooks } from "../context/BooksContext";
+import { StarRating } from "../components/StarRating";
+import { Book } from "../data/initialBooks";
 
 const SHELF_LABELS: Record<string, string> = {
-  read: 'Read',
-  'currently-reading': 'Currently Reading',
-  'want-to-read': 'Want to Read',
+  read: "Read",
+  "currently-reading": "Currently Reading",
+  "want-to-read": "Want to Read",
 };
 
 interface ReadDate {
@@ -24,8 +24,10 @@ export function EditReview() {
   const book = getBook(bookId!);
 
   const [rating, setRating] = useState(book?.rating || 0);
-  const [shelf, setShelf] = useState<Book['shelf']>(book?.shelf || 'want-to-read');
-  const [reviewText, setReviewText] = useState(book?.review || '');
+  const [shelf, setShelf] = useState<Book["shelf"]>(
+    book?.shelf || "want-to-read",
+  );
+  const [reviewText, setReviewText] = useState(book?.review || "");
   const [hideSpoilers, setHideSpoilers] = useState(false);
   const [postToBlog, setPostToBlog] = useState(false);
   const [addToFeed, setAddToFeed] = useState(true);
@@ -46,17 +48,17 @@ export function EditReview() {
 
   function handlePost() {
     updateBook(book!.id, { rating, shelf, review: reviewText });
-    navigate('/mybooks');
+    navigate("/mybooks");
   }
 
   function addReadDate() {
     setReadDates((prev) => [
       ...prev,
-      { id: Date.now().toString(), started: '', finished: '' },
+      { id: Date.now().toString(), started: "", finished: "" },
     ]);
   }
 
-  const bookFullTitle = `${book.title}${book.title !== 'The Hard Things About Hard Things' ? '' : ': Building a Business When There Are No Easy Answers'}`;
+  const bookFullTitle = `${book.title}${book.title !== "The Hard Things About Hard Things" ? "" : ": Building a Business When There Are No Easy Answers"}`;
 
   return (
     <div className="max-w-[860px] mx-auto px-4 py-5">
@@ -81,23 +83,29 @@ export function EditReview() {
         <div>
           <div className="text-[14px] text-[#382110] leading-snug mb-1">
             {book.title}
-            {book.id === '5' && (
-              <span>: Building a Business When There Are No Easy Answers - Straight Talk on the Challenges of Entrepreneurship <em>(Hardcover)</em></span>
+            {book.id === "5" && (
+              <span>
+                : Building a Business When There Are No Easy Answers - Straight
+                Talk on the Challenges of Entrepreneurship <em>(Hardcover)</em>
+              </span>
             )}
           </div>
           <div className="text-[13px] text-gray-600">
-            by{' '}
+            by{" "}
             <a href="#" className="text-[#382110] hover:underline no-underline">
               {book.author}
             </a>
-            {book.id === '5' && (
+            {book.id === "5" && (
               <span className="text-gray-400"> (Goodreads Author)</span>
             )}
           </div>
         </div>
       </div>
 
-      <a href="#" className="text-[12px] text-[#00635d] hover:underline no-underline mb-6 block">
+      <a
+        href="#"
+        className="text-[12px] text-[#00635d] hover:underline no-underline mb-6 block"
+      >
         Change Edition
       </a>
 
@@ -106,7 +114,12 @@ export function EditReview() {
       {/* Rating */}
       <div className="py-4 flex items-center gap-3 border-b border-[#ddd]">
         <span className="text-[14px] text-[#382110]">My Rating:</span>
-        <StarRating rating={rating} interactive size="lg" onChange={setRating} />
+        <StarRating
+          rating={rating}
+          interactive
+          size="lg"
+          onChange={setRating}
+        />
         {rating > 0 && (
           <button
             onClick={() => setRating(0)}
@@ -123,36 +136,43 @@ export function EditReview() {
         <div className="relative">
           <button
             onClick={() => setShowShelfMenu(!showShelfMenu)}
-            className="flex items-center gap-1 text-[13px] border border-[#aaa] px-2 py-0.5 bg-white hover:bg-[#f4f0e6] text-[#382110]"
+            className="flex items-center gap-1 text-[13px] border border-[#aaa] px-2 py-0.5 bg-[#ffffff] hover:bg-[#f4f0e6] text-[#382110]"
           >
             Choose shelves… <ChevronDown size={12} />
           </button>
           {showShelfMenu && (
-            <div className="absolute top-full left-0 z-20 bg-white border border-[#ddd] rounded shadow-md min-w-[180px]">
+            <div className="absolute top-full left-0 z-20 bg-[#ffffff] border border-[#ddd] rounded shadow-md min-w-[180px]">
               {Object.entries(SHELF_LABELS).map(([key, label]) => (
                 <button
                   key={key}
                   className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f4f0e6] ${
-                    shelf === key ? 'font-semibold text-[#382110]' : 'text-[#382110]'
+                    shelf === key
+                      ? "font-semibold text-[#382110]"
+                      : "text-[#382110]"
                   }`}
                   onClick={() => {
-                    setShelf(key as Book['shelf']);
+                    setShelf(key as Book["shelf"]);
                     setShowShelfMenu(false);
                   }}
                 >
-                  {shelf === key && '✓ '}{label}
+                  {shelf === key && "✓ "}
+                  {label}
                 </button>
               ))}
             </div>
           )}
         </div>
-        <span className="text-[#00635d] text-[13px]">{SHELF_LABELS[shelf]}</span>
+        <span className="text-[#00635d] text-[13px]">
+          {SHELF_LABELS[shelf]}
+        </span>
       </div>
 
       {/* Review */}
       <div className="py-4 border-b border-[#ddd]">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[15px] text-[#382110]">What did you think?</span>
+          <span className="text-[15px] text-[#382110]">
+            What did you think?
+          </span>
           <div className="flex items-center gap-2 text-[12px] text-[#00635d]">
             <button className="hover:underline">Formatting tips</button>
             <span>|</span>
@@ -175,7 +195,10 @@ export function EditReview() {
             onChange={(e) => setHideSpoilers(e.target.checked)}
             className="accent-[#382110]"
           />
-          <label htmlFor="spoilers" className="text-[12px] text-[#382110] cursor-pointer">
+          <label
+            htmlFor="spoilers"
+            className="text-[12px] text-[#382110] cursor-pointer"
+          >
             Hide entire review because of spoilers
           </label>
         </div>
@@ -186,8 +209,8 @@ export function EditReview() {
         <div className="text-[16px] text-[#382110] mb-2">Dates read</div>
         <div className="text-[13px] text-[#382110] mb-1">Rereading?</div>
         <div className="text-[12px] text-gray-500 mb-3">
-          Now you can track all the times you have read a book. Make sure to fill in the year
-          finished to have it added to your Reading Challenge!
+          Now you can track all the times you have read a book. Make sure to
+          fill in the year finished to have it added to your Reading Challenge!
         </div>
 
         {readDates.map((rd) => (
@@ -199,7 +222,9 @@ export function EditReview() {
                 value={rd.started}
                 onChange={(e) =>
                   setReadDates((prev) =>
-                    prev.map((d) => (d.id === rd.id ? { ...d, started: e.target.value } : d))
+                    prev.map((d) =>
+                      d.id === rd.id ? { ...d, started: e.target.value } : d,
+                    ),
                   )
                 }
                 className="border border-[#ccc] rounded px-2 py-0.5 text-[12px]"
@@ -212,14 +237,18 @@ export function EditReview() {
                 value={rd.finished}
                 onChange={(e) =>
                   setReadDates((prev) =>
-                    prev.map((d) => (d.id === rd.id ? { ...d, finished: e.target.value } : d))
+                    prev.map((d) =>
+                      d.id === rd.id ? { ...d, finished: e.target.value } : d,
+                    ),
                   )
                 }
                 className="border border-[#ccc] rounded px-2 py-0.5 text-[12px]"
               />
             </div>
             <button
-              onClick={() => setReadDates((prev) => prev.filter((d) => d.id !== rd.id))}
+              onClick={() =>
+                setReadDates((prev) => prev.filter((d) => d.id !== rd.id))
+              }
               className="text-gray-400 hover:text-red-400"
             >
               <X size={14} />
@@ -239,12 +268,19 @@ export function EditReview() {
             onClick={() => setShowMoreDetails(!showMoreDetails)}
             className="text-[12px] text-[#382110] flex items-center gap-1 hover:underline"
           >
-            More details {showMoreDetails ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            More details{" "}
+            {showMoreDetails ? (
+              <ChevronUp size={13} />
+            ) : (
+              <ChevronDown size={13} />
+            )}
           </button>
           {showMoreDetails && (
             <div className="mt-3 grid grid-cols-2 gap-3 text-[13px] text-[#382110]">
               <div>
-                <label className="block text-gray-500 text-[11px] mb-1">Owned?</label>
+                <label className="block text-gray-500 text-[11px] mb-1">
+                  Owned?
+                </label>
                 <select className="border border-[#ccc] rounded px-2 py-1 text-[12px] w-full">
                   <option value="">—</option>
                   <option value="yes">Yes</option>
@@ -252,7 +288,9 @@ export function EditReview() {
                 </select>
               </div>
               <div>
-                <label className="block text-gray-500 text-[11px] mb-1">Format</label>
+                <label className="block text-gray-500 text-[11px] mb-1">
+                  Format
+                </label>
                 <select className="border border-[#ccc] rounded px-2 py-1 text-[12px] w-full">
                   <option value="">—</option>
                   <option value="hardcover">Hardcover</option>
@@ -304,9 +342,9 @@ export function EditReview() {
         <span className="text-gray-300">|</span>
         <button
           onClick={() => {
-            if (confirm('Remove this book from your shelves?')) {
+            if (confirm("Remove this book from your shelves?")) {
               removeBook(book.id);
-              navigate('/mybooks');
+              navigate("/mybooks");
             }
           }}
           className="text-[#00635d] hover:underline"

@@ -1,34 +1,40 @@
-import { useState } from 'react';
-import { MessageSquare, ChevronDown } from 'lucide-react';
-import { Link } from 'react-router';
-import { Book } from '../data/initialBooks';
-import { StarRating } from './StarRating';
-import { useBooks } from '../context/BooksContext';
+import { useState } from "react";
+import { MessageSquare, ChevronDown } from "lucide-react";
+import { Link } from "react-router";
+import { Book } from "../data/initialBooks";
+import { StarRating } from "./StarRating";
+import { useBooks } from "../context/BooksContext";
 
 interface BookRowProps {
   book: Book;
-  viewMode?: 'list' | 'grid';
+  viewMode?: "list" | "grid";
   selected?: boolean;
   onSelect?: (id: string) => void;
   batchMode?: boolean;
 }
 
 const SHELF_LABELS: Record<string, string> = {
-  read: 'Read',
-  'currently-reading': 'Currently Reading',
-  'want-to-read': 'Want to Read',
+  read: "Read",
+  "currently-reading": "Currently Reading",
+  "want-to-read": "Want to Read",
 };
 
-export function BookRow({ book, viewMode = 'list', selected = false, onSelect, batchMode = false }: BookRowProps) {
+export function BookRow({
+  book,
+  viewMode = "list",
+  selected = false,
+  onSelect,
+  batchMode = false,
+}: BookRowProps) {
   const { updateBook } = useBooks();
   const [showShelfMenu, setShowShelfMenu] = useState(false);
 
   const progress =
-    book.shelf === 'currently-reading' && book.totalPages && book.totalPages > 0
+    book.shelf === "currently-reading" && book.totalPages && book.totalPages > 0
       ? Math.round(((book.pagesCompleted || 0) / book.totalPages) * 100)
       : null;
 
-  if (viewMode === 'grid') {
+  if (viewMode === "grid") {
     return (
       <div className="flex flex-col items-center gap-2 p-2">
         {batchMode && (
@@ -47,8 +53,12 @@ export function BookRow({ book, viewMode = 'list', selected = false, onSelect, b
           />
         </Link>
         <div className="text-center max-w-[90px]">
-          <div className="text-[12px] text-[#382110] truncate">{book.titleLocal || book.title}</div>
-          <div className="text-[11px] text-gray-500 truncate">{book.author}</div>
+          <div className="text-[12px] text-[#382110] truncate">
+            {book.titleLocal || book.title}
+          </div>
+          <div className="text-[11px] text-gray-500 truncate">
+            {book.author}
+          </div>
           <StarRating rating={book.rating} showCount size="sm" />
         </div>
       </div>
@@ -58,7 +68,7 @@ export function BookRow({ book, viewMode = 'list', selected = false, onSelect, b
   return (
     <div
       className={`flex items-start gap-3 py-4 border-b border-[#e8e0d0] ${
-        selected ? 'bg-[#fffbf0]' : 'bg-white hover:bg-[#fafaf8]'
+        selected ? "bg-[#fffbf0]" : "bg-[#ffffff] hover:bg-[#fafaf8]"
       } transition-colors`}
     >
       {batchMode && (
@@ -102,15 +112,17 @@ export function BookRow({ book, viewMode = 'list', selected = false, onSelect, b
             {SHELF_LABELS[book.shelf]} <ChevronDown size={10} />
           </button>
           {showShelfMenu && (
-            <div className="absolute top-full left-0 z-20 bg-white border border-[#ddd] rounded shadow-md min-w-[150px]">
+            <div className="absolute top-full left-0 z-20 bg-[#ffffff] border border-[#ddd] rounded shadow-md min-w-[150px]">
               {Object.entries(SHELF_LABELS).map(([key, label]) => (
                 <button
                   key={key}
                   className={`w-full text-left px-3 py-1.5 text-[12px] hover:bg-[#f4f0e6] ${
-                    book.shelf === key ? 'font-semibold text-[#382110]' : 'text-[#382110]'
+                    book.shelf === key
+                      ? "font-semibold text-[#382110]"
+                      : "text-[#382110]"
                   }`}
                   onClick={() => {
-                    updateBook(book.id, { shelf: key as Book['shelf'] });
+                    updateBook(book.id, { shelf: key as Book["shelf"] });
                     setShowShelfMenu(false);
                   }}
                 >
@@ -140,8 +152,11 @@ export function BookRow({ book, viewMode = 'list', selected = false, onSelect, b
       <div className="flex-1 min-w-0 text-[12px]">
         {book.review ? (
           <div>
-            <span className="text-gray-700">{book.review}</span>{' '}
-            <Link to={`/book/${book.id}/review`} className="text-[#00635d] no-underline hover:underline">
+            <span className="text-gray-700">{book.review}</span>{" "}
+            <Link
+              to={`/book/${book.id}/review`}
+              className="text-[#00635d] no-underline hover:underline"
+            >
               [Edit]
             </Link>
           </div>
@@ -150,7 +165,10 @@ export function BookRow({ book, viewMode = 'list', selected = false, onSelect, b
             to={`/book/${book.id}/review`}
             className="flex flex-col items-center gap-1 w-[90px] text-[#382110] no-underline hover:text-[#00635d] group"
           >
-            <MessageSquare size={22} className="text-[#555] group-hover:text-[#00635d]" />
+            <MessageSquare
+              size={22}
+              className="text-[#555] group-hover:text-[#00635d]"
+            />
             <span className="text-[11px]">Post a review</span>
           </Link>
         )}
