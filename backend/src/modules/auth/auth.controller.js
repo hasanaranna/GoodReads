@@ -147,3 +147,17 @@ export const login = async (req, res, next) => {
     next(error); 
   }
 };
+
+export const logout = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    await pool.query(
+      "UPDATE users SET refresh_token = NULL WHERE id = $1",
+      [userId]
+    );
+    return res.status(204).send();
+
+  } catch (error) {
+    next(error);
+  }
+};
