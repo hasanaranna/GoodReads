@@ -194,8 +194,8 @@ export function Header() {
         {/* Right side: Search + Icons */}
         <div className="flex items-center gap-[1.5vw] ml-auto text-[#382110]">
           {/* Search */}
-          <div className="relative w-[220px]">
-            <div className="flex items-center bg-white border border-[#c9bfb0] rounded-full h-[32px] px-3 gap-2">
+          <div className="relative w-[260px]">
+            <div className="flex items-center bg-[#ffffff] border border-[#c9bfb0] rounded-full py-2 px-6 gap-2">
               <input
                 type="text"
                 placeholder="Search books, authors..."
@@ -206,7 +206,7 @@ export function Header() {
                 }}
                 onFocus={() => setShowResults(true)}
                 onBlur={() => setTimeout(() => setShowResults(false), 200)}
-                className="flex-1 appearance-none outline-none border-0 shadow-none text-[13px] text-gray-700 bg-white"
+                className="flex-1 appearance-none outline-none border-0 shadow-none text-[13px] text-gray-700 bg-transparent"
               />
               {searchQuery ? (
                 <X
@@ -224,7 +224,7 @@ export function Header() {
               )}
             </div>
             {showResults && (searchQuery.trim().length > 1 || isSearching) && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#ddd] rounded shadow-lg z-50">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-[#ffffff] border border-[#ddd] rounded shadow-lg z-50">
                 {isSearching && (
                   <div className="px-3 py-2 text-[12px] text-gray-500">
                     Searching...
