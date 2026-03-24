@@ -204,7 +204,7 @@ export function Header() {
               }}
               onFocus={() => setShowResults(true)}
               onBlur={() => setTimeout(() => setShowResults(false), 200)}
-              className="flex-1 outline-none text-[13px] text-gray-700 bg-transparent"
+              className="flex-1 appearance-none outline-none border-0 shadow-none text-[13px] text-gray-700 bg-transparent"
             />
             {searchQuery ? (
               <X
@@ -278,16 +278,16 @@ export function Header() {
 
         {/* Icons */}
         <div className="flex items-center gap-3 ml-auto text-[#382110]">
-          <button className="hover:text-[#00635d]">
+          <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
             <Bell size={18} />
           </button>
-          <button className="hover:text-[#00635d]">
+          <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
             <MessageSquare size={18} />
           </button>
-          <button className="hover:text-[#00635d]">
+          <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
             <Users size={18} />
           </button>
-          <button className="hover:text-[#00635d]">
+          <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
             <Menu size={18} />
           </button>
         </div>
