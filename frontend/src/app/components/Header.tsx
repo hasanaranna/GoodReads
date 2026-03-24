@@ -277,7 +277,7 @@ export function Header() {
         </div>
 
         {/* Icons */}
-        <div className="flex items-center gap-3 ml-auto text-[#382110]">
+        <div className="flex items-center gap-[1.5vw] ml-auto text-[#382110]">
           <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
             <Bell size={18} />
           </button>
