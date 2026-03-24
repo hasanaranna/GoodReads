@@ -6,6 +6,7 @@ import {
   notFoundMiddleware,
 } from "./middleware/error.middleware.js";
 import booksRouter from "./modules/books/books.routes.js";
+import authRoutes from "./modules/auth/auth.routes.js";
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/books", booksRouter);
+app.use("/api/auth", authRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
