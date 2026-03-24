@@ -161,3 +161,72 @@ export const logout = async (req, res, next) => {
     next(error);
   }
 };
+
+export const refresh = async (req, res, next) => {
+  try {
+    const { refresh_token } = req.body;
+
+    if (!refresh_token) {
+      return res.status(401).json({
+        error: { code: "UNAUTHORIZED", message: "Invalid or expired refresh token.", status: 401 }
+      });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(refresh_token, env.jwtRefreshSecret);
+    } catch (err) {
+      return res.status(401).json({
+        error: { code: "UNAUTHORIZED", message: "Invalid or expired refresh token.", status: 401 }
+      });
+    }
+
+    const result = await pool.query(
+      "SELECT * FROM users WHERE id = $1 AND refresh_token = $2",
+      [decoded.id, refresh_token]
+    );
+
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(401).json({
+        error: { code: "UNAUTHORIZED", message: "Invalid or expired refresh token.", status: 401 }
+      });
+    }
+
+    const birthDate = new Date(user.dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    const is_mature = age >= 18;
+
+    const newAccessToken = jwt.sign({ id: user.id }, env.jwtAccessSecret, { expiresIn: 3600 });
+    const newRefreshToken = jwt.sign({ id: user.id }, env.jwtRefreshSecret, { expiresIn: "7d" });
+
+    await pool.query(
+      "UPDATE users SET refresh_token = $1 WHERE id = $2",
+      [newRefreshToken, user.id]
+    );
+
+    return res.status(200).json({
+      access_token: newAccessToken,
+      refresh_token: newRefreshToken,
+      token_type: "Bearer",
+      expires_in: 3600,
+      user: {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        date_of_birth: user.dob.toISOString().split('T')[0],
+        is_mature: is_mature,
+        created_at: user.created_at
+      }
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
