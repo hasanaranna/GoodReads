@@ -78,7 +78,7 @@ export function MyBooks() {
   return (
     <div className="max-w-[1100px] mx-auto px-4 py-5">
       {/* Breadcrumb */}
-      <div className="text-[13px] text-[#382110] mb-2">
+      <div className="text-[13px] text-[#382110] mb-2" style={{ marginTop: "24px" }}>
         <Link
           to="/mybooks"
           className="no-underline text-[#382110] hover:underline"
@@ -173,7 +173,7 @@ export function MyBooks() {
         {/* Main content */}
         <div className="flex-1 min-w-0">
           {/* Sort bar */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3" style={{ marginTop: "24px" }}>
             <div className="text-[0.9em] text-gray-500">
               {filtered.length} book{filtered.length !== 1 ? "s" : ""}
               {shelfLabel ? ` on ${shelfLabel}` : ""}
