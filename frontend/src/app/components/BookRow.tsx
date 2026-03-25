@@ -149,7 +149,7 @@ export function BookRow({
       </div>
 
       {/* Review */}
-      <div className="flex-1 min-w-0 text-[12px]">
+      <div className="flex-1 min-w-0 text-[12px]" style={{ padding: "15px 0" }}>
         {book.review ? (
           <div>
             <span className="text-gray-700">{book.review}</span>{" "}
