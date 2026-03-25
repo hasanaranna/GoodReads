@@ -194,8 +194,11 @@ export function Header() {
         {/* Right side: Search + Icons */}
         <div className="flex items-center gap-[1.5vw] ml-auto text-[#382110]">
           {/* Search */}
-          <div className="relative w-[260px]">
-            <div className="flex items-center bg-[#ffffff] border border-[#c9bfb0] rounded-full py-2 px-6 gap-2">
+          <div className="relative w-[280px]" style={{ marginRight: "15%" }}>
+            <div 
+              className="flex items-center bg-[#ffffff] border border-[#c9bfb0] rounded-full w-full h-[42px] gap-2"
+              style={{ paddingLeft: "15px", paddingRight: "15px" }}
+            >
               <input
                 type="text"
                 placeholder="Search books, authors..."

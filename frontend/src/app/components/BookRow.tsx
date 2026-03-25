@@ -92,7 +92,7 @@ export function BookRow({
       </Link>
 
       {/* Title + Author */}
-      <div className="w-[200px] shrink-0">
+      <div className="w-[200px] shrink-0" style={{ margin: "5px 16px" }}>
         <Link to={`/book/${book.id}/review`} className="no-underline">
           <div className="text-[14px] text-[#382110] hover:underline leading-snug">
             {book.titleLocal || book.title}
@@ -102,7 +102,7 @@ export function BookRow({
       </div>
 
       {/* Rating + Shelf */}
-      <div className="w-[130px] shrink-0 flex flex-col gap-1">
+      <div className="w-[130px] shrink-0 flex flex-col items-center gap-1" style={{ padding: "15px 0" }}>
         <StarRating rating={book.rating} showCount size="sm" />
         <div className="relative">
           <button
@@ -149,7 +149,7 @@ export function BookRow({
       </div>
 
       {/* Review */}
-      <div className="flex-1 min-w-0 text-[12px]">
+      <div className="flex-1 min-w-0 text-[12px]" style={{ padding: "15px 0" }}>
         {book.review ? (
           <div>
             <span className="text-gray-700">{book.review}</span>{" "}

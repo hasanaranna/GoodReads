@@ -1,5 +1,6 @@
-import { createBrowserRouter, redirect } from 'react-router';
+import { createBrowserRouter } from 'react-router';
 import { Root } from './pages/Root';
+import { Login } from './pages/Login';
 import { MyBooks } from './pages/MyBooks';
 import { EditReview } from './pages/EditReview';
 import { InputProgress } from './pages/InputProgress';
@@ -11,7 +12,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        loader: () => redirect('/mybooks'),
+        Component: Login,
       },
       {
         path: 'mybooks',

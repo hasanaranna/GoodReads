@@ -20,7 +20,7 @@ export function Sidebar() {
   const activeShelf = shelfId || 'all';
 
   return (
-    <aside className="w-[180px] shrink-0 text-[13px]">
+    <aside className="w-[180px] shrink-0 text-[13px]" style={{ marginTop: "24px" }}>
       {/* Bookshelves */}
       <div className="mb-6">
         <div className="mb-2 border-b border-[#ddd] pb-1">

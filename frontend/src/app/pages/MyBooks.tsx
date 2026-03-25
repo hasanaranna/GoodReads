@@ -78,7 +78,7 @@ export function MyBooks() {
   return (
     <div className="max-w-[1100px] mx-auto px-4 py-5">
       {/* Breadcrumb */}
-      <div className="text-[13px] text-[#382110] mb-2">
+      <div className="text-[13px] text-[#382110] mb-2" style={{ marginTop: "24px" }}>
         <Link
           to="/mybooks"
           className="no-underline text-[#382110] hover:underline"
@@ -107,13 +107,13 @@ export function MyBooks() {
         </div>
 
         {/* Actions */}
-        <div className="ml-auto flex items-center gap-3 text-[13px]">
+        <div className="ml-auto flex items-center gap-[1.5em] text-[1em]">
           <button
             onClick={() => {
               setBatchMode(!batchMode);
               setSelectedIds(new Set());
             }}
-            className={`font-semibold hover:underline ${batchMode ? "text-[#00635d]" : "text-[#382110]"}`}
+            className={`outline-none border-none bg-transparent shadow-none font-semibold hover:underline ${batchMode ? "text-[#00635d]" : "text-[#382110]"}`}
           >
             Batch Edit
           </button>
@@ -121,71 +121,71 @@ export function MyBooks() {
             <>
               <button
                 onClick={selectAll}
-                className="text-[#00635d] hover:underline text-[12px]"
+                className="outline-none border-none bg-transparent shadow-none text-[#00635d] hover:underline text-[0.9em]"
               >
                 Select All
               </button>
               <button
                 onClick={() => setSelectedIds(new Set())}
-                className="text-[#00635d] hover:underline text-[12px]"
+                className="outline-none border-none bg-transparent shadow-none text-[#00635d] hover:underline text-[0.9em]"
               >
                 Clear
               </button>
             </>
           )}
-          <button className="font-semibold text-[#382110] hover:underline">
+          <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
             Settings
           </button>
-          <button className="font-semibold text-[#382110] hover:underline">
+          <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
             Stats
           </button>
-          <button className="font-semibold text-[#382110] hover:underline">
+          <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
             Print
           </button>
           <span className="text-[#ccc]">|</span>
           <button
             onClick={() => setViewMode("list")}
-            className={
+            className={`outline-none border-none bg-transparent shadow-none ${
               viewMode === "list"
                 ? "text-[#382110]"
                 : "text-[#aaa] hover:text-[#382110]"
-            }
+            }`}
           >
-            <List size={18} />
+            <List size="1.2em" />
           </button>
           <button
             onClick={() => setViewMode("grid")}
-            className={
+            className={`outline-none border-none bg-transparent shadow-none ${
               viewMode === "grid"
                 ? "text-[#382110]"
                 : "text-[#aaa] hover:text-[#382110]"
-            }
+            }`}
           >
-            <LayoutGrid size={18} />
+            <LayoutGrid size="1.2em" />
           </button>
         </div>
       </div>
 
-      <div className="flex gap-8">
+      <div className="flex" style={{ gap: "64px" }}>
         {/* Sidebar */}
         <Sidebar />
 
         {/* Main content */}
         <div className="flex-1 min-w-0">
           {/* Sort bar */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-[12px] text-gray-500">
+          <div className="flex items-center justify-between mb-3" style={{ marginTop: "24px" }}>
+            <div className="text-[0.9em] text-gray-500">
               {filtered.length} book{filtered.length !== 1 ? "s" : ""}
               {shelfLabel ? ` on ${shelfLabel}` : ""}
             </div>
-            <div className="flex items-center gap-2 text-[12px]">
+            <div className="flex items-center gap-[1em] text-[0.9em]">
               <span className="text-gray-500">Sort by:</span>
               {(["title", "author", "rating", "dateAdded"] as const).map(
                 (s) => (
                   <button
                     key={s}
                     onClick={() => setSortBy(s)}
-                    className={`capitalize hover:underline ${
+                    className={`outline-none border-none bg-transparent shadow-none capitalize hover:underline ${
                       sortBy === s
                         ? "text-[#382110] underline"
                         : "text-[#00635d]"
@@ -240,7 +240,7 @@ export function MyBooks() {
               <div className="flex items-center gap-3 py-2 border-b-2 border-[#382110] text-[12px] text-gray-500">
                 {batchMode && <div className="w-5" />}
                 <div className="w-[60px] shrink-0" />
-                <div className="w-[200px] shrink-0">Title</div>
+                <div className="w-[200px] shrink-0" style={{ margin: "0 16px" }}>Title</div>
                 <div className="w-[130px] shrink-0">Rating / Shelf</div>
                 <div className="hidden md:block w-[110px] shrink-0">
                   Date Added / Read
