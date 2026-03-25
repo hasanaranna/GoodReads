@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   Bell,
   MessageSquare,
@@ -7,6 +7,8 @@ import {
   Search,
   ChevronDown,
   X,
+  User,
+  LogOut,
 } from "lucide-react";
 import { Link } from "react-router";
 import { useBooks } from "../context/BooksContext";
@@ -61,6 +63,8 @@ export function Header() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [results, setResults] = useState<BackendSearchBook[]>([]);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const { books, addBook, userName } = useBooks();
 
   const existingBookIds = useMemo(
@@ -135,6 +139,16 @@ export function Header() {
 
     return () => controller.abort();
   }, [debouncedSearchQuery]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const visibleResults = results.filter(
     (book) => !existingBookIds.has(`gb-${book.id}`),
@@ -290,19 +304,45 @@ export function Header() {
           <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
             <MessageSquare size={18} />
           </button>
-          <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
-            <Users size={18} />
-          </button>
+          <div className="relative" ref={profileMenuRef}>
+            <button 
+              className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]"
+              onClick={() => userName && setShowProfileMenu(!showProfileMenu)}
+            >
+              <Users size={18} />
+            </button>
+            
+            {showProfileMenu && userName && (
+              <div 
+                className="absolute top-full mt-2 bg-[#ffffff] border border-[#d8d0bb] rounded-md shadow-lg z-50 flex flex-col pt-2 pb-2 left-1/2 -translate-x-1/2"
+                style={{ width: "20vw", minWidth: "280px" }}
+              >
+                <div className="flex flex-col items-center gap-4 p-8 border-b border-[#d8d0bb] bg-[#f4f0e6]">
+                  <div className="w-16 h-16 rounded-full bg-[#e8e0d0] flex items-center justify-center text-[#382110]">
+                    <User size={32} />
+                  </div>
+                  <span className="text-[16px] font-semibold text-[#382110] truncate w-full text-center">
+                    {userName}
+                  </span>
+                </div>
+                <div className="p-3">
+                  <button 
+                    className="flex items-center justify-center gap-2 w-full p-3 text-[15px] font-medium text-[#382110] hover:bg-[#f4f0e6] transition-colors rounded-sm"
+                    onClick={() => {
+                      // Logout logic goes here later
+                      setShowProfileMenu(false);
+                    }}
+                  >
+                    <LogOut size={18} />
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
           <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
             <Menu size={18} />
           </button>
-          
-          {/* User profile identifier / Initial */}
-          {userName && (
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#382110] text-white text-[14px] font-semibold cursor-pointer">
-              {userName.charAt(0).toUpperCase()}
-            </div>
-          )}
         </div>
       </div>
     </header>
