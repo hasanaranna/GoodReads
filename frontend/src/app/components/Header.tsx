@@ -143,7 +143,10 @@ export function Header() {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target as Node)
+      ) {
         setShowProfileMenu(false);
       }
     }
@@ -186,9 +189,9 @@ export function Header() {
         console.error("Logout request failed", error);
       }
     }
-    
+
     localStorage.removeItem("access_token");
-    setUserName(""); 
+    setUserName("");
     setShowProfileMenu(false);
     navigate("/");
   }
@@ -229,11 +232,14 @@ export function Header() {
         </nav>
 
         {/* Right side: Search + Icons */}
-        <div className="flex items-center gap-[1.5vw] ml-auto text-[#382110]">
+        <div className="flex items-center gap-4 ml-auto text-[#382110]">
           {/* Search */}
-          <div className="relative w-[280px]" style={{ marginRight: "15%" }}>
-            <div 
-              className="flex items-center bg-[#ffffff] border border-[#c9bfb0] rounded-full w-full h-[42px] gap-2"
+          <div
+            className="relative w-[380px] lg:w-[460px]"
+            style={{ marginRight: "8%" }}
+          >
+            <div
+              className="flex items-center bg-[#ffffff] border border-[#c9bfb0] rounded-full w-full h-[44px] gap-2"
               style={{ paddingLeft: "15px", paddingRight: "15px" }}
             >
               <input
@@ -264,7 +270,7 @@ export function Header() {
               )}
             </div>
             {showResults && (searchQuery.trim().length > 1 || isSearching) && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-[#ffffff] border border-[#ddd] rounded shadow-lg z-50">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-[#ffffff] border border-[#ddd] rounded-md shadow-lg z-50 overflow-hidden">
                 {isSearching && (
                   <div className="px-3 py-2 text-[12px] text-gray-500">
                     Searching...
@@ -285,37 +291,52 @@ export function Header() {
                     </div>
                   )}
 
-                {!isSearching &&
-                  !searchError &&
-                  visibleResults.length > 0 &&
-                  visibleResults.map((book) => {
-                    const mappedBook = toLibraryBook(book);
+                {!isSearching && !searchError && visibleResults.length > 0 && (
+                  <div className="max-h-[580px] overflow-y-auto divide-y divide-[#f0ebe0]">
+                    {visibleResults.map((book) => {
+                      const mappedBook = toLibraryBook(book);
 
-                    return (
-                      <button
-                        key={book.id}
-                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[#f4f0e6] text-left"
-                        onMouseDown={() => handleAddBook(book)}
-                      >
-                        <img
-                          src={mappedBook.coverUrl}
-                          alt={mappedBook.title}
-                          className="w-8 h-10 object-cover rounded"
-                        />
-                        <div>
-                          <div className="text-[13px] text-[#382110]">
-                            {mappedBook.title}
+                      return (
+                        <div
+                          key={book.id}
+                          className="group flex items-start gap-4 px-4 py-3.5 hover:bg-[#faf7f0] transition-colors duration-150"
+                        >
+                          {/* Cover */}
+                          <div className="relative flex-shrink-0">
+                            <img
+                              src={mappedBook.coverUrl}
+                              alt={mappedBook.title}
+                              className="w-11 h-16 object-cover rounded shadow-sm ring-1 ring-black/10"
+                            />
                           </div>
-                          <div className="text-[11px] text-gray-500">
-                            {mappedBook.author}
+
+                          {/* Info */}
+                          <div className="min-w-0 flex-1 flex flex-col justify-between h-16">
+                            <div>
+                              <p className="text-[14.5px] font-medium leading-snug text-[#1c1208] line-clamp-2">
+                                {mappedBook.title}
+                              </p>
+                              <p className="text-[12.5px] mt-0.5 text-[#8b7355] truncate">
+                                {mappedBook.author}
+                              </p>
+                            </div>
+
+                            {/* Add button */}
+                            <button
+                              onMouseDown={() => handleAddBook(book)}
+                              className="self-start mt-1.5 inline-flex items-center gap-1 text-[12px] font-medium text-[#00635d] border border-[#00635d]/50 bg-[#00635d]/5 hover:bg-[#00635d] hover:text-white px-2.5 py-0.5 rounded-full transition-all duration-150 cursor-pointer"
+                            >
+                              <span className="text-[13px] leading-none">
+                                +
+                              </span>
+                              Add book
+                            </button>
                           </div>
                         </div>
-                        <span className="ml-auto text-[11px] text-[#00635d] border border-[#00635d] px-1.5 py-0.5 rounded">
-                          + Add
-                        </span>
-                      </button>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -328,15 +349,15 @@ export function Header() {
             <MessageSquare size={18} />
           </button>
           <div className="relative" ref={profileMenuRef}>
-            <button 
+            <button
               className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]"
               onClick={() => userName && setShowProfileMenu(!showProfileMenu)}
             >
               <Users size={18} />
             </button>
-            
+
             {showProfileMenu && userName && (
-              <div 
+              <div
                 className="absolute top-full mt-2 bg-[#ffffff] border border-[#d8d0bb] rounded-md shadow-lg z-50 flex flex-col pt-2 pb-2 left-1/2 -translate-x-1/2"
                 style={{ width: "20vw", minWidth: "280px" }}
               >
@@ -349,7 +370,7 @@ export function Header() {
                   </span>
                 </div>
                 <div className="p-3">
-                  <button 
+                  <button
                     className="flex items-center justify-center gap-2 w-full p-3 text-[15px] font-medium text-[#382110] hover:bg-[#f4f0e6] transition-colors rounded-sm"
                     onClick={handleLogout}
                   >
