@@ -166,7 +166,7 @@ export function MyBooks() {
         </div>
       </div>
 
-      <div className="flex gap-8">
+      <div className="flex" style={{ gap: "64px" }}>
         {/* Sidebar */}
         <Sidebar />
 
