@@ -102,7 +102,7 @@ export function BookRow({
       </div>
 
       {/* Rating + Shelf */}
-      <div className="w-[130px] shrink-0 flex flex-col gap-1">
+      <div className="w-[130px] shrink-0 flex flex-col items-center gap-1" style={{ padding: "15px 0" }}>
         <StarRating rating={book.rating} showCount size="sm" />
         <div className="relative">
           <button
