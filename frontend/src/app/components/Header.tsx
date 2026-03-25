@@ -10,7 +10,7 @@ import {
   User,
   LogOut,
 } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useBooks } from "../context/BooksContext";
 import { Book } from "../data/initialBooks";
 
@@ -57,6 +57,7 @@ function toLibraryBook(book: BackendSearchBook): Book {
 }
 
 export function Header() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -65,7 +66,7 @@ export function Header() {
   const [results, setResults] = useState<BackendSearchBook[]>([]);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
-  const { books, addBook, userName } = useBooks();
+  const { books, addBook, userName, setUserName } = useBooks();
 
   const existingBookIds = useMemo(
     () => new Set(books.map((book) => book.id)),
@@ -168,6 +169,28 @@ export function Header() {
     setDebouncedSearchQuery("");
     setResults([]);
     setShowResults(false);
+  }
+
+  async function handleLogout() {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      try {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      } catch (error) {
+        console.error("Logout request failed", error);
+      }
+    }
+    
+    localStorage.removeItem("access_token");
+    setUserName(""); 
+    setShowProfileMenu(false);
+    navigate("/");
   }
 
   return (
@@ -328,10 +351,7 @@ export function Header() {
                 <div className="p-3">
                   <button 
                     className="flex items-center justify-center gap-2 w-full p-3 text-[15px] font-medium text-[#382110] hover:bg-[#f4f0e6] transition-colors rounded-sm"
-                    onClick={() => {
-                      // Logout logic goes here later
-                      setShowProfileMenu(false);
-                    }}
+                    onClick={handleLogout}
                   >
                     <LogOut size={18} />
                     Sign out
