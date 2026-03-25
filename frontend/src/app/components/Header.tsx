@@ -61,7 +61,7 @@ export function Header() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [results, setResults] = useState<BackendSearchBook[]>([]);
-  const { books, addBook } = useBooks();
+  const { books, addBook, userName } = useBooks();
 
   const existingBookIds = useMemo(
     () => new Set(books.map((book) => book.id)),
@@ -296,6 +296,13 @@ export function Header() {
           <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
             <Menu size={18} />
           </button>
+          
+          {/* User profile identifier / Initial */}
+          {userName && (
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#382110] text-white text-[14px] font-semibold cursor-pointer">
+              {userName.charAt(0).toUpperCase()}
+            </div>
+          )}
         </div>
       </div>
     </header>

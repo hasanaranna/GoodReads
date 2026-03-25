@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import { Book, initialBooks } from '../data/initialBooks';
 
 type Action =
@@ -13,6 +13,8 @@ interface BooksContextType {
   removeBook: (id: string) => void;
   getBook: (id: string) => Book | undefined;
   shelfCounts: { all: number; read: number; currentlyReading: number; wantToRead: number };
+  userName: string;
+  setUserName: (name: string) => void;
 }
 
 function booksReducer(state: Book[], action: Action): Book[] {
@@ -34,6 +36,7 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
   const stored = localStorage.getItem('goodreads_books');
   const init = stored ? (JSON.parse(stored) as Book[]) : initialBooks;
   const [books, dispatch] = useReducer(booksReducer, init);
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     localStorage.setItem('goodreads_books', JSON.stringify(books));
@@ -61,7 +64,7 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <BooksContext.Provider value={{ books, updateBook, addBook, removeBook, getBook, shelfCounts }}>
+    <BooksContext.Provider value={{ books, updateBook, addBook, removeBook, getBook, shelfCounts, userName, setUserName }}>
       {children}
     </BooksContext.Provider>
   );

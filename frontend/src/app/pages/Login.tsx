@@ -1,9 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { jwtDecode } from "jwt-decode";
 import { API_BASE_URL } from "../../config";
+import { useBooks } from "../context/BooksContext";
+
+interface JwtPayload {
+  id: string;
+  name?: string;
+  username?: string;
+}
 
 export function Login() {
   const navigate = useNavigate();
+  const { setUserName } = useBooks();
+
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -39,6 +49,24 @@ export function Login() {
 
         if (data.access_token) {
           localStorage.setItem("access_token", data.access_token);
+          
+          try {
+            const decoded = jwtDecode<JwtPayload>(data.access_token);
+            if (data.user?.name) {
+              setUserName(data.user.name);
+            } else if (decoded.name) {
+              setUserName(decoded.name);
+            } else if (data.user?.username) {
+              setUserName(data.user.username);
+            } else if (decoded.username) {
+              setUserName(decoded.username);
+            } else {
+              setUserName("User");
+            }
+          } catch (err) {
+            console.error("Failed to decode token", err);
+            setUserName("User");
+          }
         }
         navigate("/mybooks");
       } catch (error) {
@@ -81,6 +109,24 @@ export function Login() {
       // Successful registration
       if (data.access_token) {
         localStorage.setItem("access_token", data.access_token);
+        
+        try {
+          const decoded = jwtDecode<JwtPayload>(data.access_token);
+          if (data.user?.name) {
+            setUserName(data.user.name);
+          } else if (decoded.name) {
+            setUserName(decoded.name);
+          } else if (data.user?.username) {
+            setUserName(data.user.username);
+          } else if (decoded.username) {
+            setUserName(decoded.username);
+          } else {
+            setUserName(name || "User");
+          }
+        } catch (err) {
+          console.error("Failed to decode token", err);
+          setUserName(name || "User");
+        }
       }
       navigate("/mybooks");
     } catch (error) {
