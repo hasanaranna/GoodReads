@@ -240,7 +240,7 @@ export function MyBooks() {
               <div className="flex items-center gap-3 py-2 border-b-2 border-[#382110] text-[12px] text-gray-500">
                 {batchMode && <div className="w-5" />}
                 <div className="w-[60px] shrink-0" />
-                <div className="w-[200px] shrink-0">Title</div>
+                <div className="w-[200px] shrink-0" style={{ margin: "0 16px" }}>Title</div>
                 <div className="w-[130px] shrink-0">Rating / Shelf</div>
                 <div className="hidden md:block w-[110px] shrink-0">
                   Date Added / Read
