@@ -141,6 +141,22 @@ export function Login() {
                 required
               />
             </div>
+
+            {!isLogin && (
+              <div className="flex flex-col gap-1.5 w-full">
+                <label className="text-[14px] font-semibold text-[#382110]">
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full border border-[#ccc] rounded-sm px-3 py-2 text-[14px] text-[#382110] outline-none shadow-inner focus:border-[#00635d] focus:ring-1 focus:ring-[#00635d] bg-[#ffffff]"
+                  style={{ boxSizing: "border-box" }}
+                  required
+                />
+              </div>
+            )}
             
             <div className="flex flex-col gap-1.5 w-full">
               <label className="text-[14px] font-semibold text-[#382110]">
