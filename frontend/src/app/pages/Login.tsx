@@ -85,7 +85,7 @@ export function Login() {
             style={{ padding: "24px", boxSizing: "border-box", gap: "20px" }}
           >
             {errorMessage && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-md text-[14px] border border-red-200">
+              <div className="text-red-600 text-center text-[14px]">
                 {errorMessage}
               </div>
             )}
