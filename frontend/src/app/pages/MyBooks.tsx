@@ -107,13 +107,13 @@ export function MyBooks() {
         </div>
 
         {/* Actions */}
-        <div className="ml-auto flex items-center gap-3 text-[13px]">
+        <div className="ml-auto flex items-center gap-[1.5em] text-[1em]">
           <button
             onClick={() => {
               setBatchMode(!batchMode);
               setSelectedIds(new Set());
             }}
-            className={`font-semibold hover:underline ${batchMode ? "text-[#00635d]" : "text-[#382110]"}`}
+            className={`outline-none border-none bg-transparent shadow-none font-semibold hover:underline ${batchMode ? "text-[#00635d]" : "text-[#382110]"}`}
           >
             Batch Edit
           </button>
@@ -121,47 +121,47 @@ export function MyBooks() {
             <>
               <button
                 onClick={selectAll}
-                className="text-[#00635d] hover:underline text-[12px]"
+                className="outline-none border-none bg-transparent shadow-none text-[#00635d] hover:underline text-[0.9em]"
               >
                 Select All
               </button>
               <button
                 onClick={() => setSelectedIds(new Set())}
-                className="text-[#00635d] hover:underline text-[12px]"
+                className="outline-none border-none bg-transparent shadow-none text-[#00635d] hover:underline text-[0.9em]"
               >
                 Clear
               </button>
             </>
           )}
-          <button className="font-semibold text-[#382110] hover:underline">
+          <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
             Settings
           </button>
-          <button className="font-semibold text-[#382110] hover:underline">
+          <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
             Stats
           </button>
-          <button className="font-semibold text-[#382110] hover:underline">
+          <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
             Print
           </button>
           <span className="text-[#ccc]">|</span>
           <button
             onClick={() => setViewMode("list")}
-            className={
+            className={`outline-none border-none bg-transparent shadow-none ${
               viewMode === "list"
                 ? "text-[#382110]"
                 : "text-[#aaa] hover:text-[#382110]"
-            }
+            }`}
           >
-            <List size={18} />
+            <List size="1.2em" />
           </button>
           <button
             onClick={() => setViewMode("grid")}
-            className={
+            className={`outline-none border-none bg-transparent shadow-none ${
               viewMode === "grid"
                 ? "text-[#382110]"
                 : "text-[#aaa] hover:text-[#382110]"
-            }
+            }`}
           >
-            <LayoutGrid size={18} />
+            <LayoutGrid size="1.2em" />
           </button>
         </div>
       </div>
@@ -174,18 +174,18 @@ export function MyBooks() {
         <div className="flex-1 min-w-0">
           {/* Sort bar */}
           <div className="flex items-center justify-between mb-3">
-            <div className="text-[12px] text-gray-500">
+            <div className="text-[0.9em] text-gray-500">
               {filtered.length} book{filtered.length !== 1 ? "s" : ""}
               {shelfLabel ? ` on ${shelfLabel}` : ""}
             </div>
-            <div className="flex items-center gap-2 text-[12px]">
+            <div className="flex items-center gap-[1em] text-[0.9em]">
               <span className="text-gray-500">Sort by:</span>
               {(["title", "author", "rating", "dateAdded"] as const).map(
                 (s) => (
                   <button
                     key={s}
                     onClick={() => setSortBy(s)}
-                    className={`capitalize hover:underline ${
+                    className={`outline-none border-none bg-transparent shadow-none capitalize hover:underline ${
                       sortBy === s
                         ? "text-[#382110] underline"
                         : "text-[#00635d]"
