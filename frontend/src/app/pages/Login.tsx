@@ -18,8 +18,32 @@ export function Login() {
     setErrorMessage("");
 
     if (isLogin) {
-      // No validation for now, simply redirect to mybooks
-      navigate("/mybooks");
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username,
+            password,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setErrorMessage(data.error?.message || "Login failed. Please try again.");
+          return;
+        }
+
+        if (data.access_token) {
+          localStorage.setItem("access_token", data.access_token);
+        }
+        navigate("/mybooks");
+      } catch (error) {
+        setErrorMessage("Network error. Could not connect to the server.");
+      }
       return;
     }
 
@@ -104,29 +128,14 @@ export function Login() {
                 />
               </div>
             )}
-            {!isLogin && (
-              <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-[14px] font-semibold text-[#382110]">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full border border-[#ccc] rounded-sm px-3 py-2 text-[14px] text-[#382110] outline-none shadow-inner focus:border-[#00635d] focus:ring-1 focus:ring-[#00635d] bg-[#ffffff]"
-                  style={{ boxSizing: "border-box" }}
-                  required
-                />
-              </div>
-            )}
             <div className="flex flex-col gap-1.5 w-full">
               <label className="text-[14px] font-semibold text-[#382110]">
-                Email address
+                Username
               </label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full border border-[#ccc] rounded-sm px-3 py-2 text-[14px] text-[#382110] outline-none shadow-inner focus:border-[#00635d] focus:ring-1 focus:ring-[#00635d] bg-[#ffffff]"
                 style={{ boxSizing: "border-box" }}
                 required
