@@ -92,7 +92,7 @@ export function BookRow({
       </Link>
 
       {/* Title + Author */}
-      <div className="w-[200px] shrink-0">
+      <div className="w-[200px] shrink-0" style={{ margin: "5px 16px" }}>
         <Link to={`/book/${book.id}/review`} className="no-underline">
           <div className="text-[14px] text-[#382110] hover:underline leading-snug">
             {book.titleLocal || book.title}
