@@ -1,70 +1,224 @@
-import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
-import { Book, initialBooks } from '../data/initialBooks';
-
-type Action =
-  | { type: 'UPDATE_BOOK'; payload: Partial<Book> & { id: string } }
-  | { type: 'ADD_BOOK'; payload: Book }
-  | { type: 'REMOVE_BOOK'; payload: string };
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { Book } from '../data/initialBooks';
+import {
+  fetchUserBooks,
+  addBookToShelfAPI,
+  updateUserBookAPI,
+  removeUserBookAPI,
+  updateReviewAPI,
+  UserBookRow,
+  ShelfBookData,
+} from '../services/api';
 
 interface BooksContextType {
   books: Book[];
-  updateBook: (id: string, updates: Partial<Book>) => void;
-  addBook: (book: Book) => void;
-  removeBook: (id: string) => void;
+  loading: boolean;
+  error: string | null;
+  updateBook: (id: string, updates: Partial<Book>) => Promise<void>;
+  addBook: (book: Book, bookData: ShelfBookData) => Promise<void>;
+  removeBook: (id: string) => Promise<void>;
   getBook: (id: string) => Book | undefined;
   shelfCounts: { all: number; read: number; currentlyReading: number; wantToRead: number };
   userName: string;
   setUserName: (name: string) => void;
+  refreshBooks: () => Promise<void>;
+  updateReview: (id: string, updates: { rating?: number; review?: string }) => Promise<void>;
 }
 
-function booksReducer(state: Book[], action: Action): Book[] {
-  switch (action.type) {
-    case 'UPDATE_BOOK':
-      return state.map((b) => (b.id === action.payload.id ? { ...b, ...action.payload } : b));
-    case 'ADD_BOOK':
-      return [...state, action.payload];
-    case 'REMOVE_BOOK':
-      return state.filter((b) => b.id !== action.payload);
-    default:
-      return state;
-  }
+function mapRowToBook(row: UserBookRow): Book {
+  const dateAdded = row.date_added
+    ? new Date(row.date_added).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : '';
+
+  const dateRead = row.date_read
+    ? new Date(row.date_read).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : undefined;
+
+  return {
+    id: row.user_book_id,
+    bookId: row.book_id,
+    googleBooksId: row.google_books_id,
+    title: row.title,
+    subtitle: row.subtitle || undefined,
+    author: row.author,
+    coverUrl: row.cover_url || 'https://placehold.co/120x180?text=No+Cover',
+    rating: row.rating,
+    shelf: row.shelf,
+    dateAdded,
+    dateRead,
+    review: row.review || '',
+    pagesCompleted: row.pages_completed,
+    totalPages: row.page_count || undefined,
+    description: row.description || undefined,
+  };
 }
 
 const BooksContext = createContext<BooksContextType | null>(null);
 
 export function BooksProvider({ children }: { children: React.ReactNode }) {
-  const stored = localStorage.getItem('goodreads_books');
-  const init = stored ? (JSON.parse(stored) as Book[]) : initialBooks;
-  const [books, dispatch] = useReducer(booksReducer, init);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [userName, setUserName] = useState('');
+  const [shelfCounts, setShelfCounts] = useState({
+    all: 0,
+    read: 0,
+    currentlyReading: 0,
+    wantToRead: 0,
+  });
 
+  const refreshBooks = useCallback(async () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      setBooks([]);
+      setShelfCounts({ all: 0, read: 0, currentlyReading: 0, wantToRead: 0 });
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetchUserBooks();
+      const mappedBooks = response.data.map(mapRowToBook);
+      setBooks(mappedBooks);
+      setShelfCounts(response.shelfCounts);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load books.';
+      setError(message);
+      console.error('Failed to fetch books:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Load books when a user is logged in
   useEffect(() => {
-    localStorage.setItem('goodreads_books', JSON.stringify(books));
-  }, [books]);
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      refreshBooks();
+    }
+  }, [userName, refreshBooks]);
 
-  const updateBook = (id: string, updates: Partial<Book>) => {
-    dispatch({ type: 'UPDATE_BOOK', payload: { id, ...updates } });
-  };
+  const addBook = useCallback(
+    async (book: Book, bookData: ShelfBookData) => {
+      // Optimistic update
+      setBooks((prev) => [...prev, book]);
+      setShelfCounts((prev) => ({
+        ...prev,
+        all: prev.all + 1,
+        wantToRead: book.shelf === 'want-to-read' ? prev.wantToRead + 1 : prev.wantToRead,
+        currentlyReading:
+          book.shelf === 'currently-reading' ? prev.currentlyReading + 1 : prev.currentlyReading,
+        read: book.shelf === 'read' ? prev.read + 1 : prev.read,
+      }));
 
-  const addBook = (book: Book) => {
-    dispatch({ type: 'ADD_BOOK', payload: book });
-  };
+      try {
+        const response = await addBookToShelfAPI(bookData, book.shelf);
+        // Replace the optimistic entry with the real data
+        const realBook = mapRowToBook(response.data);
+        setBooks((prev) => prev.map((b) => (b.googleBooksId === realBook.googleBooksId ? realBook : b)));
+      } catch (err) {
+        // Rollback optimistic update
+        setBooks((prev) => prev.filter((b) => b.googleBooksId !== book.googleBooksId));
+        console.error('Failed to add book:', err);
+        // Refresh to get actual state
+        await refreshBooks();
+      }
+    },
+    [refreshBooks]
+  );
 
-  const removeBook = (id: string) => {
-    dispatch({ type: 'REMOVE_BOOK', payload: id });
-  };
+  const updateBook = useCallback(
+    async (id: string, updates: Partial<Book>) => {
+      // Optimistic update
+      setBooks((prev) => prev.map((b) => (b.id === id ? { ...b, ...updates } : b)));
 
-  const getBook = (id: string) => books.find((b) => b.id === id);
+      try {
+        const apiUpdates: Record<string, unknown> = {};
+        if (updates.shelf !== undefined) apiUpdates.shelf = updates.shelf;
+        if (updates.pagesCompleted !== undefined) apiUpdates.pages_completed = updates.pagesCompleted;
+        if (updates.dateRead !== undefined) apiUpdates.date_read = updates.dateRead || null;
 
-  const shelfCounts = {
-    all: books.length,
-    read: books.filter((b) => b.shelf === 'read').length,
-    currentlyReading: books.filter((b) => b.shelf === 'currently-reading').length,
-    wantToRead: books.filter((b) => b.shelf === 'want-to-read').length,
-  };
+        if (Object.keys(apiUpdates).length > 0) {
+          await updateUserBookAPI(id, apiUpdates as { shelf?: string; pages_completed?: number; date_read?: string | null });
+        }
+
+        // Refresh counts
+        await refreshBooks();
+      } catch (err) {
+        console.error('Failed to update book:', err);
+        await refreshBooks();
+      }
+    },
+    [refreshBooks]
+  );
+
+  const updateReview = useCallback(
+    async (id: string, updates: { rating?: number; review?: string }) => {
+      // Optimistic update
+      setBooks((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, ...updates } : b))
+      );
+
+      try {
+        await updateReviewAPI(id, updates);
+      } catch (err) {
+        console.error('Failed to update review:', err);
+        await refreshBooks();
+      }
+    },
+    [refreshBooks]
+  );
+
+  const removeBook = useCallback(
+    async (id: string) => {
+      const bookToRemove = books.find((b) => b.id === id);
+      // Optimistic update
+      setBooks((prev) => prev.filter((b) => b.id !== id));
+
+      try {
+        await removeUserBookAPI(id);
+        await refreshBooks();
+      } catch (err) {
+        // Rollback
+        if (bookToRemove) {
+          setBooks((prev) => [...prev, bookToRemove]);
+        }
+        console.error('Failed to remove book:', err);
+        await refreshBooks();
+      }
+    },
+    [books, refreshBooks]
+  );
+
+  const getBook = useCallback((id: string) => books.find((b) => b.id === id), [books]);
 
   return (
-    <BooksContext.Provider value={{ books, updateBook, addBook, removeBook, getBook, shelfCounts, userName, setUserName }}>
+    <BooksContext.Provider
+      value={{
+        books,
+        loading,
+        error,
+        updateBook,
+        addBook,
+        removeBook,
+        getBook,
+        shelfCounts,
+        userName,
+        setUserName,
+        refreshBooks,
+        updateReview,
+      }}
+    >
       {children}
     </BooksContext.Provider>
   );

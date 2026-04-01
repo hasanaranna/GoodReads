@@ -34,6 +34,11 @@ export function BookRow({
       ? Math.round(((book.pagesCompleted || 0) / book.totalPages) * 100)
       : null;
 
+  async function handleShelfChange(newShelf: string) {
+    await updateBook(book.id, { shelf: newShelf as Book["shelf"] });
+    setShowShelfMenu(false);
+  }
+
   if (viewMode === "grid") {
     return (
       <div className="flex flex-col items-center gap-2 p-2">
@@ -48,13 +53,13 @@ export function BookRow({
         <Link to={`/book/${book.id}/review`}>
           <img
             src={book.coverUrl}
-            alt={book.titleLocal || book.title}
+            alt={book.title}
             className="w-[80px] h-[110px] object-cover shadow-md hover:shadow-lg transition-shadow"
           />
         </Link>
         <div className="text-center max-w-[90px]">
           <div className="text-[12px] text-[#382110] truncate">
-            {book.titleLocal || book.title}
+            {book.title}
           </div>
           <div className="text-[11px] text-gray-500 truncate">
             {book.author}
@@ -86,7 +91,7 @@ export function BookRow({
       <Link to={`/book/${book.id}/review`} className="shrink-0">
         <img
           src={book.coverUrl}
-          alt={book.titleLocal || book.title}
+          alt={book.title}
           className="w-[60px] h-[85px] object-cover shadow hover:shadow-md transition-shadow"
         />
       </Link>
@@ -95,7 +100,7 @@ export function BookRow({
       <div className="w-[200px] shrink-0" style={{ margin: "5px 16px" }}>
         <Link to={`/book/${book.id}/review`} className="no-underline">
           <div className="text-[14px] text-[#382110] hover:underline leading-snug">
-            {book.titleLocal || book.title}
+            {book.title}
           </div>
         </Link>
         <div className="text-[12px] text-gray-600 mt-0.5">{book.author}</div>
@@ -121,10 +126,7 @@ export function BookRow({
                       ? "font-semibold text-[#382110]"
                       : "text-[#382110]"
                   }`}
-                  onClick={() => {
-                    updateBook(book.id, { shelf: key as Book["shelf"] });
-                    setShowShelfMenu(false);
-                  }}
+                  onClick={() => handleShelfChange(key)}
                 >
                   {label}
                 </button>

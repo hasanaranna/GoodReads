@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router";
-import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { ChevronDown, ChevronUp, X, User } from "lucide-react";
 import { useBooks } from "../context/BooksContext";
 import { StarRating } from "../components/StarRating";
 import { Book } from "../data/initialBooks";
+import { fetchBookReviewsAPI, PublicReview } from "../services/api";
 
 const SHELF_LABELS: Record<string, string> = {
   read: "Read",
@@ -17,9 +18,24 @@ interface ReadDate {
   finished?: string;
 }
 
+function ReviewStars({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <span
+          key={star}
+          className={`text-[14px] ${star <= rating ? "text-[#d4a017]" : "text-gray-300"}`}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function EditReview() {
   const { bookId } = useParams();
-  const { getBook, updateBook, removeBook } = useBooks();
+  const { getBook, updateBook, updateReview, removeBook } = useBooks();
   const navigate = useNavigate();
   const book = getBook(bookId!);
 
@@ -34,6 +50,30 @@ export function EditReview() {
   const [showShelfMenu, setShowShelfMenu] = useState(false);
   const [readDates, setReadDates] = useState<ReadDate[]>([]);
   const [showMoreDetails, setShowMoreDetails] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Community reviews state
+  const [communityReviews, setCommunityReviews] = useState<PublicReview[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
+  // Fetch community reviews when the book is loaded
+  useEffect(() => {
+    if (!book?.googleBooksId) return;
+
+    async function loadReviews() {
+      setLoadingReviews(true);
+      try {
+        const response = await fetchBookReviewsAPI(book!.googleBooksId);
+        setCommunityReviews(response.data);
+      } catch (err) {
+        console.error("Failed to load community reviews:", err);
+      } finally {
+        setLoadingReviews(false);
+      }
+    }
+
+    loadReviews();
+  }, [book?.googleBooksId]);
 
   if (!book) {
     return (
@@ -46,9 +86,19 @@ export function EditReview() {
     );
   }
 
-  function handlePost() {
-    updateBook(book!.id, { rating, shelf, review: reviewText });
-    navigate("/mybooks");
+  async function handlePost() {
+    setIsSaving(true);
+    try {
+      if (shelf !== book!.shelf) {
+        await updateBook(book!.id, { shelf });
+      }
+      await updateReview(book!.id, { rating, review: reviewText });
+      navigate("/mybooks");
+    } catch (err) {
+      console.error("Failed to save review:", err);
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function addReadDate() {
@@ -58,7 +108,10 @@ export function EditReview() {
     ]);
   }
 
-  const bookFullTitle = `${book.title}${book.title !== "The Hard Things About Hard Things" ? "" : ": Building a Business When There Are No Easy Answers"}`;
+  // Filter out current user's review from community reviews
+  const otherReviews = communityReviews.filter(
+    (r) => r.user_book_id !== book.id
+  );
 
   return (
     <div className="max-w-[860px] mx-auto px-4 py-5">
@@ -68,7 +121,7 @@ export function EditReview() {
           to={`/book/${book.id}/progress`}
           className="text-[#00635d] no-underline hover:underline"
         >
-          {book.titleLocal ? `${book.titleLocal} (${book.title})` : book.title}
+          {book.title}
         </Link>
         <span className="text-[#00635d]"> &gt; Review &gt; Edit</span>
       </div>
@@ -83,11 +136,8 @@ export function EditReview() {
         <div>
           <div className="text-[14px] text-[#382110] leading-snug mb-1">
             {book.title}
-            {book.id === "5" && (
-              <span>
-                : Building a Business When There Are No Easy Answers - Straight
-                Talk on the Challenges of Entrepreneurship <em>(Hardcover)</em>
-              </span>
+            {book.subtitle && (
+              <span>: {book.subtitle}</span>
             )}
           </div>
           <div className="text-[13px] text-gray-600">
@@ -95,9 +145,6 @@ export function EditReview() {
             <a href="#" className="text-[#382110] hover:underline no-underline">
               {book.author}
             </a>
-            {book.id === "5" && (
-              <span className="text-gray-400"> (Goodreads Author)</span>
-            )}
           </div>
         </div>
       </div>
@@ -308,9 +355,10 @@ export function EditReview() {
       <div className="py-4 flex flex-wrap items-center gap-4">
         <button
           onClick={handlePost}
-          className="bg-[#f4f0e6] border border-[#999] px-5 py-1.5 text-[13px] text-[#382110] hover:bg-[#e8e2d0] rounded"
+          disabled={isSaving}
+          className="bg-[#f4f0e6] border border-[#999] px-5 py-1.5 text-[13px] text-[#382110] hover:bg-[#e8e2d0] rounded disabled:opacity-50"
         >
-          Post
+          {isSaving ? "Saving..." : "Post"}
         </button>
         <div className="flex items-center gap-4 ml-auto text-[12px]">
           <label className="flex items-center gap-1.5 cursor-pointer text-[#382110]">
@@ -335,15 +383,15 @@ export function EditReview() {
       </div>
 
       {/* Footer links */}
-      <div className="text-[12px] flex items-center gap-2 pb-4">
+      <div className="text-[12px] flex items-center gap-2 pb-4 border-b border-[#ddd]">
         <a href="#" className="text-[#00635d] hover:underline no-underline">
           Preview
         </a>
         <span className="text-gray-300">|</span>
         <button
-          onClick={() => {
+          onClick={async () => {
             if (confirm("Remove this book from your shelves?")) {
-              removeBook(book.id);
+              await removeBook(book.id);
               navigate("/mybooks");
             }
           }}
@@ -351,6 +399,95 @@ export function EditReview() {
         >
           Remove from my books
         </button>
+      </div>
+
+      {/* ===== Community Reviews Section ===== */}
+      <div className="py-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-[18px] font-medium text-[#382110]">
+            Community Reviews
+          </h2>
+          <span className="text-[13px] text-gray-500">
+            {communityReviews.length} {communityReviews.length === 1 ? "review" : "reviews"}
+          </span>
+        </div>
+
+        {loadingReviews && (
+          <div className="text-[13px] text-gray-500 py-4">
+            Loading reviews...
+          </div>
+        )}
+
+        {!loadingReviews && otherReviews.length === 0 && (
+          <div className="bg-[#f9f7f2] border border-[#e8e0d0] rounded-lg p-6 text-center">
+            <p className="text-[14px] text-gray-500 mb-1">
+              No community reviews yet.
+            </p>
+            <p className="text-[12px] text-gray-400">
+              Be the first to share your thoughts about this book!
+            </p>
+          </div>
+        )}
+
+        {!loadingReviews && otherReviews.length > 0 && (
+          <div className="space-y-0 divide-y divide-[#e8e0d0]">
+            {otherReviews.map((review) => (
+              <div key={review.user_book_id} className="py-4">
+                {/* Reviewer header */}
+                <div className="flex items-start gap-3 mb-2">
+                  <div className="w-9 h-9 rounded-full bg-[#e8e0d0] flex items-center justify-center text-[#382110] shrink-0">
+                    <User size={18} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[14px] font-medium text-[#382110]">
+                        {review.user_name}
+                      </span>
+                      <span className="text-[12px] text-gray-400">
+                        @{review.username}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {review.rating > 0 && (
+                        <ReviewStars rating={review.rating} />
+                      )}
+                      <span className="text-[11px] text-gray-400">
+                        {review.shelf && SHELF_LABELS[review.shelf]
+                          ? `· ${SHELF_LABELS[review.shelf]}`
+                          : ""}
+                      </span>
+                      <span className="text-[11px] text-gray-400">
+                        · {new Date(review.date_added).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Review text */}
+                {review.review && (
+                  <div className="ml-12 mt-1">
+                    <p className="text-[13px] text-[#382110] leading-relaxed whitespace-pre-wrap">
+                      {review.review}
+                    </p>
+                  </div>
+                )}
+
+                {/* Rating only (no text) */}
+                {!review.review && review.rating > 0 && (
+                  <div className="ml-12 mt-1">
+                    <p className="text-[12px] text-gray-400 italic">
+                      Rated this book {review.rating} out of 5 stars
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

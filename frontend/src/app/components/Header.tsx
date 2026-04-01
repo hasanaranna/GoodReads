@@ -13,6 +13,7 @@ import {
 import { Link, useNavigate } from "react-router";
 import { useBooks } from "../context/BooksContext";
 import { Book } from "../data/initialBooks";
+import { ShelfBookData } from "../services/api";
 
 const SEARCH_DEBOUNCE_MS = 350;
 const SEARCH_LIMIT = 8;
@@ -23,13 +24,17 @@ const API_BASE_URL =
 interface BackendSearchBook {
   id: string;
   title: string;
+  subtitle?: string;
   authors: string[];
   pageCount: number | null;
   averageRating: number | null;
   coverImage: string | null;
+  description?: string;
+  publishedDate?: string;
+  categories?: string[];
 }
 
-function toLibraryBook(book: BackendSearchBook): Book {
+function toLibraryBook(book: BackendSearchBook): { localBook: Book; shelfData: ShelfBookData } {
   const dateAdded = new Date().toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
@@ -39,13 +44,17 @@ function toLibraryBook(book: BackendSearchBook): Book {
   const normalizedRating =
     typeof book.averageRating === "number" ? Math.round(book.averageRating) : 0;
 
-  return {
-    id: `gb-${book.id}`,
+  const author = Array.isArray(book.authors) && book.authors.length > 0
+    ? book.authors[0]
+    : "Unknown Author";
+
+  const localBook: Book = {
+    id: `temp-gb-${book.id}`,
+    bookId: "",
+    googleBooksId: book.id,
     title: book.title || "Untitled",
-    author:
-      Array.isArray(book.authors) && book.authors.length > 0
-        ? book.authors[0]
-        : "Unknown Author",
+    subtitle: book.subtitle || undefined,
+    author,
     coverUrl: book.coverImage || "https://placehold.co/120x180?text=No+Cover",
     rating: Math.max(0, Math.min(5, normalizedRating)),
     shelf: "want-to-read",
@@ -54,6 +63,21 @@ function toLibraryBook(book: BackendSearchBook): Book {
     totalPages: book.pageCount || undefined,
     pagesCompleted: 0,
   };
+
+  const shelfData: ShelfBookData = {
+    google_books_id: book.id,
+    title: book.title || "Untitled",
+    subtitle: book.subtitle,
+    author,
+    cover_url: book.coverImage || undefined,
+    page_count: book.pageCount || undefined,
+    description: book.description || undefined,
+    published_date: book.publishedDate || undefined,
+    categories: book.categories || undefined,
+    average_rating: book.averageRating || undefined,
+  };
+
+  return { localBook, shelfData };
 }
 
 export function Header() {
@@ -68,8 +92,8 @@ export function Header() {
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const { books, addBook, userName, setUserName } = useBooks();
 
-  const existingBookIds = useMemo(
-    () => new Set(books.map((book) => book.id)),
+  const existingGoogleIds = useMemo(
+    () => new Set(books.map((book) => book.googleBooksId)),
     [books],
   );
 
@@ -155,18 +179,16 @@ export function Header() {
   }, []);
 
   const visibleResults = results.filter(
-    (book) => !existingBookIds.has(`gb-${book.id}`),
+    (book) => !existingGoogleIds.has(book.id),
   );
 
-  function handleAddBook(book: BackendSearchBook) {
-    const mappedBook = toLibraryBook(book);
-    if (existingBookIds.has(mappedBook.id)) {
+  async function handleAddBook(book: BackendSearchBook) {
+    const { localBook, shelfData } = toLibraryBook(book);
+    if (existingGoogleIds.has(book.id)) {
       return;
     }
 
-    addBook({
-      ...mappedBook,
-    });
+    await addBook(localBook, shelfData);
 
     setSearchQuery("");
     setDebouncedSearchQuery("");
@@ -201,7 +223,7 @@ export function Header() {
       <div className="max-w-[1100px] mx-auto px-4 h-[58px] flex items-center gap-5">
         {/* Logo */}
         <Link
-          to="/"
+          to="/mybooks"
           className="text-[#382110] no-underline shrink-0"
           style={{
             fontFamily: "Lora, serif",
@@ -214,7 +236,7 @@ export function Header() {
 
         {/* Nav links */}
         <nav className="hidden md:flex items-center gap-4 text-[13px] text-[#382110]">
-          <Link to="/" className="hover:underline no-underline text-[#382110]">
+          <Link to="/mybooks" className="hover:underline no-underline text-[#382110]">
             Home
           </Link>
           <Link
@@ -294,7 +316,7 @@ export function Header() {
                 {!isSearching && !searchError && visibleResults.length > 0 && (
                   <div className="max-h-[580px] overflow-y-auto divide-y divide-[#f0ebe0]">
                     {visibleResults.map((book) => {
-                      const mappedBook = toLibraryBook(book);
+                      const { localBook } = toLibraryBook(book);
 
                       return (
                         <div
@@ -304,8 +326,8 @@ export function Header() {
                           {/* Cover */}
                           <div className="relative flex-shrink-0">
                             <img
-                              src={mappedBook.coverUrl}
-                              alt={mappedBook.title}
+                              src={localBook.coverUrl}
+                              alt={localBook.title}
                               className="w-11 h-16 object-cover rounded shadow-sm ring-1 ring-black/10"
                             />
                           </div>
@@ -314,10 +336,10 @@ export function Header() {
                           <div className="min-w-0 flex-1 flex flex-col justify-between h-16">
                             <div>
                               <p className="text-[14.5px] font-medium leading-snug text-[#1c1208] line-clamp-2">
-                                {mappedBook.title}
+                                {localBook.title}
                               </p>
                               <p className="text-[12.5px] mt-0.5 text-[#8b7355] truncate">
-                                {mappedBook.author}
+                                {localBook.author}
                               </p>
                             </div>
 

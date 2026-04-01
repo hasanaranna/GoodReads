@@ -37,7 +37,6 @@ export function MyBooks() {
     const matchesSearch =
       !query ||
       b.title.toLowerCase().includes(query) ||
-      (b.titleLocal && b.titleLocal.toLowerCase().includes(query)) ||
       b.author.toLowerCase().includes(query);
 
     return matchesShelf && matchesSearch;
@@ -45,7 +44,7 @@ export function MyBooks() {
 
   const sorted = [...filtered].sort((a, b) => {
     if (sortBy === "title")
-      return (a.titleLocal || a.title).localeCompare(b.titleLocal || b.title);
+      return a.title.localeCompare(b.title);
     if (sortBy === "author") return a.author.localeCompare(b.author);
     if (sortBy === "rating") return b.rating - a.rating;
     return 0;
