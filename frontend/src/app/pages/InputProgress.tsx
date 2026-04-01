@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useBooks } from '../context/BooksContext';
-import { StarRating } from '../components/StarRating';
 
 const EXPLORE_BOOKS = [
   {
@@ -58,6 +57,7 @@ export function InputProgress() {
   const [totalPages, setTotalPages] = useState(book?.totalPages || 0);
   const [showMoreDetails, setShowMoreDetails] = useState(false);
   const [readDates, setReadDates] = useState<{ id: string; started: string; finished: string }[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!book) {
     return (
@@ -72,9 +72,16 @@ export function InputProgress() {
 
   const pct = totalPages > 0 ? Math.round((pagesCompleted / totalPages) * 100) : 0;
 
-  function handleUpdate() {
-    updateBook(book!.id, { pagesCompleted, totalPages });
-    navigate('/mybooks');
+  async function handleUpdate() {
+    setIsSaving(true);
+    try {
+      await updateBook(book!.id, { pagesCompleted });
+      navigate('/mybooks');
+    } catch (err) {
+      console.error('Failed to update progress:', err);
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function handlePctEdit(val: string) {
@@ -93,8 +100,8 @@ export function InputProgress() {
           to={`/book/${book.id}/review`}
           className="text-[#00635d] no-underline hover:underline"
         >
-          {book.titleLocal ? `${book.titleLocal} (${book.title})` : book.title}
-          {book.id === '5' && ': Building a Business When There Are No Easy Answers – Straight Talk on the Challenges of Entrepreneurship'}
+          {book.title}
+          {book.subtitle && `: ${book.subtitle}`}
         </Link>
         <span className="text-[#00635d]"> &gt; Review &gt; Edit</span>
       </div>
@@ -109,10 +116,9 @@ export function InputProgress() {
         <div>
           <div className="text-[14px] text-[#382110] leading-snug mb-1">
             {book.title}
-            {book.id === '5' && (
+            {book.subtitle && (
               <span>
-                : Building a Business When There Are No Easy Answers - Straight Talk on the
-                Challenges of Entrepreneurship <em>(Hardcover)</em>
+                : {book.subtitle}
               </span>
             )}
           </div>
@@ -121,9 +127,6 @@ export function InputProgress() {
             <a href="#" className="text-[#382110] hover:underline no-underline">
               {book.author}
             </a>
-            {book.id === '5' && (
-              <span className="text-gray-400"> (Goodreads Author)</span>
-            )}
           </div>
         </div>
       </div>
@@ -362,9 +365,10 @@ export function InputProgress() {
       <div className="py-4 border-b border-[#ddd] flex items-center gap-4">
         <button
           onClick={handleUpdate}
-          className="bg-[#f4f0e6] border border-[#999] px-5 py-1.5 text-[13px] text-[#382110] hover:bg-[#e8e2d0] rounded"
+          disabled={isSaving}
+          className="bg-[#f4f0e6] border border-[#999] px-5 py-1.5 text-[13px] text-[#382110] hover:bg-[#e8e2d0] rounded disabled:opacity-50"
         >
-          Update
+          {isSaving ? "Saving..." : "Update"}
         </button>
       </div>
 
@@ -375,15 +379,15 @@ export function InputProgress() {
         </a>
         <span className="text-gray-300">|</span>
         <button
-          onClick={() => {
+          onClick={async () => {
             if (confirm('Remove this book from your shelves?')) {
-              removeBook(book.id);
+              await removeBook(book.id);
               navigate('/mybooks');
             }
           }}
           className="text-[#00635d] hover:underline"
         >
-          Removal from my books
+          Remove from my books
         </button>
       </div>
 

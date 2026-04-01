@@ -5,8 +5,12 @@ import {
   errorMiddleware,
   notFoundMiddleware,
 } from "./middleware/error.middleware.js";
+import { authenticate } from "./middleware/auth.middleware.js";
 import booksRouter from "./modules/books/books.routes.js";
 import authRoutes from "./modules/auth/auth.routes.js";
+import shelvesRouter from "./modules/shelves/shelves.routes.js";
+import { getBookReviewsController } from "./modules/reviews/reviews.controller.js";
+import reviewsRouter from "./modules/reviews/reviews.routes.js";
 
 const app = express();
 
@@ -21,6 +25,13 @@ app.get("/health", (req, res) => {
 
 app.use("/api/books", booksRouter);
 app.use("/api/auth", authRoutes);
+app.use("/api/shelves", authenticate, shelvesRouter);
+
+// Public reviews route (no auth) — must be registered BEFORE the protected reviews routes
+app.get("/api/reviews/book/:googleBooksId", getBookReviewsController);
+
+// Protected reviews routes (auth required)
+app.use("/api/reviews", authenticate, reviewsRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
