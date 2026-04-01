@@ -5,65 +5,31 @@ import { Book } from "../data/initialBooks";
 import { StarRating } from "./StarRating";
 import { useBooks } from "../context/BooksContext";
 
-interface BookRowProps {
-  book: Book;
-  viewMode?: "list" | "grid";
-  selected?: boolean;
-  onSelect?: (id: string) => void;
-  batchMode?: boolean;
-}
+interface BookRowProps { book: Book; viewMode?: "list" | "grid"; selected?: boolean; onSelect?: (id: string) => void; batchMode?: boolean; }
 
-const SHELF_LABELS: Record<string, string> = {
-  read: "Read",
-  "currently-reading": "Currently Reading",
-  "want-to-read": "Want to Read",
-};
+const SL: Record<string, string> = { read: "Read", "currently-reading": "Currently Reading", "want-to-read": "Want to Read" };
 
-export function BookRow({
-  book,
-  viewMode = "list",
-  selected = false,
-  onSelect,
-  batchMode = false,
-}: BookRowProps) {
+export function BookRow({ book, viewMode = "list", selected = false, onSelect, batchMode = false }: BookRowProps) {
   const { updateBook } = useBooks();
-  const [showShelfMenu, setShowShelfMenu] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const pct = book.shelf === "currently-reading" && book.totalPages ? Math.round(((book.pagesCompleted || 0) / book.totalPages) * 100) : null;
 
-  const progress =
-    book.shelf === "currently-reading" && book.totalPages && book.totalPages > 0
-      ? Math.round(((book.pagesCompleted || 0) / book.totalPages) * 100)
-      : null;
+  async function changeShelf(s: string) { await updateBook(book.id, { shelf: s as Book["shelf"] }); setShowMenu(false); }
 
-  async function handleShelfChange(newShelf: string) {
-    await updateBook(book.id, { shelf: newShelf as Book["shelf"] });
-    setShowShelfMenu(false);
-  }
+  const getShelfBg = (shelf: string) => `var(--theme-shelf-${shelf === 'currently-reading' ? 'reading' : shelf === 'want-to-read' ? 'want' : 'read'}-bg)`;
+  const getShelfText = (shelf: string) => `var(--theme-shelf-${shelf === 'currently-reading' ? 'reading' : shelf === 'want-to-read' ? 'want' : 'read'}-text)`;
 
   if (viewMode === "grid") {
     return (
-      <div className="flex flex-col items-center gap-2 p-2">
-        {batchMode && (
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={() => onSelect?.(book.id)}
-            className="mb-1"
-          />
-        )}
-        <Link to={`/book/${book.id}/review`}>
-          <img
-            src={book.coverUrl}
-            alt={book.title}
-            className="w-[80px] h-[110px] object-cover shadow-md hover:shadow-lg transition-shadow"
-          />
-        </Link>
-        <div className="text-center max-w-[90px]">
-          <div className="text-[12px] text-[#382110] truncate">
-            {book.title}
-          </div>
-          <div className="text-[11px] text-gray-500 truncate">
-            {book.author}
-          </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, background: 'var(--theme-bg-card)', border: '1px solid var(--theme-border)', transition: 'background-color 0.3s, border-color 0.3s, box-shadow 0.2s, transform 0.2s', boxShadow: 'var(--theme-shadow-sm)' }}
+        onMouseEnter={(e) => { e.currentTarget.style.boxShadow = 'var(--theme-shadow)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'var(--theme-shadow-sm)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+      >
+        {batchMode && <input type="checkbox" checked={selected} onChange={() => onSelect?.(book.id)} />}
+        <Link to={`/book/${book.id}/review`}><img src={book.coverUrl} alt="" style={{ width: 85, height: 120, objectFit: 'cover', borderRadius: 8 }} /></Link>
+        <div style={{ textAlign: 'center', maxWidth: 100 }}>
+          <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--theme-text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{book.title}</div>
+          <div style={{ fontSize: 11, color: 'var(--theme-text-muted)' }}>{book.author}</div>
           <StarRating rating={book.rating} showCount size="sm" />
         </div>
       </div>
@@ -71,107 +37,44 @@ export function BookRow({
   }
 
   return (
-    <div
-      className={`flex items-start gap-3 py-4 border-b border-[#e8e0d0] ${
-        selected ? "bg-[#fffbf0]" : "bg-[#ffffff] hover:bg-[#fafaf8]"
-      } transition-colors`}
-    >
-      {batchMode && (
-        <div className="pt-1 shrink-0">
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={() => onSelect?.(book.id)}
-            className="w-4 h-4 accent-[#382110]"
-          />
-        </div>
-      )}
-
-      {/* Cover */}
-      <Link to={`/book/${book.id}/review`} className="shrink-0">
-        <img
-          src={book.coverUrl}
-          alt={book.title}
-          className="w-[60px] h-[85px] object-cover shadow hover:shadow-md transition-shadow"
-        />
-      </Link>
-
-      {/* Title + Author */}
-      <div className="w-[200px] shrink-0" style={{ margin: "5px 16px" }}>
-        <Link to={`/book/${book.id}/review`} className="no-underline">
-          <div className="text-[14px] text-[#382110] hover:underline leading-snug">
-            {book.title}
-          </div>
-        </Link>
-        <div className="text-[12px] text-gray-600 mt-0.5">{book.author}</div>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '16px 0', borderBottom: '1px solid var(--theme-border)', transition: 'background-color 0.3s, border-color 0.3s', background: selected ? 'var(--theme-accent-active)' : 'transparent' }}>
+      {batchMode && <div style={{ paddingTop: 4 }}><input type="checkbox" checked={selected} onChange={() => onSelect?.(book.id)} style={{ accentColor: 'var(--theme-accent)' }} /></div>}
+      <Link to={`/book/${book.id}/review`} style={{ flexShrink: 0 }}><img src={book.coverUrl} alt="" style={{ width: 52, height: 76, objectFit: 'cover', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }} /></Link>
+      <div style={{ width: 200, flexShrink: 0, paddingTop: 4 }}>
+        <Link to={`/book/${book.id}/review`} style={{ textDecoration: 'none', fontSize: 14, fontWeight: 500, color: 'var(--theme-text-main)', transition: 'color 0.15s' }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--theme-accent)')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--theme-text-main)')}
+        >{book.title}</Link>
+        <div style={{ fontSize: 12, color: 'var(--theme-text-light)', marginTop: 3 }}>{book.author}</div>
       </div>
-
-      {/* Rating + Shelf */}
-      <div className="w-[130px] shrink-0 flex flex-col items-center gap-1" style={{ padding: "15px 0" }}>
+      <div style={{ width: 140, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, paddingTop: 4 }}>
         <StarRating rating={book.rating} showCount size="sm" />
-        <div className="relative">
-          <button
-            onClick={() => setShowShelfMenu(!showShelfMenu)}
-            className="flex items-center gap-1 text-[11px] text-[#382110] border border-[#ccc] rounded px-2 py-0.5 bg-[#f4f0e6] hover:bg-[#e8e2d0]"
-          >
-            {SHELF_LABELS[book.shelf]} <ChevronDown size={10} />
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setShowMenu(!showMenu)} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', background: getShelfBg(book.shelf), color: getShelfText(book.shelf), transition: 'opacity 0.2s' }}>
+            {SL[book.shelf]} <ChevronDown size={10} />
           </button>
-          {showShelfMenu && (
-            <div className="absolute top-full left-0 z-20 bg-[#ffffff] border border-[#ddd] rounded shadow-md min-w-[150px]">
-              {Object.entries(SHELF_LABELS).map(([key, label]) => (
-                <button
-                  key={key}
-                  className={`w-full text-left px-3 py-1.5 text-[12px] hover:bg-[#f4f0e6] ${
-                    book.shelf === key
-                      ? "font-semibold text-[#382110]"
-                      : "text-[#382110]"
-                  }`}
-                  onClick={() => handleShelfChange(key)}
-                >
-                  {label}
-                </button>
+          {showMenu && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 20, background: 'var(--theme-bg-card)', border: '1px solid var(--theme-border)', borderRadius: 10, boxShadow: 'var(--theme-shadow)', minWidth: 160, marginTop: 4, overflow: 'hidden' }}>
+              {Object.entries(SL).map(([k, l]) => (
+                <button key={k} onClick={() => changeShelf(k)} style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: 12, border: 'none', cursor: 'pointer', color: getShelfText(k), background: book.shelf === k ? 'var(--theme-bg-hover)' : 'transparent', fontWeight: book.shelf === k ? 600 : 400, transition: 'background-color 0.1s' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--theme-bg-hover)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = book.shelf === k ? 'var(--theme-bg-hover)' : 'transparent')}
+                >{l}</button>
               ))}
             </div>
           )}
         </div>
-        {progress !== null && (
-          <Link
-            to={`/book/${book.id}/progress`}
-            className="text-[11px] text-[#00635d] no-underline hover:underline"
-          >
-            {progress}% [Edit]
-          </Link>
-        )}
+        {pct !== null && <Link to={`/book/${book.id}/progress`} style={{ fontSize: 11, color: 'var(--theme-accent)', textDecoration: 'none', fontWeight: 500 }}>{pct}% done</Link>}
       </div>
-
-      {/* Dates */}
-      <div className="hidden md:flex flex-col gap-1 w-[110px] shrink-0 text-[12px] text-gray-600">
-        <span>{book.dateAdded}</span>
-        {book.dateRead && <span>{book.dateRead}</span>}
+      <div className="hidden md:flex" style={{ flexDirection: 'column', gap: 4, width: 100, flexShrink: 0, fontSize: 12, color: 'var(--theme-text-lighter)', paddingTop: 4 }}>
+        <span>{book.dateAdded}</span>{book.dateRead && <span>{book.dateRead}</span>}
       </div>
-
-      {/* Review */}
-      <div className="flex-1 min-w-0 text-[12px]" style={{ padding: "15px 0" }}>
+      <div style={{ flex: 1, minWidth: 0, fontSize: 13, paddingTop: 4 }}>
         {book.review ? (
-          <div>
-            <span className="text-gray-700">{book.review}</span>{" "}
-            <Link
-              to={`/book/${book.id}/review`}
-              className="text-[#00635d] no-underline hover:underline"
-            >
-              [Edit]
-            </Link>
-          </div>
+          <div><span style={{ color: 'var(--theme-text-muted)' }}>{book.review}</span> <Link to={`/book/${book.id}/review`} style={{ color: 'var(--theme-accent)', textDecoration: 'none', fontWeight: 500, fontSize: 12 }}>Edit</Link></div>
         ) : (
-          <Link
-            to={`/book/${book.id}/review`}
-            className="flex flex-col items-center gap-1 w-[90px] text-[#382110] no-underline hover:text-[#00635d] group"
-          >
-            <MessageSquare
-              size={22}
-              className="text-[#555] group-hover:text-[#00635d]"
-            />
-            <span className="text-[11px]">Post a review</span>
+          <Link to={`/book/${book.id}/review`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, width: 70 }}>
+            <MessageSquare size={18} color="var(--theme-border)" /><span style={{ fontSize: 11, color: 'var(--theme-text-lighter)' }}>Review</span>
           </Link>
         )}
       </div>

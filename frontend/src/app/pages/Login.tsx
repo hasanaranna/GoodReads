@@ -3,17 +3,13 @@ import { useNavigate } from "react-router";
 import { jwtDecode } from "jwt-decode";
 import { API_BASE_URL } from "../../config";
 import { useBooks } from "../context/BooksContext";
+import { BookOpen, Eye, EyeOff } from "lucide-react";
 
-interface JwtPayload {
-  id: string;
-  name?: string;
-  username?: string;
-}
+interface JwtPayload { id: string; name?: string; username?: string; }
 
 export function Login() {
   const navigate = useNavigate();
   const { setUserName } = useBooks();
-
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -22,6 +18,7 @@ export function Login() {
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,251 +27,157 @@ export function Login() {
     if (isLogin) {
       try {
         const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username,
-            password,
-          }),
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
         });
-
         const data = await response.json();
-
-        if (!response.ok) {
-          setErrorMessage(data.error?.message || "Login failed. Please try again.");
-          return;
-        }
-
+        if (!response.ok) { setErrorMessage(data.error?.message || "Login failed."); return; }
         if (data.access_token) {
           localStorage.setItem("access_token", data.access_token);
-          
           try {
             const decoded = jwtDecode<JwtPayload>(data.access_token);
-            if (data.user?.name) {
-              setUserName(data.user.name);
-            } else if (decoded.name) {
-              setUserName(decoded.name);
-            } else if (data.user?.username) {
-              setUserName(data.user.username);
-            } else if (decoded.username) {
-              setUserName(decoded.username);
-            } else {
-              setUserName("User");
-            }
-          } catch (err) {
-            console.error("Failed to decode token", err);
-            setUserName("User");
-          }
+            setUserName(data.user?.name || decoded.name || data.user?.username || decoded.username || "User");
+          } catch { setUserName("User"); }
         }
         navigate("/mybooks");
-      } catch (error) {
-        setErrorMessage("Network error. Could not connect to the server.");
-      }
+      } catch { setErrorMessage("Network error. Could not connect."); }
       return;
     }
 
-    if (password !== confirmPassword) {
-      setErrorMessage("Passwords do not match.");
-      return;
-    }
+    if (password !== confirmPassword) { setErrorMessage("Passwords do not match."); return; }
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          username,
-          email,
-          password,
-          date_of_birth: dob,
-        }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, username, email, password, date_of_birth: dob }),
       });
-
       const data = await response.json();
-
       if (!response.ok) {
-        let msg = data.error?.message || "Registration failed. Please try again.";
-        if (data.error?.details && data.error.details.length > 0) {
-          msg += " " + data.error.details.map((d: any) => d.message).join(" ");
-        }
-        setErrorMessage(msg);
-        return;
+        let msg = data.error?.message || "Registration failed.";
+        if (data.error?.details?.length > 0) msg += " " + data.error.details.map((d: any) => d.message).join(" ");
+        setErrorMessage(msg); return;
       }
-
-      // Successful registration
       if (data.access_token) {
         localStorage.setItem("access_token", data.access_token);
-        
         try {
           const decoded = jwtDecode<JwtPayload>(data.access_token);
-          if (data.user?.name) {
-            setUserName(data.user.name);
-          } else if (decoded.name) {
-            setUserName(decoded.name);
-          } else if (data.user?.username) {
-            setUserName(data.user.username);
-          } else if (decoded.username) {
-            setUserName(decoded.username);
-          } else {
-            setUserName(name || "User");
-          }
-        } catch (err) {
-          console.error("Failed to decode token", err);
-          setUserName(name || "User");
-        }
+          setUserName(data.user?.name || decoded.name || name || "User");
+        } catch { setUserName(name || "User"); }
       }
       navigate("/mybooks");
-    } catch (error) {
-      setErrorMessage("Network error. Could not connect to the server.");
-    }
+    } catch { setErrorMessage("Network error. Could not connect."); }
   };
 
   return (
-    <div className="flex justify-center py-20 px-4 min-h-[80vh] bg-[#ffffff]">
-      <div style={{ width: "400px" }}>
-        <div className="text-center mb-10">
-          <h1 
-            className="text-[32px] text-[#382110] font-bold mb-2 cursor-default" 
-            style={{ fontFamily: "Lora, serif" }}
-          >
-            goodreads
-          </h1>
-          <p className="text-[15px] text-gray-600" style={{ fontFamily: "Georgia, serif" }}>
-            {isLogin ? "Sign in to your account" : "Create an account"}
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--theme-bg-main)', padding: '24px', transition: 'background-color 0.3s' }}>
+      <div style={{ width: 440, maxWidth: '100%' }}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: 'var(--theme-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,0,0,0.15)', transition: 'background-color 0.3s' }}>
+              <BookOpen size={22} color="white" />
+            </div>
+            <span style={{ fontSize: 26, fontWeight: 700, color: 'var(--theme-text-main)', letterSpacing: '-0.5px' }}>GoodReads</span>
+          </div>
+          <p style={{ fontSize: 15, color: 'var(--theme-text-muted)', margin: 0 }}>
+            {isLogin ? "Welcome back! Sign in to continue." : "Join our community of readers."}
           </p>
         </div>
-        
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          <div 
-            className="bg-[#f4f0e6] border border-[#d8d0bb] rounded-md flex flex-col gap-6"
-            style={{ padding: "24px", boxSizing: "border-box", gap: "20px" }}
-          >
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ background: 'var(--theme-bg-card)', borderRadius: 16, padding: 28, boxShadow: 'var(--theme-shadow)', border: '1px solid var(--theme-border)', transition: 'background-color 0.3s, border-color 0.3s, box-shadow 0.3s' }}>
             {errorMessage && (
-              <div className="text-red-600 text-center text-[14px]">
+              <div style={{ background: 'rgba(220, 38, 38, 0.1)', color: '#ef4444', fontSize: 13, padding: '10px 14px', borderRadius: 10, marginBottom: 16, border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                 {errorMessage}
               </div>
             )}
-            {!isLogin && (
-              <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-[14px] font-semibold text-[#382110]">
-                  Your Name
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full border border-[#ccc] rounded-sm px-3 py-2 text-[14px] text-[#382110] outline-none shadow-inner focus:border-[#00635d] focus:ring-1 focus:ring-[#00635d] bg-[#ffffff]"
-                  style={{ boxSizing: "border-box" }}
-                  required
-                />
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {!isLogin && (
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--theme-text-muted)', marginBottom: 6 }}>Full Name</label>
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+                    placeholder="Jane Smith"
+                    style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--theme-border)', borderRadius: 10, fontSize: 14, color: 'var(--theme-text-main)', outline: 'none', boxSizing: 'border-box', background: 'var(--theme-bg-input)', transition: 'border-color 0.2s, background-color 0.3s, color 0.3s' }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--theme-accent)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--theme-border)'}
+                    required />
+                </div>
+              )}
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--theme-text-muted)', marginBottom: 6 }}>Username</label>
+                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
+                  placeholder="janesmith"
+                  style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--theme-border)', borderRadius: 10, fontSize: 14, color: 'var(--theme-text-main)', outline: 'none', boxSizing: 'border-box', background: 'var(--theme-bg-input)', transition: 'border-color 0.2s, background-color 0.3s, color 0.3s' }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--theme-accent)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--theme-border)'}
+                  required />
               </div>
-            )}
-            <div className="flex flex-col gap-1.5 w-full">
-              <label className="text-[14px] font-semibold text-[#382110]">
-                Username
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full border border-[#ccc] rounded-sm px-3 py-2 text-[14px] text-[#382110] outline-none shadow-inner focus:border-[#00635d] focus:ring-1 focus:ring-[#00635d] bg-[#ffffff]"
-                style={{ boxSizing: "border-box" }}
-                required
-              />
+              {!isLogin && (
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--theme-text-muted)', marginBottom: 6 }}>Email</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                    placeholder="jane@example.com"
+                    style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--theme-border)', borderRadius: 10, fontSize: 14, color: 'var(--theme-text-main)', outline: 'none', boxSizing: 'border-box', background: 'var(--theme-bg-input)', transition: 'border-color 0.2s, background-color 0.3s, color 0.3s' }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--theme-accent)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--theme-border)'}
+                    required />
+                </div>
+              )}
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--theme-text-muted)', marginBottom: 6 }}>Password</label>
+                <div style={{ position: 'relative' }}>
+                  <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    style={{ width: '100%', padding: '10px 14px', paddingRight: 42, border: '1.5px solid var(--theme-border)', borderRadius: 10, fontSize: 14, color: 'var(--theme-text-main)', outline: 'none', boxSizing: 'border-box', background: 'var(--theme-bg-input)', transition: 'border-color 0.2s, background-color 0.3s, color 0.3s' }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--theme-accent)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--theme-border)'}
+                    required />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)}
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--theme-text-light)', padding: 0 }}>
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              {!isLogin && (
+                <>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--theme-text-muted)', marginBottom: 6 }}>Confirm Password</label>
+                    <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--theme-border)', borderRadius: 10, fontSize: 14, color: 'var(--theme-text-main)', outline: 'none', boxSizing: 'border-box', background: 'var(--theme-bg-input)', transition: 'border-color 0.2s, background-color 0.3s, color 0.3s' }}
+                      onFocus={(e) => e.target.style.borderColor = 'var(--theme-accent)'}
+                      onBlur={(e) => e.target.style.borderColor = 'var(--theme-border)'}
+                      required />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--theme-text-muted)', marginBottom: 6 }}>Date of Birth</label>
+                    <input type="date" value={dob} onChange={(e) => setDob(e.target.value)}
+                      style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--theme-border)', borderRadius: 10, fontSize: 14, color: 'var(--theme-text-main)', outline: 'none', boxSizing: 'border-box', background: 'var(--theme-bg-input)', transition: 'border-color 0.2s, background-color 0.3s, color 0.3s' }}
+                      onFocus={(e) => e.target.style.borderColor = 'var(--theme-accent)'}
+                      onBlur={(e) => e.target.style.borderColor = 'var(--theme-border)'}
+                      required />
+                  </div>
+                </>
+              )}
             </div>
-
-            {!isLogin && (
-              <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-[14px] font-semibold text-[#382110]">
-                  Email address
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border border-[#ccc] rounded-sm px-3 py-2 text-[14px] text-[#382110] outline-none shadow-inner focus:border-[#00635d] focus:ring-1 focus:ring-[#00635d] bg-[#ffffff]"
-                  style={{ boxSizing: "border-box" }}
-                  required
-                />
-              </div>
-            )}
-            
-            <div className="flex flex-col gap-1.5 w-full">
-              <label className="text-[14px] font-semibold text-[#382110]">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-[#ccc] rounded-sm px-3 py-2 text-[14px] text-[#382110] outline-none shadow-inner focus:border-[#00635d] focus:ring-1 focus:ring-[#00635d] bg-[#ffffff]"
-                style={{ boxSizing: "border-box" }}
-                required
-              />
-            </div>
-
-            {!isLogin && (
-              <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-[14px] font-semibold text-[#382110]">
-                  Confirm password
-                </label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full border border-[#ccc] rounded-sm px-3 py-2 text-[14px] text-[#382110] outline-none shadow-inner focus:border-[#00635d] focus:ring-1 focus:ring-[#00635d] bg-[#ffffff]"
-                  style={{ boxSizing: "border-box" }}
-                  required
-                />
-              </div>
-            )}
-
-            {!isLogin && (
-              <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-[14px] font-semibold text-[#382110]">
-                  Date of birth
-                </label>
-                <input
-                  type="date"
-                  value={dob}
-                  onChange={(e) => setDob(e.target.value)}
-                  className="w-full border border-[#ccc] rounded-sm px-3 py-2 text-[14px] text-[#382110] outline-none shadow-inner focus:border-[#00635d] focus:ring-1 focus:ring-[#00635d] bg-[#ffffff]"
-                  style={{ boxSizing: "border-box" }}
-                  required
-                />
-              </div>
-            )}
           </div>
-          
-          <div className="pt-2" style={{ marginBottom: "20px" }}>
-            <button
-              type="submit"
-              className="w-full bg-[#f4f0e6] text-[#382110] border border-[#d8d0bb] rounded-sm text-[14px] font-semibold hover:bg-[#e8e0d0] transition-colors shadow-sm"
-              style={{ padding: "12px 16px" }}
-            >
-              {isLogin ? "Sign In" : "Sign Up"}
-            </button>
-          </div>
-        </form>
-        
-        <div className="mt-10 pt-5 text-center text-[14px] text-gray-600">
-          {isLogin ? "Not a member yet?" : "Already have an account?"}{" "}
-          <button 
-            type="button"
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setErrorMessage("");
-            }}
-            className="bg-transparent border-0 appearance-none shadow-none text-[#00635d] hover:underline no-underline font-semibold cursor-pointer"
+
+          <button type="submit"
+            style={{ width: '100%', marginTop: 20, padding: '13px 0', background: 'var(--theme-accent)', color: '#fff', fontWeight: 600, fontSize: 15, border: 'none', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--theme-accent-hover)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--theme-accent)'; e.currentTarget.style.transform = 'translateY(0)'; }}
           >
-            {isLogin ? "Sign up" : "Sign in"}
+            {isLogin ? "Sign In" : "Create Account"}
           </button>
-        </div>
+        </form>
+
+        <p style={{ textAlign: 'center', marginTop: 28, fontSize: 14, color: 'var(--theme-text-light)' }}>
+          {isLogin ? "New to GoodReads?" : "Already have an account?"}{" "}
+          <button onClick={() => { setIsLogin(!isLogin); setErrorMessage(""); }}
+            style={{ background: 'none', border: 'none', color: 'var(--theme-accent)', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>
+            {isLogin ? "Create account" : "Sign in"}
+          </button>
+        </p>
       </div>
     </div>
   );

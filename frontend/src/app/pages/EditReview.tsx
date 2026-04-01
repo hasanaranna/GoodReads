@@ -1,493 +1,152 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router";
-import { ChevronDown, ChevronUp, X, User } from "lucide-react";
+import { ChevronDown, User, Trash2 } from "lucide-react";
 import { useBooks } from "../context/BooksContext";
 import { StarRating } from "../components/StarRating";
 import { Book } from "../data/initialBooks";
 import { fetchBookReviewsAPI, PublicReview } from "../services/api";
 
-const SHELF_LABELS: Record<string, string> = {
-  read: "Read",
-  "currently-reading": "Currently Reading",
-  "want-to-read": "Want to Read",
-};
-
-interface ReadDate {
-  id: string;
-  started?: string;
-  finished?: string;
-}
-
-function ReviewStars({ rating }: { rating: number }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <span
-          key={star}
-          className={`text-[14px] ${star <= rating ? "text-[#d4a017]" : "text-gray-300"}`}
-        >
-          ★
-        </span>
-      ))}
-    </div>
-  );
-}
+const SL: Record<string, string> = { read: "Read", "currently-reading": "Currently Reading", "want-to-read": "Want to Read" };
 
 export function EditReview() {
   const { bookId } = useParams();
   const { getBook, updateBook, updateReview, removeBook } = useBooks();
   const navigate = useNavigate();
   const book = getBook(bookId!);
-
   const [rating, setRating] = useState(book?.rating || 0);
-  const [shelf, setShelf] = useState<Book["shelf"]>(
-    book?.shelf || "want-to-read",
-  );
+  const [shelf, setShelf] = useState<Book["shelf"]>(book?.shelf || "want-to-read");
   const [reviewText, setReviewText] = useState(book?.review || "");
-  const [hideSpoilers, setHideSpoilers] = useState(false);
-  const [postToBlog, setPostToBlog] = useState(false);
-  const [addToFeed, setAddToFeed] = useState(true);
-  const [showShelfMenu, setShowShelfMenu] = useState(false);
-  const [readDates, setReadDates] = useState<ReadDate[]>([]);
-  const [showMoreDetails, setShowMoreDetails] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [reviews, setReviews] = useState<PublicReview[]>([]);
+  const [loadingR, setLoadingR] = useState(false);
 
-  // Community reviews state
-  const [communityReviews, setCommunityReviews] = useState<PublicReview[]>([]);
-  const [loadingReviews, setLoadingReviews] = useState(false);
-
-  // Fetch community reviews when the book is loaded
   useEffect(() => {
     if (!book?.googleBooksId) return;
-
-    async function loadReviews() {
-      setLoadingReviews(true);
-      try {
-        const response = await fetchBookReviewsAPI(book!.googleBooksId);
-        setCommunityReviews(response.data);
-      } catch (err) {
-        console.error("Failed to load community reviews:", err);
-      } finally {
-        setLoadingReviews(false);
-      }
-    }
-
-    loadReviews();
+    setLoadingR(true);
+    fetchBookReviewsAPI(book.googleBooksId).then(r => setReviews(r.data)).catch(() => {}).finally(() => setLoadingR(false));
   }, [book?.googleBooksId]);
 
-  if (!book) {
-    return (
-      <div className="max-w-[860px] mx-auto px-4 py-10 text-center">
-        <p className="text-gray-500">Book not found.</p>
-        <Link to="/mybooks" className="text-[#00635d] hover:underline">
-          Back to My Books
-        </Link>
-      </div>
-    );
-  }
-
-  async function handlePost() {
-    setIsSaving(true);
-    try {
-      if (shelf !== book!.shelf) {
-        await updateBook(book!.id, { shelf });
-      }
-      await updateReview(book!.id, { rating, review: reviewText });
-      navigate("/mybooks");
-    } catch (err) {
-      console.error("Failed to save review:", err);
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  function addReadDate() {
-    setReadDates((prev) => [
-      ...prev,
-      { id: Date.now().toString(), started: "", finished: "" },
-    ]);
-  }
-
-  // Filter out current user's review from community reviews
-  const otherReviews = communityReviews.filter(
-    (r) => r.user_book_id !== book.id
+  if (!book) return (
+    <div style={{ maxWidth: 860, margin: '0 auto', padding: '60px 24px', textAlign: 'center' }}>
+      <p style={{ color: 'var(--theme-text-light)', marginBottom: 12 }}>Book not found.</p>
+      <Link to="/mybooks" style={{ color: 'var(--theme-accent)', textDecoration: 'none' }}>Back to My Books</Link>
+    </div>
   );
 
+  async function handlePost() {
+    setSaving(true);
+    try {
+      if (shelf !== book!.shelf) await updateBook(book!.id, { shelf });
+      await updateReview(book!.id, { rating, review: reviewText });
+      navigate("/mybooks");
+    } catch (e) { console.error(e); } finally { setSaving(false); }
+  }
+
+  const getShelfBg = (s: string) => `var(--theme-shelf-${s === 'currently-reading' ? 'reading' : s === 'want-to-read' ? 'want' : 'read'}-bg)`;
+  const getShelfText = (s: string) => `var(--theme-shelf-${s === 'currently-reading' ? 'reading' : s === 'want-to-read' ? 'want' : 'read'}-text)`;
+
+  const others = reviews.filter(r => r.user_book_id !== book.id);
+
   return (
-    <div className="max-w-[860px] mx-auto px-4 py-5">
-      {/* Breadcrumb */}
-      <div className="text-[12px] mb-4 leading-relaxed">
-        <Link
-          to={`/book/${book.id}/progress`}
-          className="text-[#00635d] no-underline hover:underline"
-        >
-          {book.title}
-        </Link>
-        <span className="text-[#00635d]"> &gt; Review &gt; Edit</span>
+    <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
+      <div style={{ fontSize: 12, color: 'var(--theme-text-lighter)', marginBottom: 24, transition: 'color 0.3s' }}>
+        <Link to="/mybooks" style={{ color: 'var(--theme-text-light)', textDecoration: 'none' }}>My Books</Link> / <span style={{ color: 'var(--theme-text-muted)' }}>{book.title}</span>
       </div>
 
-      {/* Book info */}
-      <div className="flex gap-4 mb-6">
-        <img
-          src={book.coverUrl}
-          alt={book.title}
-          className="w-[75px] h-[105px] object-cover shadow"
-        />
+      <div style={{ display: 'flex', gap: 20, marginBottom: 32, padding: 20, borderRadius: 16, background: 'var(--theme-bg-card)', border: '1px solid var(--theme-border)', boxShadow: 'var(--theme-shadow-sm)', transition: 'background-color 0.3s, border-color 0.3s, box-shadow 0.3s' }}>
+        <img src={book.coverUrl} alt="" style={{ width: 90, height: 130, objectFit: 'cover', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', flexShrink: 0 }} />
         <div>
-          <div className="text-[14px] text-[#382110] leading-snug mb-1">
-            {book.title}
-            {book.subtitle && (
-              <span>: {book.subtitle}</span>
-            )}
+          <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--theme-text-main)', lineHeight: 1.3, marginBottom: 4 }}>
+            {book.title}{book.subtitle && <span style={{ color: 'var(--theme-text-light)', fontWeight: 400 }}>: {book.subtitle}</span>}
           </div>
-          <div className="text-[13px] text-gray-600">
-            by{" "}
-            <a href="#" className="text-[#382110] hover:underline no-underline">
-              {book.author}
-            </a>
-          </div>
+          <div style={{ fontSize: 14, color: 'var(--theme-text-muted)' }}>by {book.author}</div>
         </div>
       </div>
 
-      <a
-        href="#"
-        className="text-[12px] text-[#00635d] hover:underline no-underline mb-6 block"
-      >
-        Change Edition
-      </a>
-
-      <div className="border-t border-[#ddd]" />
-
-      {/* Rating */}
-      <div className="py-4 flex items-center gap-3 border-b border-[#ddd]">
-        <span className="text-[14px] text-[#382110]">My Rating:</span>
-        <StarRating
-          rating={rating}
-          interactive
-          size="lg"
-          onChange={setRating}
-        />
-        {rating > 0 && (
-          <button
-            onClick={() => setRating(0)}
-            className="text-[12px] text-[#00635d] hover:underline"
-          >
-            Clear
-          </button>
-        )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 0', borderBottom: '1px solid var(--theme-border)', transition: 'border-color 0.3s' }}>
+        <span style={{ fontSize: 14, color: 'var(--theme-text-muted)', fontWeight: 500 }}>My Rating</span>
+        <StarRating rating={rating} interactive size="lg" onChange={setRating} />
+        {rating > 0 && <button onClick={() => setRating(0)} style={{ fontSize: 12, color: 'var(--theme-text-lighter)', background: 'none', border: 'none', cursor: 'pointer' }}>Clear</button>}
       </div>
 
-      {/* Shelves */}
-      <div className="py-4 flex items-center gap-3 border-b border-[#ddd]">
-        <span className="text-[14px] text-[#382110]">Bookshelves/tags:</span>
-        <div className="relative">
-          <button
-            onClick={() => setShowShelfMenu(!showShelfMenu)}
-            className="flex items-center gap-1 text-[13px] border border-[#aaa] px-2 py-0.5 bg-[#ffffff] hover:bg-[#f4f0e6] text-[#382110]"
-          >
-            Choose shelves… <ChevronDown size={12} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 0', borderBottom: '1px solid var(--theme-border)', transition: 'border-color 0.3s' }}>
+        <span style={{ fontSize: 14, color: 'var(--theme-text-muted)', fontWeight: 500 }}>Shelf</span>
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setShowMenu(!showMenu)} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', background: getShelfBg(shelf), color: getShelfText(shelf) }}>
+            {SL[shelf]} <ChevronDown size={12} />
           </button>
-          {showShelfMenu && (
-            <div className="absolute top-full left-0 z-20 bg-[#ffffff] border border-[#ddd] rounded shadow-md min-w-[180px]">
-              {Object.entries(SHELF_LABELS).map(([key, label]) => (
-                <button
-                  key={key}
-                  className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f4f0e6] ${
-                    shelf === key
-                      ? "font-semibold text-[#382110]"
-                      : "text-[#382110]"
-                  }`}
-                  onClick={() => {
-                    setShelf(key as Book["shelf"]);
-                    setShowShelfMenu(false);
-                  }}
-                >
-                  {shelf === key && "✓ "}
-                  {label}
-                </button>
+          {showMenu && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 20, background: 'var(--theme-bg-card)', border: '1px solid var(--theme-border)', borderRadius: 12, boxShadow: 'var(--theme-shadow)', minWidth: 180, marginTop: 6, overflow: 'hidden' }}>
+              {Object.entries(SL).map(([k, l]) => (
+                <button key={k} onClick={() => { setShelf(k as Book["shelf"]); setShowMenu(false); }}
+                  style={{ width: '100%', textAlign: 'left', padding: '10px 16px', fontSize: 13, border: 'none', cursor: 'pointer', color: getShelfText(k), background: shelf === k ? 'var(--theme-bg-hover)' : 'transparent', fontWeight: shelf === k ? 600 : 400 }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--theme-bg-hover)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = shelf === k ? 'var(--theme-bg-hover)' : 'transparent')}
+                >{shelf === k && "✓ "}{l}</button>
               ))}
             </div>
           )}
         </div>
-        <span className="text-[#00635d] text-[13px]">
-          {SHELF_LABELS[shelf]}
-        </span>
       </div>
 
-      {/* Review */}
-      <div className="py-4 border-b border-[#ddd]">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[15px] text-[#382110]">
-            What did you think?
-          </span>
-          <div className="flex items-center gap-2 text-[12px] text-[#00635d]">
-            <button className="hover:underline">Formatting tips</button>
-            <span>|</span>
-            <button className="hover:underline">Insert book/author</button>
-            <span>|</span>
-            <button className="hover:underline">Enlarge text field</button>
+      <div style={{ padding: '20px 0', borderBottom: '1px solid var(--theme-border)', transition: 'border-color 0.3s' }}>
+        <div style={{ fontSize: 15, color: 'var(--theme-text-muted)', marginBottom: 12, fontWeight: 500 }}>What did you think?</div>
+        <textarea value={reviewText} onChange={e => setReviewText(e.target.value)} placeholder="Share your thoughts..."
+          style={{ width: '100%', borderRadius: 12, padding: 16, fontSize: 14, color: 'var(--theme-text-main)', border: '1.5px solid var(--theme-border)', outline: 'none', resize: 'vertical', minHeight: 140, background: 'var(--theme-bg-input)', boxSizing: 'border-box', transition: 'border-color 0.2s, background-color 0.3s, color 0.3s' }}
+          onFocus={e => e.target.style.borderColor = 'var(--theme-accent)'} onBlur={e => e.target.style.borderColor = 'var(--theme-border)'} />
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 0', borderBottom: '1px solid var(--theme-border)', transition: 'border-color 0.3s' }}>
+        <button onClick={handlePost} disabled={saving}
+          style={{ padding: '10px 28px', background: 'var(--theme-accent)', color: '#fff', fontWeight: 600, fontSize: 14, border: 'none', borderRadius: 10, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', opacity: saving ? 0.6 : 1, transition: 'background-color 0.2s' }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--theme-accent-hover)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--theme-accent)')}
+        >
+          {saving ? "Saving..." : "Save Review"}
+        </button>
+        <button onClick={async () => { if (confirm("Remove this book?")) { await removeBook(book.id); navigate("/mybooks"); } }}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', opacity: 0.8 }}>
+          <Trash2 size={14} /> Remove
+        </button>
+      </div>
+
+      <div style={{ padding: '32px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--theme-text-main)', margin: 0, transition: 'color 0.3s' }}>Community Reviews</h2>
+          <span style={{ fontSize: 13, color: 'var(--theme-text-lighter)', transition: 'color 0.3s' }}>{reviews.length} review{reviews.length !== 1 ? "s" : ""}</span>
+        </div>
+
+        {loadingR && <div style={{ fontSize: 13, color: 'var(--theme-text-lighter)', padding: '24px 0' }}>Loading...</div>}
+
+        {!loadingR && others.length === 0 && (
+          <div style={{ borderRadius: 14, padding: 32, textAlign: 'center', background: 'var(--theme-bg-card)', border: '1px solid var(--theme-border)', transition: 'background-color 0.3s, border-color 0.3s' }}>
+            <p style={{ fontSize: 14, color: 'var(--theme-text-lighter)', margin: '0 0 4px' }}>No community reviews yet.</p>
+            <p style={{ fontSize: 12, color: 'var(--theme-text-lighter)', margin: 0, opacity: 0.7 }}>Be the first to share your thoughts!</p>
           </div>
-        </div>
-        <textarea
-          value={reviewText}
-          onChange={(e) => setReviewText(e.target.value)}
-          placeholder="Enter your review (optional)"
-          className="w-full border border-[#ccc] rounded p-3 text-[13px] text-[#382110] focus:outline-none focus:border-[#00635d] resize-y min-h-[180px]"
-        />
-        <div className="mt-2 flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="spoilers"
-            checked={hideSpoilers}
-            onChange={(e) => setHideSpoilers(e.target.checked)}
-            className="accent-[#382110]"
-          />
-          <label
-            htmlFor="spoilers"
-            className="text-[12px] text-[#382110] cursor-pointer"
-          >
-            Hide entire review because of spoilers
-          </label>
-        </div>
-      </div>
+        )}
 
-      {/* Dates read */}
-      <div className="py-4 border-b border-[#ddd]">
-        <div className="text-[16px] text-[#382110] mb-2">Dates read</div>
-        <div className="text-[13px] text-[#382110] mb-1">Rereading?</div>
-        <div className="text-[12px] text-gray-500 mb-3">
-          Now you can track all the times you have read a book. Make sure to
-          fill in the year finished to have it added to your Reading Challenge!
-        </div>
-
-        {readDates.map((rd) => (
-          <div key={rd.id} className="flex items-center gap-3 mb-2 text-[13px]">
-            <div className="flex items-center gap-2">
-              <label className="text-gray-500 text-[12px]">Started:</label>
-              <input
-                type="date"
-                value={rd.started}
-                onChange={(e) =>
-                  setReadDates((prev) =>
-                    prev.map((d) =>
-                      d.id === rd.id ? { ...d, started: e.target.value } : d,
-                    ),
-                  )
-                }
-                className="border border-[#ccc] rounded px-2 py-0.5 text-[12px]"
-              />
+        {!loadingR && others.map(r => (
+          <div key={r.user_book_id} style={{ padding: '20px 0', borderBottom: '1px solid var(--theme-border)', transition: 'border-color 0.3s' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 8 }}>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--theme-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <User size={16} color="white" />
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--theme-text-main)' }}>{r.user_name}</span>
+                  <span style={{ fontSize: 12, color: 'var(--theme-text-lighter)' }}>@{r.username}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                  {r.rating > 0 && <div style={{ display: 'flex', gap: 2 }}>{[1,2,3,4,5].map(s => <span key={s} style={{ fontSize: 12, color: s <= r.rating ? 'var(--theme-accent-star)' : 'var(--theme-border)' }}>★</span>)}</div>}
+                  <span style={{ fontSize: 11, color: 'var(--theme-text-lighter)' }}>· {new Date(r.date_added).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <label className="text-gray-500 text-[12px]">Finished:</label>
-              <input
-                type="date"
-                value={rd.finished}
-                onChange={(e) =>
-                  setReadDates((prev) =>
-                    prev.map((d) =>
-                      d.id === rd.id ? { ...d, finished: e.target.value } : d,
-                    ),
-                  )
-                }
-                className="border border-[#ccc] rounded px-2 py-0.5 text-[12px]"
-              />
-            </div>
-            <button
-              onClick={() =>
-                setReadDates((prev) => prev.filter((d) => d.id !== rd.id))
-              }
-              className="text-gray-400 hover:text-red-400"
-            >
-              <X size={14} />
-            </button>
+            {r.review && <p style={{ marginLeft: 48, fontSize: 14, color: 'var(--theme-text-muted)', lineHeight: 1.7, whiteSpace: 'pre-wrap', margin: '0 0 0 48px' }}>{r.review}</p>}
+            {!r.review && r.rating > 0 && <p style={{ marginLeft: 48, fontSize: 12, color: 'var(--theme-text-lighter)', fontStyle: 'italic', margin: '0 0 0 48px' }}>Rated {r.rating}/5 stars</p>}
           </div>
         ))}
-
-        <button
-          onClick={addReadDate}
-          className="text-[12px] bg-[#f4f0e6] border border-[#ccc] px-3 py-1 text-[#382110] hover:bg-[#e8e2d0] rounded"
-        >
-          Add read data
-        </button>
-
-        <div className="mt-3">
-          <button
-            onClick={() => setShowMoreDetails(!showMoreDetails)}
-            className="text-[12px] text-[#382110] flex items-center gap-1 hover:underline"
-          >
-            More details{" "}
-            {showMoreDetails ? (
-              <ChevronUp size={13} />
-            ) : (
-              <ChevronDown size={13} />
-            )}
-          </button>
-          {showMoreDetails && (
-            <div className="mt-3 grid grid-cols-2 gap-3 text-[13px] text-[#382110]">
-              <div>
-                <label className="block text-gray-500 text-[11px] mb-1">
-                  Owned?
-                </label>
-                <select className="border border-[#ccc] rounded px-2 py-1 text-[12px] w-full">
-                  <option value="">—</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-gray-500 text-[11px] mb-1">
-                  Format
-                </label>
-                <select className="border border-[#ccc] rounded px-2 py-1 text-[12px] w-full">
-                  <option value="">—</option>
-                  <option value="hardcover">Hardcover</option>
-                  <option value="paperback">Paperback</option>
-                  <option value="ebook">E-book</option>
-                  <option value="audiobook">Audiobook</option>
-                </select>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Post button */}
-      <div className="py-4 flex flex-wrap items-center gap-4">
-        <button
-          onClick={handlePost}
-          disabled={isSaving}
-          className="bg-[#f4f0e6] border border-[#999] px-5 py-1.5 text-[13px] text-[#382110] hover:bg-[#e8e2d0] rounded disabled:opacity-50"
-        >
-          {isSaving ? "Saving..." : "Post"}
-        </button>
-        <div className="flex items-center gap-4 ml-auto text-[12px]">
-          <label className="flex items-center gap-1.5 cursor-pointer text-[#382110]">
-            <input
-              type="checkbox"
-              checked={postToBlog}
-              onChange={(e) => setPostToBlog(e.target.checked)}
-              className="accent-[#382110]"
-            />
-            Post to blog
-          </label>
-          <label className="flex items-center gap-1.5 cursor-pointer text-[#382110]">
-            <input
-              type="checkbox"
-              checked={addToFeed}
-              onChange={(e) => setAddToFeed(e.target.checked)}
-              className="accent-[#382110]"
-            />
-            Add to my update feed
-          </label>
-        </div>
-      </div>
-
-      {/* Footer links */}
-      <div className="text-[12px] flex items-center gap-2 pb-4 border-b border-[#ddd]">
-        <a href="#" className="text-[#00635d] hover:underline no-underline">
-          Preview
-        </a>
-        <span className="text-gray-300">|</span>
-        <button
-          onClick={async () => {
-            if (confirm("Remove this book from your shelves?")) {
-              await removeBook(book.id);
-              navigate("/mybooks");
-            }
-          }}
-          className="text-[#00635d] hover:underline"
-        >
-          Remove from my books
-        </button>
-      </div>
-
-      {/* ===== Community Reviews Section ===== */}
-      <div className="py-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[18px] font-medium text-[#382110]">
-            Community Reviews
-          </h2>
-          <span className="text-[13px] text-gray-500">
-            {communityReviews.length} {communityReviews.length === 1 ? "review" : "reviews"}
-          </span>
-        </div>
-
-        {loadingReviews && (
-          <div className="text-[13px] text-gray-500 py-4">
-            Loading reviews...
-          </div>
-        )}
-
-        {!loadingReviews && otherReviews.length === 0 && (
-          <div className="bg-[#f9f7f2] border border-[#e8e0d0] rounded-lg p-6 text-center">
-            <p className="text-[14px] text-gray-500 mb-1">
-              No community reviews yet.
-            </p>
-            <p className="text-[12px] text-gray-400">
-              Be the first to share your thoughts about this book!
-            </p>
-          </div>
-        )}
-
-        {!loadingReviews && otherReviews.length > 0 && (
-          <div className="space-y-0 divide-y divide-[#e8e0d0]">
-            {otherReviews.map((review) => (
-              <div key={review.user_book_id} className="py-4">
-                {/* Reviewer header */}
-                <div className="flex items-start gap-3 mb-2">
-                  <div className="w-9 h-9 rounded-full bg-[#e8e0d0] flex items-center justify-center text-[#382110] shrink-0">
-                    <User size={18} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[14px] font-medium text-[#382110]">
-                        {review.user_name}
-                      </span>
-                      <span className="text-[12px] text-gray-400">
-                        @{review.username}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      {review.rating > 0 && (
-                        <ReviewStars rating={review.rating} />
-                      )}
-                      <span className="text-[11px] text-gray-400">
-                        {review.shelf && SHELF_LABELS[review.shelf]
-                          ? `· ${SHELF_LABELS[review.shelf]}`
-                          : ""}
-                      </span>
-                      <span className="text-[11px] text-gray-400">
-                        · {new Date(review.date_added).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Review text */}
-                {review.review && (
-                  <div className="ml-12 mt-1">
-                    <p className="text-[13px] text-[#382110] leading-relaxed whitespace-pre-wrap">
-                      {review.review}
-                    </p>
-                  </div>
-                )}
-
-                {/* Rating only (no text) */}
-                {!review.review && review.rating > 0 && (
-                  <div className="ml-12 mt-1">
-                    <p className="text-[12px] text-gray-400 italic">
-                      Rated this book {review.rating} out of 5 stars
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

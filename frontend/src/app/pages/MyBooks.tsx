@@ -1,330 +1,106 @@
 import { useEffect, useState } from "react";
-import {
-  Search,
-  List,
-  LayoutGrid,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Search, List, LayoutGrid, ChevronLeft, ChevronRight } from "lucide-react";
 import { useParams, Link } from "react-router";
 import { useBooks } from "../context/BooksContext";
 import { Sidebar } from "../components/Sidebar";
 import { BookRow } from "../components/BookRow";
 
-const SHELF_NAMES: Record<string, string> = {
-  "want-to-read": "Want to Read",
-  "currently-reading": "Currently Reading",
-  read: "Read",
-};
-
-const ITEMS_PER_PAGE = 10;
+const SN: Record<string, string> = { "want-to-read": "Want to Read", "currently-reading": "Currently Reading", read: "Read" };
+const PER_PAGE = 10;
 
 export function MyBooks() {
   const { shelfId } = useParams();
   const { books } = useBooks();
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<
-    "title" | "author" | "rating" | "dateAdded"
-  >("dateAdded");
-  const [batchMode, setBatchMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [currentPage, setCurrentPage] = useState(1);
+  const [view, setView] = useState<"list" | "grid">("list");
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<"title" | "author" | "rating" | "dateAdded">("dateAdded");
+  const [batch, setBatch] = useState(false);
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(1);
 
   const filtered = books.filter((b) => {
-    const matchesShelf = !shelfId || b.shelf === shelfId;
-    const query = searchQuery.trim().toLowerCase();
-    const matchesSearch =
-      !query ||
-      b.title.toLowerCase().includes(query) ||
-      b.author.toLowerCase().includes(query);
-
-    return matchesShelf && matchesSearch;
+    const ms = !shelfId || b.shelf === shelfId;
+    const q = search.trim().toLowerCase();
+    return ms && (!q || b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q));
   });
-
   const sorted = [...filtered].sort((a, b) => {
-    if (sortBy === "title")
-      return a.title.localeCompare(b.title);
-    if (sortBy === "author") return a.author.localeCompare(b.author);
-    if (sortBy === "rating") return b.rating - a.rating;
+    if (sort === "title") return a.title.localeCompare(b.title);
+    if (sort === "author") return a.author.localeCompare(b.author);
+    if (sort === "rating") return b.rating - a.rating;
     return 0;
   });
+  useEffect(() => setPage(1), [search, shelfId]);
+  const tp = Math.ceil(sorted.length / PER_PAGE);
+  const paged = sorted.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const toggle = (id: string) => setSel(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const label = shelfId ? SN[shelfId] : undefined;
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, shelfId]);
-
-  const totalPages = Math.ceil(sorted.length / ITEMS_PER_PAGE);
-  const paginated = sorted.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE,
-  );
-
-  function toggleSelect(id: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
-  function selectAll() {
-    setSelectedIds(new Set(paginated.map((b) => b.id)));
-  }
-
-  const shelfLabel = shelfId ? SHELF_NAMES[shelfId] : undefined;
+  const Pager = () => tp > 1 ? (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', fontSize: 12 }}>
+      <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--theme-text-light)', background: 'none', border: 'none', cursor: 'pointer', opacity: page === 1 ? 0.3 : 1 }}><ChevronLeft size={13} /> prev</button>
+      {Array.from({ length: tp }, (_, i) => i + 1).map(p => (
+        <button key={p} onClick={() => setPage(p)} style={{ padding: '3px 8px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, background: page === p ? 'var(--theme-accent-active)' : 'transparent', color: page === p ? 'var(--theme-accent)' : 'var(--theme-text-lighter)', fontWeight: page === p ? 600 : 400 }}>{p}</button>
+      ))}
+      <button onClick={() => setPage(p => Math.min(tp, p + 1))} disabled={page === tp} style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--theme-text-light)', background: 'none', border: 'none', cursor: 'pointer', opacity: page === tp ? 0.3 : 1 }}>next <ChevronRight size={13} /></button>
+    </div>
+  ) : null;
 
   return (
-    <div className="max-w-[1100px] mx-auto px-4 py-5">
-      {/* Breadcrumb */}
-      <div className="text-[13px] text-[#382110] mb-2" style={{ marginTop: "24px" }}>
-        <Link
-          to="/mybooks"
-          className="no-underline text-[#382110] hover:underline"
-        >
-          My Books
-        </Link>
-        {shelfLabel && (
-          <span className="text-gray-500 ml-1">&gt;&gt; {shelfLabel}</span>
-        )}
+    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px' }}>
+      <div style={{ fontSize: 13, color: 'var(--theme-text-light)', marginBottom: 16, marginTop: 24, transition: 'color 0.3s' }}>
+        <Link to="/mybooks" style={{ textDecoration: 'none', color: 'var(--theme-text-light)' }}>My Books</Link>
+        {label && <span style={{ color: 'var(--theme-text-lighter)' }}> / {label}</span>}
       </div>
 
-      {/* Top bar */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        {/* Search and add books */}
-        <div className="flex items-center border border-[#ccc] rounded-full px-3 py-1 bg-[#f4f0e6] gap-2 text-[12px]">
-          <input
-            type="text"
-            placeholder="Search in My Books"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-            }}
-            className="outline-none bg-transparent text-[#382110] w-[180px]"
-          />
-          <Search size={13} className="text-[#888]" />
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--theme-bg-input)', borderRadius: 10, padding: '8px 14px', border: '1.5px solid var(--theme-border)', transition: 'background-color 0.3s, border-color 0.3s' }}>
+          <Search size={15} color="var(--theme-text-light)" />
+          <input type="text" placeholder="Filter books..." value={search} onChange={e => setSearch(e.target.value)} style={{ background: 'none', border: 'none', outline: 'none', fontSize: 13, color: 'var(--theme-text-main)', width: 180 }} />
         </div>
-
-        {/* Actions */}
-        <div className="ml-auto flex items-center gap-[1.5em] text-[1em]">
-          <button
-            onClick={() => {
-              setBatchMode(!batchMode);
-              setSelectedIds(new Set());
-            }}
-            className={`outline-none border-none bg-transparent shadow-none font-semibold hover:underline ${batchMode ? "text-[#00635d]" : "text-[#382110]"}`}
-          >
-            Batch Edit
-          </button>
-          {batchMode && (
-            <>
-              <button
-                onClick={selectAll}
-                className="outline-none border-none bg-transparent shadow-none text-[#00635d] hover:underline text-[0.9em]"
-              >
-                Select All
-              </button>
-              <button
-                onClick={() => setSelectedIds(new Set())}
-                className="outline-none border-none bg-transparent shadow-none text-[#00635d] hover:underline text-[0.9em]"
-              >
-                Clear
-              </button>
-            </>
-          )}
-          <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
-            Settings
-          </button>
-          <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
-            Stats
-          </button>
-          <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
-            Print
-          </button>
-          <span className="text-[#ccc]">|</span>
-          <button
-            onClick={() => setViewMode("list")}
-            className={`outline-none border-none bg-transparent shadow-none ${
-              viewMode === "list"
-                ? "text-[#382110]"
-                : "text-[#aaa] hover:text-[#382110]"
-            }`}
-          >
-            <List size="1.2em" />
-          </button>
-          <button
-            onClick={() => setViewMode("grid")}
-            className={`outline-none border-none bg-transparent shadow-none ${
-              viewMode === "grid"
-                ? "text-[#382110]"
-                : "text-[#aaa] hover:text-[#382110]"
-            }`}
-          >
-            <LayoutGrid size="1.2em" />
-          </button>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12, fontSize: 13 }}>
+          <button onClick={() => { setBatch(!batch); setSel(new Set()); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: batch ? 'var(--theme-accent)' : 'var(--theme-text-light)', fontWeight: 500 }}>Batch Edit</button>
+          <span style={{ color: 'var(--theme-border)' }}>|</span>
+          <button onClick={() => setView("list")} style={{ background: 'none', border: 'none', cursor: 'pointer', color: view === 'list' ? 'var(--theme-text-main)' : 'var(--theme-text-lighter)' }}><List size={16} /></button>
+          <button onClick={() => setView("grid")} style={{ background: 'none', border: 'none', cursor: 'pointer', color: view === 'grid' ? 'var(--theme-text-main)' : 'var(--theme-text-lighter)' }}><LayoutGrid size={16} /></button>
         </div>
       </div>
 
-      <div className="flex" style={{ gap: "64px" }}>
-        {/* Sidebar */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 48 }}>
         <Sidebar />
-
-        {/* Main content */}
-        <div className="flex-1 min-w-0">
-          {/* Sort bar */}
-          <div className="flex items-center justify-between mb-3" style={{ marginTop: "24px" }}>
-            <div className="text-[0.9em] text-gray-500">
-              {filtered.length} book{filtered.length !== 1 ? "s" : ""}
-              {shelfLabel ? ` on ${shelfLabel}` : ""}
-            </div>
-            <div className="flex items-center gap-[1em] text-[0.9em]">
-              <span className="text-gray-500">Sort by:</span>
-              {(["title", "author", "rating", "dateAdded"] as const).map(
-                (s) => (
-                  <button
-                    key={s}
-                    onClick={() => setSortBy(s)}
-                    className={`outline-none border-none bg-transparent shadow-none capitalize hover:underline ${
-                      sortBy === s
-                        ? "text-[#382110] underline"
-                        : "text-[#00635d]"
-                    }`}
-                  >
-                    {s === "dateAdded" ? "Date Added" : s}
-                  </button>
-                ),
-              )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, marginTop: 24 }}>
+            <div style={{ fontSize: 13, color: 'var(--theme-text-lighter)', transition: 'color 0.3s' }}>{filtered.length} book{filtered.length !== 1 ? "s" : ""}{label ? ` on ${label}` : ""}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12 }}>
+              <span style={{ color: 'var(--theme-text-lighter)' }}>Sort:</span>
+              {(["title", "author", "rating", "dateAdded"] as const).map(s => (
+                <button key={s} onClick={() => setSort(s)} style={{ background: 'none', border: 'none', cursor: 'pointer', textTransform: 'capitalize', fontSize: 12, color: sort === s ? 'var(--theme-accent)' : 'var(--theme-text-lighter)', fontWeight: sort === s ? 600 : 400 }}>
+                  {s === "dateAdded" ? "Date" : s}
+                </button>
+              ))}
             </div>
           </div>
-
-          {/* Pagination top */}
-          {totalPages > 1 && (
-            <div className="flex items-center gap-1 text-[12px] text-[#00635d] justify-end mb-3">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="disabled:opacity-40 hover:underline flex items-center"
-              >
-                <ChevronLeft size={13} /> previous
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setCurrentPage(p)}
-                  className={`px-1 hover:underline ${
-                    currentPage === p
-                      ? "text-[#382110] underline"
-                      : "text-[#00635d]"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-              <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages}
-                className="disabled:opacity-40 hover:underline flex items-center"
-              >
-                next <ChevronRight size={13} />
-              </button>
-            </div>
-          )}
-
-          {/* Book list or grid */}
-          {viewMode === "list" ? (
-            <div>
-              {/* Header row */}
-              <div className="flex items-center gap-3 py-2 border-b-2 border-[#382110] text-[12px] text-gray-500">
-                {batchMode && <div className="w-5" />}
-                <div className="w-[60px] shrink-0" />
-                <div className="w-[200px] shrink-0" style={{ margin: "0 16px" }}>Title</div>
-                <div className="w-[130px] shrink-0">Rating / Shelf</div>
-                <div className="hidden md:block w-[110px] shrink-0">
-                  Date Added / Read
-                </div>
-                <div className="flex-1">Review</div>
+          <Pager />
+          {view === "list" ? (
+            <div style={{ marginTop: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '8px 0', borderBottom: '2px solid var(--theme-border)', fontSize: 11, color: 'var(--theme-text-lighter)', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 500, transition: 'border-color 0.3s' }}>
+                {batch && <div style={{ width: 20 }} />}
+                <div style={{ width: 52, flexShrink: 0 }} />
+                <div style={{ width: 200, flexShrink: 0 }}>Title</div>
+                <div style={{ width: 140, flexShrink: 0, textAlign: 'center' }}>Rating</div>
+                <div className="hidden md:block" style={{ width: 100, flexShrink: 0 }}>Date</div>
+                <div style={{ flex: 1 }}>Review</div>
               </div>
-
-              {paginated.length === 0 ? (
-                <div className="py-12 text-center text-gray-400 text-[14px]">
-                  No books found.{" "}
-                  <Link
-                    to="/mybooks"
-                    className="text-[#00635d] hover:underline no-underline"
-                  >
-                    View all books
-                  </Link>
-                </div>
-              ) : (
-                paginated.map((book) => (
-                  <BookRow
-                    key={book.id}
-                    book={book}
-                    viewMode="list"
-                    selected={selectedIds.has(book.id)}
-                    onSelect={toggleSelect}
-                    batchMode={batchMode}
-                  />
-                ))
-              )}
+              {paged.length === 0 ? (
+                <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--theme-text-lighter)', fontSize: 14 }}>No books found. <Link to="/mybooks" style={{ color: 'var(--theme-accent)', textDecoration: 'none' }}>View all</Link></div>
+              ) : paged.map(b => <BookRow key={b.id} book={b} viewMode="list" selected={sel.has(b.id)} onSelect={toggle} batchMode={batch} />)}
             </div>
           ) : (
-            <div className="flex flex-wrap gap-4 pt-2">
-              {paginated.length === 0 ? (
-                <div className="py-12 text-center text-gray-400 text-[14px] w-full">
-                  No books found.
-                </div>
-              ) : (
-                paginated.map((book) => (
-                  <BookRow
-                    key={book.id}
-                    book={book}
-                    viewMode="grid"
-                    selected={selectedIds.has(book.id)}
-                    onSelect={toggleSelect}
-                    batchMode={batchMode}
-                  />
-                ))
-              )}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, paddingTop: 12 }}>
+              {paged.length === 0 ? <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--theme-text-lighter)', fontSize: 14, width: '100%' }}>No books found.</div>
+              : paged.map(b => <BookRow key={b.id} book={b} viewMode="grid" selected={sel.has(b.id)} onSelect={toggle} batchMode={batch} />)}
             </div>
           )}
-
-          {/* Pagination bottom */}
-          {totalPages > 1 && (
-            <div className="flex items-center gap-1 text-[12px] text-[#00635d] justify-end mt-4">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="disabled:opacity-40 hover:underline flex items-center"
-              >
-                <ChevronLeft size={13} /> previous
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setCurrentPage(p)}
-                  className={`px-1 hover:underline ${
-                    currentPage === p
-                      ? "text-[#382110] underline"
-                      : "text-[#00635d]"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-              <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages}
-                className="disabled:opacity-40 hover:underline flex items-center"
-              >
-                next <ChevronRight size={13} />
-              </button>
-            </div>
-          )}
+          <div style={{ marginTop: 16 }}><Pager /></div>
         </div>
       </div>
     </div>

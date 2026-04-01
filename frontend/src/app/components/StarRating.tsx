@@ -9,48 +9,31 @@ interface StarRatingProps {
   showCount?: boolean;
 }
 
-export function StarRating({
-  rating,
-  interactive = false,
-  onChange,
-  size = 'sm',
-  showCount = false,
-}: StarRatingProps) {
+export function StarRating({ rating, interactive = false, onChange, size = 'sm', showCount = false }: StarRatingProps) {
   const [hovered, setHovered] = useState(0);
-
-  const sizes = { sm: 14, md: 18, lg: 22 };
+  const sizes = { sm: 14, md: 18, lg: 24 };
   const px = sizes[size];
-
   const display = interactive && hovered > 0 ? hovered : rating;
 
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <div className="flex items-center gap-0.5">
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            width={px}
-            height={px}
-            className={`transition-colors ${
-              interactive ? 'cursor-pointer' : ''
-            } ${
-              star <= display
-                ? 'fill-[#d4a017] text-[#d4a017]'
-                : 'fill-none text-[#888]'
-            }`}
+          <Star key={star} width={px} height={px}
+            style={{
+              transition: 'all 0.15s',
+              cursor: interactive ? 'pointer' : 'default',
+              fill: star <= display ? 'var(--theme-accent-star)' : 'none',
+              color: star <= display ? 'var(--theme-accent-star)' : 'var(--theme-border)',
+              transform: interactive && hovered === star ? 'scale(1.15)' : 'scale(1)',
+            }}
             onMouseEnter={() => interactive && setHovered(star)}
             onMouseLeave={() => interactive && setHovered(0)}
-            onClick={() => {
-              if (interactive && onChange) {
-                onChange(star === rating ? 0 : star);
-              }
-            }}
+            onClick={() => { if (interactive && onChange) onChange(star === rating ? 0 : star); }}
           />
         ))}
       </div>
-      {showCount && (
-        <span className="text-[11px] text-gray-500">{rating > 0 ? `${rating}/5` : ''}</span>
-      )}
+      {showCount && rating > 0 && <span style={{ fontSize: 11, color: 'var(--theme-text-light)' }}>{rating}/5</span>}
     </div>
   );
 }
