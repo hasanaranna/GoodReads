@@ -133,13 +133,13 @@ export function MyBooks() {
             </>
           )}
           <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
-            Settings
+            *Settings
           </button>
           <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
-            Stats
+            *Stats
           </button>
           <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
-            Print
+            *Print
           </button>
           <span className="text-[#ccc]">|</span>
           <button

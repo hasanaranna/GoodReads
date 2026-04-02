@@ -55,7 +55,7 @@ export function Sidebar() {
           Your reading activity
         </div>
         <ul className="space-y-1">
-          {['Review Drafts', 'Kindle Notes & Highlights', 'Reading Challenge', 'Year in Books', 'Reading stats'].map(
+          {['*Review Drafts', '*Kindle Notes & Highlights', '*Reading Challenge', '*Year in Books', '*Reading stats'].map(
             (item) => (
               <li key={item}>
                 <a href="#" className="text-[#00635d] hover:underline no-underline text-[12px]">
@@ -72,7 +72,7 @@ export function Sidebar() {
           Add books
         </div>
         <ul className="space-y-1">
-          {['Recommendations', 'Explore'].map((item) => (
+          {['*Recommendations', '*Explore'].map((item) => (
             <li key={item}>
               <a href="#" className="text-[#382110] hover:underline no-underline text-[12px]">
                 {item}
@@ -87,7 +87,7 @@ export function Sidebar() {
           Tools
         </div>
         <ul className="space-y-1">
-          {['Find duplicates', 'Widgets', 'Import and exports'].map((item) => (
+          {['*Find duplicates', '*Widgets', '*Import and exports'].map((item) => (
             <li key={item}>
               <a href="#" className="text-[#382110] hover:underline no-underline text-[12px]">
                 {item}
