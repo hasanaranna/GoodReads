@@ -87,7 +87,7 @@ export function Sidebar() {
             <li key={item}>
               <a
                 href="#"
-                className="text-[#00635d] hover:underline no-underline text-[13px]"
+                className="text-[#00635d] hover:underline no-underline text-[15px]"
               >
                 {item}
               </a>
@@ -108,7 +108,7 @@ export function Sidebar() {
             <li key={item}>
               <a
                 href="#"
-                className="text-[#382110] hover:underline no-underline text-[13px]"
+                className="text-[#382110] hover:underline no-underline text-[15px]"
               >
                 {item}
               </a>
@@ -130,7 +130,7 @@ export function Sidebar() {
               <li key={item}>
                 <a
                   href="#"
-                  className="text-[#382110] hover:underline no-underline text-[13px]"
+                  className="text-[#382110] hover:underline no-underline text-[15px]"
                 >
                   {item}
                 </a>

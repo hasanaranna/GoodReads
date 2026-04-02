@@ -69,7 +69,7 @@ export function BookRow({
             className="w-[104px] h-[148px] object-cover shadow-md hover:shadow-lg transition-shadow"
           />
         </Link>
-        <div className="text-center max-w-[120px]">
+        <div className="text-center max-w-[120px] ">
           <div className="text-[14px] text-[#382110] truncate">
             {book.title}
           </div>
@@ -84,7 +84,7 @@ export function BookRow({
 
   return (
     <div
-      className={`flex items-start gap-4 py-5 border-b border-[#e8e0d0] ${
+      className={`flex items-start gap-4 py-5 mb-2 border-b border-[#e8e0d0] ${
         selected ? "bg-[#fffbf0]" : "bg-[#ffffff] hover:bg-[#fafaf8]"
       } transition-colors`}
     >
