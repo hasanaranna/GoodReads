@@ -20,26 +20,9 @@ services:
       - ./backend:/app:z  
     environment:
       - NODE_ENV=development
-      # Standard connection string format: postgres://user:password@host:port/dbname
-      - DATABASE_URL=postgresql://postgres:postgres@goodreads-db:5432/goodreads
+      # Replace this with your Supabase Connection String
+      # IMPORTANT: Use the Transaction Pooler URL (usually port 6543)
+      - DATABASE_URL=postgresql://postgres.[your-project-ref]:[your-password]@aws-0-[region].pooler.supabase.com:6543/postgres
       - PORT=8080
       - JWT_ACCESS_SECRET=my_super_secret_access_key_123
       - JWT_REFRESH_SECRET=my_super_secret_refresh_key_456
-    depends_on:
-      - db
-
-  db:
-    image: postgres:15-alpine
-    container_name: goodreads-db
-    ports:
-      - "5433:5432"
-    environment:
-      - POSTGRES_DB=goodreads
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    volumes:
-      - db_data:/var/lib/postgresql/data:z
-      - ./init-scripts:/docker-entrypoint-initdb.d:z
-
-volumes:
-  db_data:
