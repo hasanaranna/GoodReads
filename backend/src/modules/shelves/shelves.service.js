@@ -1,5 +1,19 @@
 import { pool } from "../../config/db.js";
 
+function addProgressMetadata(row) {
+  const totalPages = Number.isInteger(row.page_count) && row.page_count > 0 ? row.page_count : null;
+  const rawPagesCompleted = Number.isInteger(row.pages_completed) ? row.pages_completed : 0;
+  const pagesCompleted = totalPages ? Math.min(Math.max(rawPagesCompleted, 0), totalPages) : Math.max(rawPagesCompleted, 0);
+
+  return {
+    ...row,
+    pages_completed: pagesCompleted,
+    completion_percentage: totalPages
+      ? Math.round((pagesCompleted / totalPages) * 100)
+      : null,
+  };
+}
+
 /**
  * Find or create a book record from Google Books data.
  * Returns the internal UUID.
@@ -73,7 +87,7 @@ export async function getUserBooks(userId, shelf) {
   query += " ORDER BY ub.date_added DESC";
 
   const result = await pool.query(query, params);
-  return result.rows;
+  return result.rows.map(addProgressMetadata);
 }
 
 /**
@@ -148,6 +162,8 @@ export async function addBookToShelf(userId, bookData, shelf) {
     published_date: bookData.published_date || null,
     categories: bookData.categories || null,
     average_rating: bookData.average_rating || null,
+    completion_percentage:
+      Number.isInteger(bookData.page_count) && bookData.page_count > 0 ? 0 : null,
   };
 }
 
@@ -157,7 +173,15 @@ export async function addBookToShelf(userId, bookData, shelf) {
 export async function updateUserBook(userId, userBookId, updates) {
   // Verify ownership
   const ownership = await pool.query(
-    "SELECT id FROM user_books WHERE id = $1 AND user_id = $2",
+    `SELECT
+      ub.id,
+      ub.shelf,
+      ub.date_read,
+      ub.pages_completed,
+      b.page_count
+    FROM user_books ub
+    JOIN books b ON ub.book_id = b.id
+    WHERE ub.id = $1 AND ub.user_id = $2`,
     [userBookId, userId]
   );
 
@@ -168,23 +192,83 @@ export async function updateUserBook(userId, userBookId, updates) {
     throw error;
   }
 
+  const existing = ownership.rows[0];
+  const hasPageCount = Number.isInteger(existing.page_count) && existing.page_count > 0;
+  const normalizedUpdates = { ...updates };
+
+  if (normalizedUpdates.pages_completed !== undefined) {
+    if (
+      !Number.isInteger(normalizedUpdates.pages_completed) ||
+      normalizedUpdates.pages_completed < 0
+    ) {
+      const error = new Error("pages_completed must be a non-negative integer.");
+      error.statusCode = 400;
+      error.code = "VALIDATION_ERROR";
+      throw error;
+    }
+
+    if (hasPageCount) {
+      normalizedUpdates.pages_completed = Math.min(
+        normalizedUpdates.pages_completed,
+        existing.page_count
+      );
+
+      if (normalizedUpdates.shelf === undefined) {
+        if (normalizedUpdates.pages_completed >= existing.page_count) {
+          normalizedUpdates.shelf = "read";
+        } else if (
+          normalizedUpdates.pages_completed > 0 &&
+          existing.shelf === "want-to-read"
+        ) {
+          normalizedUpdates.shelf = "currently-reading";
+        }
+      }
+
+      if (normalizedUpdates.date_read === undefined) {
+        if (normalizedUpdates.pages_completed >= existing.page_count) {
+          normalizedUpdates.date_read = new Date().toISOString();
+        } else if (existing.date_read) {
+          normalizedUpdates.date_read = null;
+        }
+      }
+    }
+  }
+
+  if (normalizedUpdates.shelf === "read") {
+    if (hasPageCount && normalizedUpdates.pages_completed === undefined) {
+      normalizedUpdates.pages_completed = existing.page_count;
+    }
+    if (normalizedUpdates.date_read === undefined) {
+      normalizedUpdates.date_read = new Date().toISOString();
+    }
+  }
+
+  if (
+    normalizedUpdates.shelf !== undefined &&
+    normalizedUpdates.shelf !== "read" &&
+    normalizedUpdates.date_read === undefined &&
+    existing.date_read
+  ) {
+    normalizedUpdates.date_read = null;
+  }
+
   const setClauses = [];
   const params = [];
   let paramIndex = 1;
 
-  if (updates.shelf !== undefined) {
+  if (normalizedUpdates.shelf !== undefined) {
     setClauses.push(`shelf = $${paramIndex++}`);
-    params.push(updates.shelf);
+    params.push(normalizedUpdates.shelf);
   }
 
-  if (updates.pages_completed !== undefined) {
+  if (normalizedUpdates.pages_completed !== undefined) {
     setClauses.push(`pages_completed = $${paramIndex++}`);
-    params.push(updates.pages_completed);
+    params.push(normalizedUpdates.pages_completed);
   }
 
-  if (updates.date_read !== undefined) {
+  if (normalizedUpdates.date_read !== undefined) {
     setClauses.push(`date_read = $${paramIndex++}`);
-    params.push(updates.date_read);
+    params.push(normalizedUpdates.date_read);
   }
 
   if (setClauses.length === 0) {
@@ -197,14 +281,23 @@ export async function updateUserBook(userId, userBookId, updates) {
   params.push(userBookId, userId);
 
   const result = await pool.query(
-    `UPDATE user_books
+    `UPDATE user_books ub
      SET ${setClauses.join(", ")}
-     WHERE id = $${paramIndex++} AND user_id = $${paramIndex}
-     RETURNING id AS user_book_id, shelf, rating, review, pages_completed, date_added, date_read`,
+     FROM books b
+     WHERE ub.id = $${paramIndex++} AND ub.user_id = $${paramIndex} AND b.id = ub.book_id
+     RETURNING
+      ub.id AS user_book_id,
+      ub.shelf,
+      ub.rating,
+      ub.review,
+      ub.pages_completed,
+      ub.date_added,
+      ub.date_read,
+      b.page_count`,
     params
   );
 
-  return result.rows[0];
+  return addProgressMetadata(result.rows[0]);
 }
 
 /**
@@ -263,5 +356,5 @@ export async function getUserBook(userId, userBookId) {
     throw error;
   }
 
-  return result.rows[0];
+  return addProgressMetadata(result.rows[0]);
 }

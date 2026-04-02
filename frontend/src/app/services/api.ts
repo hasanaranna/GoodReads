@@ -57,6 +57,7 @@ export interface UserBookRow {
   published_date: string | null;
   categories: string[] | null;
   average_rating: number | null;
+  completion_percentage: number | null;
 }
 
 export interface ShelfCounts {
