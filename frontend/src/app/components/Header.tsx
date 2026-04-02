@@ -225,7 +225,7 @@ export function Header() {
       <div className="max-w-[1100px] mx-auto px-4 h-[64px] flex items-center gap-5">
         {/* Logo */}
         <Link
-          to="/mybooks"
+          to={localStorage.getItem("access_token") ? "/mybooks" : "/"}
           className="text-[#382110] no-underline shrink-0"
           style={{
             fontFamily: "Lora, serif",

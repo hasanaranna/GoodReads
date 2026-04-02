@@ -1,13 +1,14 @@
-import { createBrowserRouter } from 'react-router';
-import { Root } from './pages/Root';
-import { Login } from './pages/Login';
-import { MyBooks } from './pages/MyBooks';
-import { EditReview } from './pages/EditReview';
-import { InputProgress } from './pages/InputProgress';
+import { createBrowserRouter } from "react-router";
+import { Root } from "./pages/Root";
+import { Login } from "./pages/Login";
+import { MyBooks } from "./pages/MyBooks";
+import { EditReview } from "./pages/EditReview";
+import { InputProgress } from "./pages/InputProgress";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     Component: Root,
     children: [
       {
@@ -15,20 +16,25 @@ export const router = createBrowserRouter([
         Component: Login,
       },
       {
-        path: 'mybooks',
-        Component: MyBooks,
-      },
-      {
-        path: 'mybooks/shelf/:shelfId',
-        Component: MyBooks,
-      },
-      {
-        path: 'book/:bookId/review',
-        Component: EditReview,
-      },
-      {
-        path: 'book/:bookId/progress',
-        Component: InputProgress,
+        Component: ProtectedRoute,
+        children: [
+          {
+            path: "mybooks",
+            Component: MyBooks,
+          },
+          {
+            path: "mybooks/shelf/:shelfId",
+            Component: MyBooks,
+          },
+          {
+            path: "book/:bookId/review",
+            Component: EditReview,
+          },
+          {
+            path: "book/:bookId/progress",
+            Component: InputProgress,
+          },
+        ],
       },
     ],
   },
