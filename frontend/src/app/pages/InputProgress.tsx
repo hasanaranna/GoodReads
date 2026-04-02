@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useBooks } from '../context/BooksContext';
@@ -70,12 +70,23 @@ export function InputProgress() {
     );
   }
 
-  const pct = totalPages > 0 ? Math.round((pagesCompleted / totalPages) * 100) : 0;
+  useEffect(() => {
+    if (totalPages > 0) {
+      setPagesCompleted((prev) => Math.min(Math.max(prev, 0), totalPages));
+    }
+  }, [totalPages]);
+
+  const normalizedPagesCompleted =
+    totalPages > 0
+      ? Math.min(Math.max(pagesCompleted, 0), totalPages)
+      : Math.max(pagesCompleted, 0);
+
+  const pct = totalPages > 0 ? Math.round((normalizedPagesCompleted / totalPages) * 100) : 0;
 
   async function handleUpdate() {
     setIsSaving(true);
     try {
-      await updateBook(book!.id, { pagesCompleted });
+      await updateBook(book!.id, { pagesCompleted: normalizedPagesCompleted });
       navigate('/mybooks');
     } catch (err) {
       console.error('Failed to update progress:', err);
@@ -85,9 +96,10 @@ export function InputProgress() {
   }
 
   function handlePctEdit(val: string) {
-    const n = parseInt(val);
+    const n = parseInt(val, 10);
     if (!isNaN(n) && totalPages > 0) {
-      const pages = Math.round((n / 100) * totalPages);
+      const boundedPercent = Math.min(Math.max(n, 0), 100);
+      const pages = Math.round((boundedPercent / 100) * totalPages);
       setPagesCompleted(Math.min(pages, totalPages));
     }
   }
@@ -161,7 +173,10 @@ export function InputProgress() {
               <input
                 type="number"
                 value={pagesCompleted}
-                onChange={(e) => setPagesCompleted(Math.max(0, parseInt(e.target.value) || 0))}
+                onChange={(e) => {
+                  const nextValue = Math.max(0, parseInt(e.target.value, 10) || 0);
+                  setPagesCompleted(totalPages > 0 ? Math.min(nextValue, totalPages) : nextValue);
+                }}
                 className="border border-[#00635d] rounded px-2 py-0.5 text-[13px] w-[90px] focus:outline-none"
                 autoFocus
               />

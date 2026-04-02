@@ -14,5 +14,6 @@ export interface Book {
   review?: string;
   pagesCompleted?: number;
   totalPages?: number;
+  completionPercentage?: number;
   description?: string;
 }
