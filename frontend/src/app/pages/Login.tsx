@@ -70,7 +70,7 @@ export function Login() {
             setUserName("User");
           }
         }
-        navigate("/mybooks");
+        navigate("/mybooks", { replace: true });
       } catch (error) {
         setErrorMessage("Network error. Could not connect to the server.");
       }
@@ -131,7 +131,7 @@ export function Login() {
           setUserName(name || "User");
         }
       }
-      navigate("/mybooks");
+      navigate("/mybooks", { replace: true });
     } catch (error) {
       setErrorMessage("Network error. Could not connect to the server.");
     }

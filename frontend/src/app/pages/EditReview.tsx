@@ -90,7 +90,11 @@ export function EditReview() {
     setIsSaving(true);
     try {
       if (shelf !== book!.shelf) {
-        await updateBook(book!.id, { shelf });
+        const shelfUpdates: Partial<Book> = { shelf };
+        if (shelf === "currently-reading") {
+          shelfUpdates.pagesCompleted = 0;
+        }
+        await updateBook(book!.id, shelfUpdates);
       }
       await updateReview(book!.id, { rating, review: reviewText });
       navigate("/mybooks");
@@ -110,7 +114,7 @@ export function EditReview() {
 
   // Filter out current user's review from community reviews
   const otherReviews = communityReviews.filter(
-    (r) => r.user_book_id !== book.id
+    (r) => r.user_book_id !== book.id,
   );
 
   return (
@@ -136,9 +140,7 @@ export function EditReview() {
         <div>
           <div className="text-[14px] text-[#382110] leading-snug mb-1">
             {book.title}
-            {book.subtitle && (
-              <span>: {book.subtitle}</span>
-            )}
+            {book.subtitle && <span>: {book.subtitle}</span>}
           </div>
           <div className="text-[13px] text-gray-600">
             by{" "}
@@ -408,7 +410,8 @@ export function EditReview() {
             Community Reviews
           </h2>
           <span className="text-[13px] text-gray-500">
-            {communityReviews.length} {communityReviews.length === 1 ? "review" : "reviews"}
+            {communityReviews.length}{" "}
+            {communityReviews.length === 1 ? "review" : "reviews"}
           </span>
         </div>
 
@@ -457,11 +460,15 @@ export function EditReview() {
                           : ""}
                       </span>
                       <span className="text-[11px] text-gray-400">
-                        · {new Date(review.date_added).toLocaleDateString("en-US", {
+                        ·{" "}
+                        {new Date(review.date_added).toLocaleDateString(
+                          "en-US",
+                          {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
-                          })}
+                          },
+                        )}
                       </span>
                     </div>
                   </div>
