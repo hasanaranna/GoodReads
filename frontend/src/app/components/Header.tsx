@@ -14,12 +14,10 @@ import { Link, useNavigate } from "react-router";
 import { useBooks } from "../context/BooksContext";
 import { Book } from "../data/initialBooks";
 import { ShelfBookData } from "../services/api";
+import { API_BASE_URL } from "../../config";
 
 const SEARCH_DEBOUNCE_MS = 350;
 const SEARCH_LIMIT = 8;
-const API_BASE_URL =
-  (import.meta as ImportMeta & { env?: { VITE_API_BASE_URL?: string } }).env
-    ?.VITE_API_BASE_URL || "http://localhost:8080";
 
 interface BackendSearchBook {
   id: string;
