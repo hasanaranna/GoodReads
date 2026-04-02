@@ -121,12 +121,15 @@ export function EditReview() {
     <div className="max-w-[860px] mx-auto px-4 py-5">
       {/* Breadcrumb */}
       <div className="text-[12px] mb-4 leading-relaxed">
-        <Link
+        {/* <Link
           to={`/book/${book.id}/progress`}
           className="text-[#00635d] no-underline hover:underline"
         >
           {book.title}
-        </Link>
+        </Link> */}
+        <span className="text-[#00635d]">
+          {book.title}
+        </span>
         <span className="text-[#00635d]"> &gt; Review &gt; Edit</span>
       </div>
 
@@ -194,11 +197,10 @@ export function EditReview() {
               {Object.entries(SHELF_LABELS).map(([key, label]) => (
                 <button
                   key={key}
-                  className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f4f0e6] ${
-                    shelf === key
+                  className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f4f0e6] ${shelf === key
                       ? "font-semibold text-[#382110]"
                       : "text-[#382110]"
-                  }`}
+                    }`}
                   onClick={() => {
                     setShelf(key as Book["shelf"]);
                     setShowShelfMenu(false);
