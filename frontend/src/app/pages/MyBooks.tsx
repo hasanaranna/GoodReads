@@ -43,8 +43,7 @@ export function MyBooks() {
   });
 
   const sorted = [...filtered].sort((a, b) => {
-    if (sortBy === "title")
-      return a.title.localeCompare(b.title);
+    if (sortBy === "title") return a.title.localeCompare(b.title);
     if (sortBy === "author") return a.author.localeCompare(b.author);
     if (sortBy === "rating") return b.rating - a.rating;
     return 0;
@@ -75,9 +74,12 @@ export function MyBooks() {
   const shelfLabel = shelfId ? SHELF_NAMES[shelfId] : undefined;
 
   return (
-    <div className="max-w-[1100px] mx-auto px-4 py-5">
+    <div className="max-w-[1320px] mx-auto px-2 md:px-4 py-7">
       {/* Breadcrumb */}
-      <div className="text-[13px] text-[#382110] mb-2" style={{ marginTop: "24px" }}>
+      <div
+        className="text-[15px] text-[#382110] mb-4"
+        style={{ marginTop: "24px" }}
+      >
         <Link
           to="/mybooks"
           className="no-underline text-[#382110] hover:underline"
@@ -90,9 +92,9 @@ export function MyBooks() {
       </div>
 
       {/* Top bar */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      <div className="flex flex-wrap items-center gap-4 mb-6">
         {/* Search and add books */}
-        <div className="flex items-center border border-[#ccc] rounded-full px-3 py-1 bg-[#f4f0e6] gap-2 text-[12px]">
+        <div className="flex items-center border border-[#ccc] rounded-full px-4 py-2 bg-[#f4f0e6] gap-3 text-[14px]">
           <input
             type="text"
             placeholder="Search in My Books"
@@ -100,13 +102,13 @@ export function MyBooks() {
             onChange={(e) => {
               setSearchQuery(e.target.value);
             }}
-            className="outline-none bg-transparent text-[#382110] w-[180px]"
+            className="outline-none bg-transparent text-[#382110] w-[230px]"
           />
-          <Search size={13} className="text-[#888]" />
+          <Search size={16} className="text-[#888]" />
         </div>
 
         {/* Actions */}
-        <div className="ml-auto flex items-center gap-[1.5em] text-[1em]">
+        <div className="ml-auto flex items-center gap-[1.75em] text-[1.08em]">
           <button
             onClick={() => {
               setBatchMode(!batchMode);
@@ -120,26 +122,26 @@ export function MyBooks() {
             <>
               <button
                 onClick={selectAll}
-                className="outline-none border-none bg-transparent shadow-none text-[#00635d] hover:underline text-[0.9em]"
+                className="outline-none border-none bg-transparent shadow-none text-[#00635d] hover:underline text-[0.95em]"
               >
                 Select All
               </button>
               <button
                 onClick={() => setSelectedIds(new Set())}
-                className="outline-none border-none bg-transparent shadow-none text-[#00635d] hover:underline text-[0.9em]"
+                className="outline-none border-none bg-transparent shadow-none text-[#00635d] hover:underline text-[0.95em]"
               >
                 Clear
               </button>
             </>
           )}
           <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
-            Settings
+            *Settings
           </button>
           <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
-            Stats
+            *Stats
           </button>
           <button className="outline-none border-none bg-transparent shadow-none font-semibold text-[#382110] hover:underline">
-            Print
+            *Print
           </button>
           <span className="text-[#ccc]">|</span>
           <button
@@ -150,7 +152,7 @@ export function MyBooks() {
                 : "text-[#aaa] hover:text-[#382110]"
             }`}
           >
-            <List size="1.2em" />
+            <List size="1.35em" />
           </button>
           <button
             onClick={() => setViewMode("grid")}
@@ -160,24 +162,27 @@ export function MyBooks() {
                 : "text-[#aaa] hover:text-[#382110]"
             }`}
           >
-            <LayoutGrid size="1.2em" />
+            <LayoutGrid size="1.35em" />
           </button>
         </div>
       </div>
 
-      <div className="flex" style={{ gap: "64px" }}>
+      <div className="flex items-start" style={{ gap: "48px" }}>
         {/* Sidebar */}
         <Sidebar />
 
         {/* Main content */}
         <div className="flex-1 min-w-0">
           {/* Sort bar */}
-          <div className="flex items-center justify-between mb-3" style={{ marginTop: "24px" }}>
-            <div className="text-[0.9em] text-gray-500">
+          <div
+            className="flex items-center justify-between mb-4"
+            style={{ marginTop: "24px" }}
+          >
+            <div className="text-[1em] text-gray-500">
               {filtered.length} book{filtered.length !== 1 ? "s" : ""}
               {shelfLabel ? ` on ${shelfLabel}` : ""}
             </div>
-            <div className="flex items-center gap-[1em] text-[0.9em]">
+            <div className="flex items-center gap-[1.1em] text-[1em]">
               <span className="text-gray-500">Sort by:</span>
               {(["title", "author", "rating", "dateAdded"] as const).map(
                 (s) => (
@@ -199,13 +204,13 @@ export function MyBooks() {
 
           {/* Pagination top */}
           {totalPages > 1 && (
-            <div className="flex items-center gap-1 text-[12px] text-[#00635d] justify-end mb-3">
+            <div className="flex items-center gap-2 text-[14px] text-[#00635d] justify-end mb-4">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 className="disabled:opacity-40 hover:underline flex items-center"
               >
-                <ChevronLeft size={13} /> previous
+                <ChevronLeft size={15} /> previous
               </button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                 <button
@@ -227,7 +232,7 @@ export function MyBooks() {
                 disabled={currentPage === totalPages}
                 className="disabled:opacity-40 hover:underline flex items-center"
               >
-                next <ChevronRight size={13} />
+                next <ChevronRight size={15} />
               </button>
             </div>
           )}
@@ -236,19 +241,24 @@ export function MyBooks() {
           {viewMode === "list" ? (
             <div>
               {/* Header row */}
-              <div className="flex items-center gap-3 py-2 border-b-2 border-[#382110] text-[12px] text-gray-500">
+              <div className="flex items-center gap-4 py-3 border-b-2 border-[#382110] text-[14px] text-gray-500">
                 {batchMode && <div className="w-5" />}
-                <div className="w-[60px] shrink-0" />
-                <div className="w-[200px] shrink-0" style={{ margin: "0 16px" }}>Title</div>
-                <div className="w-[130px] shrink-0">Rating / Shelf</div>
-                <div className="hidden md:block w-[110px] shrink-0">
+                <div className="w-[84px] shrink-0" />
+                <div
+                  className="w-[300px] shrink-0"
+                  style={{ margin: "0 18px" }}
+                >
+                  Title
+                </div>
+                <div className="w-[170px] shrink-0">Rating / Shelf</div>
+                <div className="hidden md:block w-[150px] shrink-0">
                   Date Added / Read
                 </div>
                 <div className="flex-1">Review</div>
               </div>
 
               {paginated.length === 0 ? (
-                <div className="py-12 text-center text-gray-400 text-[14px]">
+                <div className="py-14 text-center text-gray-400 text-[16px]">
                   No books found.{" "}
                   <Link
                     to="/mybooks"
@@ -271,9 +281,9 @@ export function MyBooks() {
               )}
             </div>
           ) : (
-            <div className="flex flex-wrap gap-4 pt-2">
+            <div className="flex flex-wrap gap-6 pt-3">
               {paginated.length === 0 ? (
-                <div className="py-12 text-center text-gray-400 text-[14px] w-full">
+                <div className="py-14 text-center text-gray-400 text-[16px] w-full">
                   No books found.
                 </div>
               ) : (
@@ -293,13 +303,13 @@ export function MyBooks() {
 
           {/* Pagination bottom */}
           {totalPages > 1 && (
-            <div className="flex items-center gap-1 text-[12px] text-[#00635d] justify-end mt-4">
+            <div className="flex items-center gap-2 text-[14px] text-[#00635d] justify-end mt-6">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 className="disabled:opacity-40 hover:underline flex items-center"
               >
-                <ChevronLeft size={13} /> previous
+                <ChevronLeft size={15} /> previous
               </button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                 <button
@@ -321,7 +331,7 @@ export function MyBooks() {
                 disabled={currentPage === totalPages}
                 className="disabled:opacity-40 hover:underline flex items-center"
               >
-                next <ChevronRight size={13} />
+                next <ChevronRight size={15} />
               </button>
             </div>
           )}
