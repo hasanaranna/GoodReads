@@ -32,7 +32,10 @@ interface BackendSearchBook {
   categories?: string[];
 }
 
-function toLibraryBook(book: BackendSearchBook): { localBook: Book; shelfData: ShelfBookData } {
+function toLibraryBook(book: BackendSearchBook): {
+  localBook: Book;
+  shelfData: ShelfBookData;
+} {
   const dateAdded = new Date().toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
@@ -42,9 +45,10 @@ function toLibraryBook(book: BackendSearchBook): { localBook: Book; shelfData: S
   const normalizedRating =
     typeof book.averageRating === "number" ? Math.round(book.averageRating) : 0;
 
-  const author = Array.isArray(book.authors) && book.authors.length > 0
-    ? book.authors[0]
-    : "Unknown Author";
+  const author =
+    Array.isArray(book.authors) && book.authors.length > 0
+      ? book.authors[0]
+      : "Unknown Author";
 
   const localBook: Book = {
     id: `temp-gb-${book.id}`,
@@ -218,14 +222,14 @@ export function Header() {
 
   return (
     <header className="bg-[#f4f0e6] border-b border-[#d8d0bb]">
-      <div className="max-w-[1100px] mx-auto px-4 h-[58px] flex items-center gap-5">
+      <div className="max-w-[1100px] mx-auto px-4 h-[64px] flex items-center gap-5">
         {/* Logo */}
         <Link
           to="/mybooks"
           className="text-[#382110] no-underline shrink-0"
           style={{
             fontFamily: "Lora, serif",
-            fontSize: "28px",
+            fontSize: "32px",
             fontWeight: 700,
           }}
         >
@@ -233,8 +237,11 @@ export function Header() {
         </Link>
 
         {/* Nav links */}
-        <nav className="hidden md:flex items-center gap-4 text-[13px] text-[#382110]">
-          <Link to="/mybooks" className="hover:underline no-underline text-[#382110]">
+        <nav className="hidden md:flex items-center gap-5 text-[15px] text-[#382110]">
+          <Link
+            to="/mybooks"
+            className="hover:underline no-underline text-[#382110]"
+          >
             Home
           </Link>
           <Link
@@ -243,23 +250,23 @@ export function Header() {
           >
             My Books
           </Link>
-          <button className="flex items-center gap-0.5 text-[#382110] hover:underline text-[13px]">
-            Browse <ChevronDown size={12} />
+          <button className="flex items-center gap-1 text-[#382110] hover:underline text-[15px]">
+            Browse <ChevronDown size={14} />
           </button>
-          <button className="flex items-center gap-0.5 text-[#382110] hover:underline text-[13px]">
-            Community <ChevronDown size={12} />
+          <button className="flex items-center gap-1 text-[#382110] hover:underline text-[15px]">
+            Community <ChevronDown size={14} />
           </button>
         </nav>
 
         {/* Right side: Search + Icons */}
-        <div className="flex items-center gap-4 ml-auto text-[#382110]">
+        <div className="flex items-center gap-4 ml-auto text-[#382110] text-[15px]">
           {/* Search */}
           <div
-            className="relative w-[380px] lg:w-[460px]"
+            className="relative w-[400px] lg:w-[500px]"
             style={{ marginRight: "8%" }}
           >
             <div
-              className="flex items-center bg-[#ffffff] border border-[#c9bfb0] rounded-full w-full h-[44px] gap-2"
+              className="flex items-center bg-[#ffffff] border border-[#c9bfb0] rounded-full w-full h-[48px] gap-2"
               style={{ paddingLeft: "15px", paddingRight: "15px" }}
             >
               <input
@@ -272,11 +279,11 @@ export function Header() {
                 }}
                 onFocus={() => setShowResults(true)}
                 onBlur={() => setTimeout(() => setShowResults(false), 200)}
-                className="flex-1 appearance-none outline-none border-0 shadow-none text-[13px] text-gray-700 bg-transparent"
+                className="flex-1 appearance-none outline-none border-0 shadow-none text-[15px] text-gray-700 bg-transparent"
               />
               {searchQuery ? (
                 <X
-                  size={14}
+                  size={16}
                   className="text-gray-400 cursor-pointer"
                   onClick={() => {
                     setSearchQuery("");
@@ -286,19 +293,19 @@ export function Header() {
                   }}
                 />
               ) : (
-                <Search size={14} className="text-gray-400" />
+                <Search size={16} className="text-gray-400" />
               )}
             </div>
             {showResults && (searchQuery.trim().length > 1 || isSearching) && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-[#ffffff] border border-[#ddd] rounded-md shadow-lg z-50 overflow-hidden">
                 {isSearching && (
-                  <div className="px-3 py-2 text-[12px] text-gray-500">
+                  <div className="px-3 py-2 text-[13px] text-gray-500">
                     Searching...
                   </div>
                 )}
 
                 {!isSearching && searchError && (
-                  <div className="px-3 py-2 text-[12px] text-[#b42318]">
+                  <div className="px-3 py-2 text-[13px] text-[#b42318]">
                     {searchError}
                   </div>
                 )}
@@ -306,7 +313,7 @@ export function Header() {
                 {!isSearching &&
                   !searchError &&
                   visibleResults.length === 0 && (
-                    <div className="px-3 py-2 text-[12px] text-gray-500">
+                    <div className="px-3 py-2 text-[13px] text-gray-500">
                       No books found.
                     </div>
                   )}
@@ -333,10 +340,10 @@ export function Header() {
                           {/* Info */}
                           <div className="min-w-0 flex-1 flex flex-col justify-between h-16">
                             <div>
-                              <p className="text-[14.5px] font-medium leading-snug text-[#1c1208] line-clamp-2">
+                              <p className="text-[15px] font-medium leading-snug text-[#1c1208] line-clamp-2">
                                 {localBook.title}
                               </p>
-                              <p className="text-[12.5px] mt-0.5 text-[#8b7355] truncate">
+                              <p className="text-[13px] mt-0.5 text-[#8b7355] truncate">
                                 {localBook.author}
                               </p>
                             </div>
@@ -344,9 +351,9 @@ export function Header() {
                             {/* Add button */}
                             <button
                               onMouseDown={() => handleAddBook(book)}
-                              className="self-start mt-1.5 inline-flex items-center gap-1 text-[12px] font-medium text-[#00635d] border border-[#00635d]/50 bg-[#00635d]/5 hover:bg-[#00635d] hover:text-white px-2.5 py-0.5 rounded-full transition-all duration-150 cursor-pointer"
+                              className="self-start mt-1.5 inline-flex items-center gap-1 text-[13px] font-medium text-[#00635d] border border-[#00635d]/50 bg-[#00635d]/5 hover:bg-[#00635d] hover:text-white px-2.5 py-0.5 rounded-full transition-all duration-150 cursor-pointer"
                             >
-                              <span className="text-[13px] leading-none">
+                              <span className="text-[14px] leading-none">
                                 +
                               </span>
                               Add book
@@ -363,17 +370,17 @@ export function Header() {
 
           {/* Icons */}
           <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
-            <Bell size={18} />
+            <Bell size={20} />
           </button>
           <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
-            <MessageSquare size={18} />
+            <MessageSquare size={20} />
           </button>
           <div className="relative" ref={profileMenuRef}>
             <button
               className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]"
               onClick={() => userName && setShowProfileMenu(!showProfileMenu)}
             >
-              <Users size={18} />
+              <Users size={20} />
             </button>
 
             {showProfileMenu && userName && (
@@ -402,7 +409,7 @@ export function Header() {
             )}
           </div>
           <button className="bg-transparent appearance-none outline-none border-0 shadow-none hover:text-[#00635d]">
-            <Menu size={18} />
+            <Menu size={20} />
           </button>
         </div>
       </div>

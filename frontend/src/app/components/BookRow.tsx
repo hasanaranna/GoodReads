@@ -37,7 +37,7 @@ export function BookRow({
     if (book.totalPages && book.totalPages > 0) {
       return Math.min(
         100,
-        Math.round(((book.pagesCompleted || 0) / book.totalPages) * 100)
+        Math.round(((book.pagesCompleted || 0) / book.totalPages) * 100),
       );
     }
 
@@ -53,7 +53,7 @@ export function BookRow({
 
   if (viewMode === "grid") {
     return (
-      <div className="flex flex-col items-center gap-2 p-2">
+      <div className="flex flex-col items-center gap-3 p-3">
         {batchMode && (
           <input
             type="checkbox"
@@ -66,14 +66,14 @@ export function BookRow({
           <img
             src={book.coverUrl}
             alt={book.title}
-            className="w-[80px] h-[110px] object-cover shadow-md hover:shadow-lg transition-shadow"
+            className="w-[104px] h-[148px] object-cover shadow-md hover:shadow-lg transition-shadow"
           />
         </Link>
-        <div className="text-center max-w-[90px]">
-          <div className="text-[12px] text-[#382110] truncate">
+        <div className="text-center max-w-[120px]">
+          <div className="text-[14px] text-[#382110] truncate">
             {book.title}
           </div>
-          <div className="text-[11px] text-gray-500 truncate">
+          <div className="text-[12px] text-gray-500 truncate">
             {book.author}
           </div>
           <StarRating rating={book.rating} showCount size="sm" />
@@ -84,7 +84,7 @@ export function BookRow({
 
   return (
     <div
-      className={`flex items-start gap-3 py-4 border-b border-[#e8e0d0] ${
+      className={`flex items-start gap-4 py-5 border-b border-[#e8e0d0] ${
         selected ? "bg-[#fffbf0]" : "bg-[#ffffff] hover:bg-[#fafaf8]"
       } transition-colors`}
     >
@@ -104,36 +104,39 @@ export function BookRow({
         <img
           src={book.coverUrl}
           alt={book.title}
-          className="w-[60px] h-[85px] object-cover shadow hover:shadow-md transition-shadow"
+          className="w-[84px] h-[120px] object-cover shadow hover:shadow-md transition-shadow"
         />
       </Link>
 
       {/* Title + Author */}
-      <div className="w-[200px] shrink-0" style={{ margin: "5px 16px" }}>
+      <div className="w-[300px] shrink-0" style={{ margin: "8px 18px" }}>
         <Link to={`/book/${book.id}/review`} className="no-underline">
-          <div className="text-[14px] text-[#382110] hover:underline leading-snug">
+          <div className="text-[17px] text-[#382110] hover:underline leading-snug">
             {book.title}
           </div>
         </Link>
-        <div className="text-[12px] text-gray-600 mt-0.5">{book.author}</div>
+        <div className="text-[14px] text-gray-600 mt-1">{book.author}</div>
       </div>
 
       {/* Rating + Shelf */}
-      <div className="w-[130px] shrink-0 flex flex-col items-center gap-1" style={{ padding: "15px 0" }}>
+      <div
+        className="w-[170px] shrink-0 flex flex-col items-center gap-2"
+        style={{ padding: "18px 0" }}
+      >
         <StarRating rating={book.rating} showCount size="sm" />
         <div className="relative">
           <button
             onClick={() => setShowShelfMenu(!showShelfMenu)}
-            className="flex items-center gap-1 text-[11px] text-[#382110] border border-[#ccc] rounded px-2 py-0.5 bg-[#f4f0e6] hover:bg-[#e8e2d0]"
+            className="flex items-center gap-1 text-[13px] text-[#382110] border border-[#ccc] rounded px-3 py-1 bg-[#f4f0e6] hover:bg-[#e8e2d0]"
           >
-            {SHELF_LABELS[book.shelf]} <ChevronDown size={10} />
+            {SHELF_LABELS[book.shelf]} <ChevronDown size={12} />
           </button>
           {showShelfMenu && (
-            <div className="absolute top-full left-0 z-20 bg-[#ffffff] border border-[#ddd] rounded shadow-md min-w-[150px]">
+            <div className="absolute top-full left-0 z-20 bg-[#ffffff] border border-[#ddd] rounded shadow-md min-w-[180px]">
               {Object.entries(SHELF_LABELS).map(([key, label]) => (
                 <button
                   key={key}
-                  className={`w-full text-left px-3 py-1.5 text-[12px] hover:bg-[#f4f0e6] ${
+                  className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f4f0e6] ${
                     book.shelf === key
                       ? "font-semibold text-[#382110]"
                       : "text-[#382110]"
@@ -147,10 +150,10 @@ export function BookRow({
           )}
         </div>
         {showProgress && (
-          <div className="w-[92px]">
+          <div className="w-[112px]">
             <Link
               to={`/book/${book.id}/progress`}
-              className="text-[11px] text-[#00635d] no-underline hover:underline"
+              className="text-[12px] text-[#00635d] no-underline hover:underline"
             >
               {progress ?? 0}% [Edit]
             </Link>
@@ -165,13 +168,13 @@ export function BookRow({
       </div>
 
       {/* Dates */}
-      <div className="hidden md:flex flex-col gap-1 w-[110px] shrink-0 text-[12px] text-gray-600">
+      <div className="hidden md:flex flex-col gap-1.5 w-[150px] shrink-0 text-[14px] text-gray-600">
         <span>{book.dateAdded}</span>
         {book.dateRead && <span>{book.dateRead}</span>}
       </div>
 
       {/* Review */}
-      <div className="flex-1 min-w-0 text-[12px]" style={{ padding: "15px 0" }}>
+      <div className="flex-1 min-w-0 text-[14px]" style={{ padding: "18px 0" }}>
         {book.review ? (
           <div>
             <span className="text-gray-700">{book.review}</span>{" "}
@@ -185,13 +188,13 @@ export function BookRow({
         ) : (
           <Link
             to={`/book/${book.id}/review`}
-            className="flex flex-col items-center gap-1 w-[90px] text-[#382110] no-underline hover:text-[#00635d] group"
+            className="flex flex-col items-center gap-1.5 w-[110px] text-[#382110] no-underline hover:text-[#00635d] group"
           >
             <MessageSquare
-              size={22}
+              size={26}
               className="text-[#555] group-hover:text-[#00635d]"
             />
-            <span className="text-[11px]">Post a review</span>
+            <span className="text-[12px]">Post a review</span>
           </Link>
         )}
       </div>
