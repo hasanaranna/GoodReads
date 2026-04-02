@@ -18,9 +18,7 @@ services:
     volumes:
       - /app/node_modules
       - ./backend:/app:z  
+    env_file:
+      - ./backend/.env
     environment:
       - NODE_ENV=development
-      # IMPORTANT: Use the Transaction Pooler URL (usually port 6543)
-      - DATABASE_URL=postgresql://postgres.wniioqiclkyvvcfgcajs:[5W$c-)~d!L:EGfi]@aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres
-      - JWT_ACCESS_SECRET=my_super_secret_access_key_123
-      - JWT_REFRESH_SECRET=my_super_secret_refresh_key_456
