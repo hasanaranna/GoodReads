@@ -7,4 +7,4 @@ CREATE TABLE users (
   dob DATE,
   refresh_token TEXT,
   created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
+);      
