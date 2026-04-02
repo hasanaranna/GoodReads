@@ -3,11 +3,26 @@ import { env } from "./env.js";
 
 const { Pool } = pg;
 
-console.log("Attempting to connect with URL:", env.databaseUrl); 
+const shouldUseDiscreteConfig =
+  Boolean(env.dbHost) &&
+  Boolean(env.dbUser) &&
+  Boolean(env.dbName) &&
+  Boolean(env.dbPassword) &&
+  Number.isFinite(env.dbPort);
 
-export const pool = new Pool({
-  connectionString: env.databaseUrl,
-});
+export const pool = shouldUseDiscreteConfig
+  ? new Pool({
+      host: env.dbHost,
+      port: env.dbPort,
+      database: env.dbName,
+      user: env.dbUser,
+      password: env.dbPassword,
+      ssl: { rejectUnauthorized: false },
+    })
+  : new Pool({
+      connectionString: env.databaseUrl,
+      ssl: { rejectUnauthorized: false },
+    });
 
 export const connectDB = async (maxRetries = 5) => {
   let lastError;
@@ -15,7 +30,7 @@ export const connectDB = async (maxRetries = 5) => {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const client = await pool.connect();
-      console.log("Connected to PostgreSQL database successfully!");
+      console.log("Connected to Supabase PostgreSQL database successfully!");
       client.release();
       return;
     } catch (err) {

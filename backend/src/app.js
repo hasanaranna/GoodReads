@@ -14,7 +14,11 @@ import reviewsRouter from "./modules/reviews/reviews.routes.js";
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  credentials: true
+}));
 app.use(express.json());
 
 app.get("/health", (req, res) => {
