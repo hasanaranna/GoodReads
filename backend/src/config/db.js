@@ -3,11 +3,24 @@ import { env } from "./env.js";
 
 const { Pool } = pg;
 
-console.log("Attempting to connect with URL:", env.databaseUrl); 
+const shouldUseDiscreteConfig =
+  Boolean(env.dbHost) &&
+  Boolean(env.dbUser) &&
+  Boolean(env.dbName) &&
+  Boolean(env.dbPassword) &&
+  Number.isFinite(env.dbPort);
 
-export const pool = new Pool({
-  connectionString: env.databaseUrl,
-});
+export const pool = shouldUseDiscreteConfig
+  ? new Pool({
+      host: env.dbHost,
+      port: env.dbPort,
+      database: env.dbName,
+      user: env.dbUser,
+      password: env.dbPassword,
+    })
+  : new Pool({
+      connectionString: env.databaseUrl,
+    });
 
 export const connectDB = async (maxRetries = 5) => {
   let lastError;
