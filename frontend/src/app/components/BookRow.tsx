@@ -62,13 +62,18 @@ export function BookRow({
             className="mb-1"
           />
         )}
-        <Link to={`/book/${book.id}/review`}>
+        {/* <Link to={`/book/${book.id}/review`}>
           <img
             src={book.coverUrl}
             alt={book.title}
             className="w-[104px] h-[148px] object-cover shadow-md hover:shadow-lg transition-shadow"
           />
-        </Link>
+        </Link> */}
+        <img
+          src={book.coverUrl}
+          alt={book.title}
+          className="w-[104px] h-[148px] object-cover shadow-md"
+        />
         <div className="text-center max-w-[120px] ">
           <div className="text-[14px] text-[#382110] truncate">
             {book.title}
@@ -100,21 +105,29 @@ export function BookRow({
       )}
 
       {/* Cover */}
-      <Link to={`/book/${book.id}/review`} className="shrink-0">
+      {/* <Link to={`/book/${book.id}/review`} className="shrink-0">
         <img
           src={book.coverUrl}
           alt={book.title}
           className="w-[84px] h-[120px] object-cover shadow hover:shadow-md transition-shadow"
         />
-      </Link>
+      </Link> */}
+      <img
+        src={book.coverUrl}
+        alt={book.title}
+        className="w-[120px] h-[180px] object-cover shadow"
+      />
 
       {/* Title + Author */}
       <div className="w-[300px] shrink-0" style={{ margin: "8px 18px" }}>
-        <Link to={`/book/${book.id}/review`} className="no-underline">
+        {/* <Link to={`/book/${book.id}/review`} className="no-underline">
           <div className="text-[17px] text-[#382110] hover:underline leading-snug">
             {book.title}
           </div>
-        </Link>
+        </Link> */}
+        <div className="text-[17px] text-[#382110] hover:underline leading-snug">
+            {book.title}
+          </div>
         <div className="text-[14px] text-gray-600 mt-1">{book.author}</div>
       </div>
 
