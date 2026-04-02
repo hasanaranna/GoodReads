@@ -20,9 +20,7 @@ services:
       - ./backend:/app:z  
     environment:
       - NODE_ENV=development
-      # Replace this with your Supabase Connection String
       # IMPORTANT: Use the Transaction Pooler URL (usually port 6543)
-      - DATABASE_URL=postgresql://postgres.[your-project-ref]:[your-password]@aws-0-[region].pooler.supabase.com:6543/postgres
-      - PORT=8080
+      - DATABASE_URL=postgresql://postgres.wniioqiclkyvvcfgcajs:[5W$c-)~d!L:EGfi]@aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres
       - JWT_ACCESS_SECRET=my_super_secret_access_key_123
       - JWT_REFRESH_SECRET=my_super_secret_refresh_key_456
