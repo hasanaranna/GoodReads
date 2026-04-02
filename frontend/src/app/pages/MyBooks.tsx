@@ -245,7 +245,7 @@ export function MyBooks() {
                 {batchMode && <div className="w-5" />}
                 <div className="w-[84px] shrink-0" />
                 <div
-                  className="w-[300px] shrink-0"
+                  className="w-[350px] shrink-0"
                   style={{ margin: "0 18px" }}
                 >
                   Title
@@ -281,7 +281,7 @@ export function MyBooks() {
               )}
             </div>
           ) : (
-            <div className="flex flex-wrap gap-6 pt-3">
+            <div className="grid grid-cols-8 md:grid-cols-4 gap-3 pt-3">
               {paginated.length === 0 ? (
                 <div className="py-14 text-center text-gray-400 text-[16px] w-full">
                   No books found.

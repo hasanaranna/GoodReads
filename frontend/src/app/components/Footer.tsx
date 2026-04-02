@@ -5,8 +5,8 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-[14px]">
           {/* Company */}
           <div>
-            <div className="text-white mb-3 text-[15px]">COMPANY</div>
-            <ul className="space-y-1.5">
+            <div className="text-white mb-3 text-[16px]">COMPANY</div>
+            <ul className="space-y-1">
               {[
                 "About us",
                 "Careers",
@@ -29,8 +29,8 @@ export function Footer() {
           </div>
           {/* Work with us */}
           <div>
-            <div className="text-white mb-3 text-[15px]">WORK WITH US</div>
-            <ul className="space-y-1.5">
+            <div className="text-white mb-3 text-[16px]">WORK WITH US</div>
+            <ul className="space-y-1">
               {["Authors", "Advertise", "Authors & ads blog"].map((item) => (
                 <li key={item}>
                   <a
@@ -44,7 +44,7 @@ export function Footer() {
             </ul>
           </div>
           {/* Connect */}
-          <div>
+          {/* <div>
             <div className="text-white mb-3 text-[15px]">Connect</div>
             <div className="flex gap-2 mt-1">
               {["f", "t", "in", "ig"].map((icon) => (
@@ -57,9 +57,9 @@ export function Footer() {
                 </a>
               ))}
             </div>
-          </div>
+          </div> */}
           {/* Copyright */}
-          <div className="text-right">
+          {/* <div className="text-right">
             <p className="text-[14px]">© 2026 Goodreads LLC</p>
             <a
               href="#"
@@ -67,7 +67,7 @@ export function Footer() {
             >
               Mobile Version
             </a>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>
