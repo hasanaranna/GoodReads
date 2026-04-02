@@ -123,14 +123,18 @@ export function InputProgress() {
     <div className="max-w-[860px] mx-auto px-4 py-5">
       {/* Breadcrumb */}
       <div className="text-[12px] mb-4 leading-relaxed">
-        <Link
-          to={`/book/${book.id}/review`}
+        {/* <Link
+          to="/mybooks"
           className="text-[#00635d] no-underline hover:underline"
         >
           {book.title}
           {book.subtitle && `: ${book.subtitle}`}
-        </Link>
-        <span className="text-[#00635d]"> &gt; Review &gt; Edit</span>
+        </Link> */}
+        <span className="text-[#00635d]">
+          {book.title}
+          {book.subtitle && `: ${book.subtitle}`}
+        </span>
+        <span className="text-[#00635d]"> &gt; Reading Progress &gt; Edit</span>
       </div>
 
       {/* Book info */}
