@@ -46,7 +46,7 @@ function calculateCompletionPercentage(
 ): number | undefined {
   if (!totalPages || totalPages <= 0) return undefined;
   const safePages = Math.min(Math.max(pagesCompleted, 0), totalPages);
-  return Math.round((safePages / totalPages) * 100);
+  return Math.floor((safePages / totalPages) * 100);
 }
 
 function mapRowToBook(row: UserBookRow): Book {

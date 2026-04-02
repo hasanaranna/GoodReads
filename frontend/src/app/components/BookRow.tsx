@@ -30,15 +30,15 @@ export function BookRow({
   const [showShelfMenu, setShowShelfMenu] = useState(false);
 
   const progress = (() => {
-    if (typeof book.completionPercentage === "number") {
-      return Math.min(Math.max(book.completionPercentage, 0), 100);
-    }
-
     if (book.totalPages && book.totalPages > 0) {
       return Math.min(
         100,
-        Math.round(((book.pagesCompleted || 0) / book.totalPages) * 100),
+        Math.floor(((book.pagesCompleted || 0) / book.totalPages) * 100),
       );
+    }
+
+    if (typeof book.completionPercentage === "number") {
+      return Math.floor(Math.min(Math.max(book.completionPercentage, 0), 100));
     }
 
     return null;
@@ -47,7 +47,14 @@ export function BookRow({
   const showProgress = book.shelf === "currently-reading";
 
   async function handleShelfChange(newShelf: string) {
-    await updateBook(book.id, { shelf: newShelf as Book["shelf"] });
+    const updates: Partial<Book> = { shelf: newShelf as Book["shelf"] };
+    if (
+      newShelf === "currently-reading" &&
+      book.shelf !== "currently-reading"
+    ) {
+      updates.pagesCompleted = 0;
+    }
+    await updateBook(book.id, updates);
     setShowShelfMenu(false);
   }
 
