@@ -38,12 +38,19 @@ cd <repo-folder>
 
 ### 2. Set Environment Variables
 
-Update the following values inside `docker-compose.yml` (or preferably move them to a `.env` file):
+Create a local `.env` file from the template:
+
+```bash
+cp .env.example .env
+```
+
+Then update values in `.env` (Docker Compose reads this automatically):
 
 * `DATABASE_URL`
 * `JWT_ACCESS_SECRET`
 * `JWT_REFRESH_SECRET`
 * `POSTGRES_PASSWORD`
+* `GOOGLE_BOOKS_API_KEY`
 
 Example:
 
@@ -51,6 +58,7 @@ Example:
 DATABASE_URL=postgresql://postgres:password@db:5432/goodreads
 JWT_ACCESS_SECRET=your_access_secret
 JWT_REFRESH_SECRET=your_refresh_secret
+GOOGLE_BOOKS_API_KEY=your_google_books_api_key
 ```
 
 ---

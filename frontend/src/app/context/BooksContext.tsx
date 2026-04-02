@@ -25,6 +25,12 @@ interface BooksContextType {
   updateReview: (id: string, updates: { rating?: number; review?: string }) => Promise<void>;
 }
 
+function calculateCompletionPercentage(pagesCompleted: number, totalPages?: number): number | undefined {
+  if (!totalPages || totalPages <= 0) return undefined;
+  const safePages = Math.min(Math.max(pagesCompleted, 0), totalPages);
+  return Math.round((safePages / totalPages) * 100);
+}
+
 function mapRowToBook(row: UserBookRow): Book {
   const dateAdded = row.date_added
     ? new Date(row.date_added).toLocaleDateString('en-US', {
@@ -42,6 +48,15 @@ function mapRowToBook(row: UserBookRow): Book {
       })
     : undefined;
 
+  const normalizedPagesCompleted =
+    row.page_count && row.page_count > 0
+      ? Math.min(Math.max(row.pages_completed, 0), row.page_count)
+      : Math.max(row.pages_completed, 0);
+
+  const completionPercentage =
+    row.completion_percentage ??
+    calculateCompletionPercentage(normalizedPagesCompleted, row.page_count || undefined);
+
   return {
     id: row.user_book_id,
     bookId: row.book_id,
@@ -55,8 +70,9 @@ function mapRowToBook(row: UserBookRow): Book {
     dateAdded,
     dateRead,
     review: row.review || '',
-    pagesCompleted: row.pages_completed,
+    pagesCompleted: normalizedPagesCompleted,
     totalPages: row.page_count || undefined,
+    completionPercentage,
     description: row.description || undefined,
   };
 }
@@ -140,7 +156,27 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
   const updateBook = useCallback(
     async (id: string, updates: Partial<Book>) => {
       // Optimistic update
-      setBooks((prev) => prev.map((b) => (b.id === id ? { ...b, ...updates } : b)));
+      setBooks((prev) =>
+        prev.map((b) => {
+          if (b.id !== id) return b;
+
+          const nextBook: Book = { ...b, ...updates };
+          if (nextBook.pagesCompleted !== undefined) {
+            const safePages = Math.max(nextBook.pagesCompleted, 0);
+            nextBook.pagesCompleted =
+              nextBook.totalPages && nextBook.totalPages > 0
+                ? Math.min(safePages, nextBook.totalPages)
+                : safePages;
+
+            nextBook.completionPercentage = calculateCompletionPercentage(
+              nextBook.pagesCompleted,
+              nextBook.totalPages
+            );
+          }
+
+          return nextBook;
+        })
+      );
 
       try {
         const apiUpdates: Record<string, unknown> = {};

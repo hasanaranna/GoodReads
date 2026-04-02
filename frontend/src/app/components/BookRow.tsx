@@ -29,10 +29,22 @@ export function BookRow({
   const { updateBook } = useBooks();
   const [showShelfMenu, setShowShelfMenu] = useState(false);
 
-  const progress =
-    book.shelf === "currently-reading" && book.totalPages && book.totalPages > 0
-      ? Math.round(((book.pagesCompleted || 0) / book.totalPages) * 100)
-      : null;
+  const progress = (() => {
+    if (typeof book.completionPercentage === "number") {
+      return Math.min(Math.max(book.completionPercentage, 0), 100);
+    }
+
+    if (book.totalPages && book.totalPages > 0) {
+      return Math.min(
+        100,
+        Math.round(((book.pagesCompleted || 0) / book.totalPages) * 100)
+      );
+    }
+
+    return null;
+  })();
+
+  const showProgress = progress !== null || (book.pagesCompleted || 0) > 0;
 
   async function handleShelfChange(newShelf: string) {
     await updateBook(book.id, { shelf: newShelf as Book["shelf"] });
@@ -134,13 +146,21 @@ export function BookRow({
             </div>
           )}
         </div>
-        {progress !== null && (
-          <Link
-            to={`/book/${book.id}/progress`}
-            className="text-[11px] text-[#00635d] no-underline hover:underline"
-          >
-            {progress}% [Edit]
-          </Link>
+        {showProgress && (
+          <div className="w-[92px]">
+            <Link
+              to={`/book/${book.id}/progress`}
+              className="text-[11px] text-[#00635d] no-underline hover:underline"
+            >
+              {progress ?? 0}% [Edit]
+            </Link>
+            <div className="w-full bg-[#e8e0d0] rounded-full h-1.5 mt-1">
+              <div
+                className="bg-[#00635d] h-1.5 rounded-full transition-all"
+                style={{ width: `${progress ?? 0}%` }}
+              />
+            </div>
+          </div>
         )}
       </div>
 

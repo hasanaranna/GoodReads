@@ -102,6 +102,33 @@ export async function updateBookController(req, res, next) {
       });
     }
 
+    if (
+      pages_completed !== undefined &&
+      (!Number.isInteger(pages_completed) || pages_completed < 0)
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "pages_completed must be a non-negative integer.",
+        },
+      });
+    }
+
+    if (
+      date_read !== undefined &&
+      date_read !== null &&
+      Number.isNaN(Date.parse(date_read))
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "date_read must be a valid ISO date string or null.",
+        },
+      });
+    }
+
     const updates = {};
     if (shelf !== undefined) updates.shelf = shelf;
     if (pages_completed !== undefined) updates.pages_completed = pages_completed;
