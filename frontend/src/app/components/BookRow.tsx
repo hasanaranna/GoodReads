@@ -44,7 +44,7 @@ export function BookRow({
     return null;
   })();
 
-  const showProgress = progress !== null || (book.pagesCompleted || 0) > 0;
+  const showProgress = book.shelf === "currently-reading";
 
   async function handleShelfChange(newShelf: string) {
     await updateBook(book.id, { shelf: newShelf as Book["shelf"] });
@@ -126,8 +126,8 @@ export function BookRow({
           </div>
         </Link> */}
         <div className="text-[17px] text-[#382110] hover:underline leading-snug">
-            {book.title}
-          </div>
+          {book.title}
+        </div>
         <div className="text-[14px] text-gray-600 mt-1">{book.author}</div>
       </div>
 
