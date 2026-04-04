@@ -1,6 +1,10 @@
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const DEFAULT_PORT = 8080;
 const DEFAULT_GOOGLE_BOOKS_BASE_URL = "https://www.googleapis.com/books/v1";

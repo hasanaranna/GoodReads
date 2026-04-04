@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router";
 import { ChevronDown, ChevronUp, X, User } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
 import { useBooks } from "../context/BooksContext";
 import { StarRating } from "../components/StarRating";
 import { Book } from "../data/initialBooks";
 import { fetchBookReviewsAPI, PublicReview } from "../services/api";
 
 const SHELF_LABELS: Record<string, string> = {
-  read: "Read",
-  "currently-reading": "Currently Reading",
-  "want-to-read": "Want to Read",
+  completed_reading: "Read",
+  currently_reading: "Currently Reading",
+  read_later: "Want to Read",
 };
 
 interface ReadDate {
@@ -18,13 +19,28 @@ interface ReadDate {
   finished?: string;
 }
 
+interface JwtPayload {
+  id: string;
+}
+
+function getCurrentUserId(): string | null {
+  const token = localStorage.getItem("access_token");
+  if (!token) return null;
+  try {
+    const decoded = jwtDecode<JwtPayload>(token);
+    return decoded.id;
+  } catch {
+    return null;
+  }
+}
+
 function ReviewStars({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((star) => (
         <span
           key={star}
-          className={`text-[14px] ${star <= rating ? "text-[#d4a017]" : "text-gray-300"}`}
+          className={`text-[14px] ${star <= Math.round(rating) ? "text-[#d4a017]" : "text-gray-300"}`}
         >
           ★
         </span>
@@ -41,7 +57,7 @@ export function EditReview() {
 
   const [rating, setRating] = useState(book?.rating || 0);
   const [shelf, setShelf] = useState<Book["shelf"]>(
-    book?.shelf || "want-to-read",
+    book?.shelf || "read_later",
   );
   const [reviewText, setReviewText] = useState(book?.review || "");
   const [hideSpoilers, setHideSpoilers] = useState(false);
@@ -52,14 +68,11 @@ export function EditReview() {
   const [showMoreDetails, setShowMoreDetails] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Community reviews state
   const [communityReviews, setCommunityReviews] = useState<PublicReview[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
 
-  // Fetch community reviews when the book is loaded
   useEffect(() => {
     if (!book?.googleBooksId) return;
-
     async function loadReviews() {
       setLoadingReviews(true);
       try {
@@ -71,7 +84,6 @@ export function EditReview() {
         setLoadingReviews(false);
       }
     }
-
     loadReviews();
   }, [book?.googleBooksId]);
 
@@ -91,7 +103,7 @@ export function EditReview() {
     try {
       if (shelf !== book!.shelf) {
         const shelfUpdates: Partial<Book> = { shelf };
-        if (shelf === "currently-reading") {
+        if (shelf === "currently_reading") {
           shelfUpdates.pagesCompleted = 0;
         }
         await updateBook(book!.id, shelfUpdates);
@@ -112,24 +124,19 @@ export function EditReview() {
     ]);
   }
 
-  // Filter out current user's review from community reviews
+  // Filter out current user's own review from community reviews
+  const currentUserId = getCurrentUserId();
   const otherReviews = communityReviews.filter(
-    (r) => r.user_book_id !== book.id,
+    (r) => !currentUserId || r.user_id !== currentUserId,
   );
+
+  const authorDisplay = (book.authors || []).join(", ") || "Unknown Author";
 
   return (
     <div className="max-w-[860px] mx-auto px-4 py-5">
       {/* Breadcrumb */}
       <div className="text-[12px] mb-4 leading-relaxed">
-        {/* <Link
-          to={`/book/${book.id}/progress`}
-          className="text-[#00635d] no-underline hover:underline"
-        >
-          {book.title}
-        </Link> */}
-        <span className="text-[#00635d]">
-          {book.title}
-        </span>
+        <span className="text-[#00635d]">{book.title}</span>
         <span className="text-[#00635d]"> &gt; Review &gt; Edit</span>
       </div>
 
@@ -148,7 +155,7 @@ export function EditReview() {
           <div className="text-[13px] text-gray-600">
             by{" "}
             <a href="#" className="text-[#382110] hover:underline no-underline">
-              {book.author}
+              {authorDisplay}
             </a>
           </div>
         </div>
@@ -160,7 +167,6 @@ export function EditReview() {
       >
         Change Edition
       </a>
-
       <div className="border-t border-[#ddd]" />
 
       {/* Rating */}
@@ -197,10 +203,7 @@ export function EditReview() {
               {Object.entries(SHELF_LABELS).map(([key, label]) => (
                 <button
                   key={key}
-                  className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f4f0e6] ${shelf === key
-                      ? "font-semibold text-[#382110]"
-                      : "text-[#382110]"
-                    }`}
+                  className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f4f0e6] ${shelf === key ? "font-semibold text-[#382110]" : "text-[#382110]"}`}
                   onClick={() => {
                     setShelf(key as Book["shelf"]);
                     setShowShelfMenu(false);
@@ -263,7 +266,6 @@ export function EditReview() {
           Now you can track all the times you have read a book. Make sure to
           fill in the year finished to have it added to your Reading Challenge!
         </div>
-
         {readDates.map((rd) => (
           <div key={rd.id} className="flex items-center gap-3 mb-2 text-[13px]">
             <div className="flex items-center gap-2">
@@ -306,14 +308,12 @@ export function EditReview() {
             </button>
           </div>
         ))}
-
         <button
           onClick={addReadDate}
           className="text-[12px] bg-[#f4f0e6] border border-[#ccc] px-3 py-1 text-[#382110] hover:bg-[#e8e2d0] rounded"
         >
           Add read data
         </button>
-
         <div className="mt-3">
           <button
             onClick={() => setShowMoreDetails(!showMoreDetails)}
@@ -405,7 +405,7 @@ export function EditReview() {
         </button>
       </div>
 
-      {/* ===== Community Reviews Section ===== */}
+      {/* Community Reviews */}
       <div className="py-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[18px] font-medium text-[#382110]">
@@ -416,13 +416,11 @@ export function EditReview() {
             {communityReviews.length === 1 ? "review" : "reviews"}
           </span>
         </div>
-
         {loadingReviews && (
           <div className="text-[13px] text-gray-500 py-4">
             Loading reviews...
           </div>
         )}
-
         {!loadingReviews && otherReviews.length === 0 && (
           <div className="bg-[#f9f7f2] border border-[#e8e0d0] rounded-lg p-6 text-center">
             <p className="text-[14px] text-gray-500 mb-1">
@@ -433,12 +431,10 @@ export function EditReview() {
             </p>
           </div>
         )}
-
         {!loadingReviews && otherReviews.length > 0 && (
           <div className="space-y-0 divide-y divide-[#e8e0d0]">
             {otherReviews.map((review) => (
-              <div key={review.user_book_id} className="py-4">
-                {/* Reviewer header */}
+              <div key={review.review_id} className="py-4">
                 <div className="flex items-start gap-3 mb-2">
                   <div className="w-9 h-9 rounded-full bg-[#e8e0d0] flex items-center justify-center text-[#382110] shrink-0">
                     <User size={18} />
@@ -465,18 +461,12 @@ export function EditReview() {
                         ·{" "}
                         {new Date(review.date_added).toLocaleDateString(
                           "en-US",
-                          {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          },
+                          { month: "short", day: "numeric", year: "numeric" },
                         )}
                       </span>
                     </div>
                   </div>
                 </div>
-
-                {/* Review text */}
                 {review.review && (
                   <div className="ml-12 mt-1">
                     <p className="text-[13px] text-[#382110] leading-relaxed whitespace-pre-wrap">
@@ -484,8 +474,6 @@ export function EditReview() {
                     </p>
                   </div>
                 )}
-
-                {/* Rating only (no text) */}
                 {!review.review && review.rating > 0 && (
                   <div className="ml-12 mt-1">
                     <p className="text-[12px] text-gray-400 italic">

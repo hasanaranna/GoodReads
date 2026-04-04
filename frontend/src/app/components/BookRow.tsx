@@ -14,9 +14,9 @@ interface BookRowProps {
 }
 
 const SHELF_LABELS: Record<string, string> = {
-  read: "Read",
-  "currently-reading": "Currently Reading",
-  "want-to-read": "Want to Read",
+  completed_reading: "Read",
+  currently_reading: "Currently Reading",
+  read_later: "Want to Read",
 };
 
 export function BookRow({
@@ -36,21 +36,20 @@ export function BookRow({
         Math.floor(((book.pagesCompleted || 0) / book.totalPages) * 100),
       );
     }
-
     if (typeof book.completionPercentage === "number") {
       return Math.floor(Math.min(Math.max(book.completionPercentage, 0), 100));
     }
-
     return null;
   })();
 
-  const showProgress = book.shelf === "currently-reading";
+  const showProgress = book.shelf === "currently_reading";
+  const authorDisplay = (book.authors || []).join(", ") || "Unknown Author";
 
   async function handleShelfChange(newShelf: string) {
     const updates: Partial<Book> = { shelf: newShelf as Book["shelf"] };
     if (
-      newShelf === "currently-reading" &&
-      book.shelf !== "currently-reading"
+      newShelf === "currently_reading" &&
+      book.shelf !== "currently_reading"
     ) {
       updates.pagesCompleted = 0;
     }
@@ -69,24 +68,17 @@ export function BookRow({
             className="mb-1"
           />
         )}
-        {/* <Link to={`/book/${book.id}/review`}>
-          <img
-            src={book.coverUrl}
-            alt={book.title}
-            className="w-[104px] h-[148px] object-cover shadow-md hover:shadow-lg transition-shadow"
-          />
-        </Link> */}
         <img
           src={book.coverUrl}
           alt={book.title}
           className="w-[104px] h-[148px] object-cover shadow-md"
         />
-        <div className="text-center max-w-[120px] ">
+        <div className="text-center max-w-[120px]">
           <div className="text-[14px] text-[#382110] truncate">
             {book.title}
           </div>
           <div className="text-[12px] text-gray-500 truncate">
-            {book.author}
+            {authorDisplay}
           </div>
           <StarRating rating={book.rating} showCount size="sm" />
         </div>
@@ -112,13 +104,6 @@ export function BookRow({
       )}
 
       {/* Cover */}
-      {/* <Link to={`/book/${book.id}/review`} className="shrink-0">
-        <img
-          src={book.coverUrl}
-          alt={book.title}
-          className="w-[84px] h-[120px] object-cover shadow hover:shadow-md transition-shadow"
-        />
-      </Link> */}
       <img
         src={book.coverUrl}
         alt={book.title}
@@ -127,15 +112,10 @@ export function BookRow({
 
       {/* Title + Author */}
       <div className="w-[300px] shrink-0" style={{ margin: "8px 18px" }}>
-        {/* <Link to={`/book/${book.id}/review`} className="no-underline">
-          <div className="text-[17px] text-[#382110] hover:underline leading-snug">
-            {book.title}
-          </div>
-        </Link> */}
         <div className="text-[17px] text-[#382110] hover:underline leading-snug">
           {book.title}
         </div>
-        <div className="text-[14px] text-gray-600 mt-1">{book.author}</div>
+        <div className="text-[14px] text-gray-600 mt-1">{authorDisplay}</div>
       </div>
 
       {/* Rating + Shelf */}
@@ -143,13 +123,13 @@ export function BookRow({
         className="w-[170px] shrink-0 flex flex-col items-center gap-2"
         style={{ padding: "18px 0" }}
       >
-        <StarRating rating={book.rating} showCount size="sm" />
+        <StarRating rating={Math.round(book.rating)} showCount size="sm" />
         <div className="relative">
           <button
             onClick={() => setShowShelfMenu(!showShelfMenu)}
             className="flex items-center gap-1 text-[13px] text-[#382110] border border-[#ccc] rounded px-3 py-1 bg-[#f4f0e6] hover:bg-[#e8e2d0]"
           >
-            {SHELF_LABELS[book.shelf]} <ChevronDown size={12} />
+            {SHELF_LABELS[book.shelf] || book.shelf} <ChevronDown size={12} />
           </button>
           {showShelfMenu && (
             <div className="absolute top-full left-0 z-20 bg-[#ffffff] border border-[#ddd] rounded shadow-md min-w-[180px]">

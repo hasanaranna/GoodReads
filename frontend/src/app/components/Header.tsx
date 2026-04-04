@@ -29,7 +29,10 @@ interface BackendSearchBook {
   coverImage: string | null;
   description?: string;
   publishedDate?: string;
-  categories?: string[];
+  genres?: string[];
+  isbn?: string | null;
+  language?: string | null;
+  maturityRating?: string | null;
 }
 
 function toLibraryBook(book: BackendSearchBook): {
@@ -42,13 +45,10 @@ function toLibraryBook(book: BackendSearchBook): {
     year: "numeric",
   });
 
-  const normalizedRating =
-    typeof book.averageRating === "number" ? Math.round(book.averageRating) : 0;
-
-  const author =
+  const authors =
     Array.isArray(book.authors) && book.authors.length > 0
-      ? book.authors[0]
-      : "Unknown Author";
+      ? book.authors
+      : ["Unknown Author"];
 
   const localBook: Book = {
     id: `temp-gb-${book.id}`,
@@ -56,26 +56,33 @@ function toLibraryBook(book: BackendSearchBook): {
     googleBooksId: book.id,
     title: book.title || "Untitled",
     subtitle: book.subtitle || undefined,
-    author,
+    authors,
     coverUrl: book.coverImage || "https://placehold.co/120x180?text=No+Cover",
-    rating: Math.max(0, Math.min(5, normalizedRating)),
-    shelf: "want-to-read",
+    rating: 0,
+    shelf: "read_later",
     dateAdded,
     review: "",
     totalPages: book.pageCount || undefined,
     pagesCompleted: 0,
+    genres: book.genres || undefined,
+    isbn: book.isbn || undefined,
+    language: book.language || undefined,
+    maturityRating: book.maturityRating || undefined,
   };
 
   const shelfData: ShelfBookData = {
     google_books_id: book.id,
     title: book.title || "Untitled",
     subtitle: book.subtitle,
-    author,
+    authors,
     cover_url: book.coverImage || undefined,
     page_count: book.pageCount || undefined,
     description: book.description || undefined,
     published_date: book.publishedDate || undefined,
-    categories: book.categories || undefined,
+    genres: book.genres || undefined,
+    isbn: book.isbn || undefined,
+    language: book.language || undefined,
+    maturity_rating: book.maturityRating || undefined,
     average_rating: book.averageRating || undefined,
   };
 
@@ -103,7 +110,6 @@ export function Header() {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery.trim());
     }, SEARCH_DEBOUNCE_MS);
-
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -114,43 +120,31 @@ export function Header() {
       setIsSearching(false);
       return;
     }
-
     const controller = new AbortController();
-
     async function runSearch() {
       setIsSearching(true);
       setSearchError("");
-
       const params = new URLSearchParams({
         q: debouncedSearchQuery,
         sort: "relevance",
         page: "1",
         limit: String(SEARCH_LIMIT),
       });
-
       try {
         const response = await fetch(
           `${API_BASE_URL}/api/books/search?${params.toString()}`,
-          {
-            signal: controller.signal,
-          },
+          { signal: controller.signal },
         );
-
         const payload = await response.json();
         if (!response.ok || !payload?.success) {
           throw new Error(payload?.error?.message || "Search request failed.");
         }
-
         const remoteBooks = Array.isArray(payload?.data)
           ? (payload.data as BackendSearchBook[])
           : [];
-
         setResults(remoteBooks);
       } catch (error) {
-        if (controller.signal.aborted) {
-          return;
-        }
-
+        if (controller.signal.aborted) return;
         const message =
           error instanceof Error ? error.message : "Unable to fetch books.";
         setSearchError(message);
@@ -161,9 +155,7 @@ export function Header() {
         }
       }
     }
-
     runSearch();
-
     return () => controller.abort();
   }, [debouncedSearchQuery]);
 
@@ -186,12 +178,8 @@ export function Header() {
 
   async function handleAddBook(book: BackendSearchBook) {
     const { localBook, shelfData } = toLibraryBook(book);
-    if (existingGoogleIds.has(book.id)) {
-      return;
-    }
-
+    if (existingGoogleIds.has(book.id)) return;
     await addBook(localBook, shelfData);
-
     setSearchQuery("");
     setDebouncedSearchQuery("");
     setResults([]);
@@ -213,7 +201,6 @@ export function Header() {
         console.error("Logout request failed", error);
       }
     }
-
     localStorage.removeItem("access_token");
     setUserName("");
     setShowProfileMenu(false);
@@ -258,7 +245,7 @@ export function Header() {
           </button>
         </nav>
 
-        {/* Right side: Search + Icons */}
+        {/* Right side */}
         <div className="flex items-center gap-4 ml-auto text-[#382110] text-[15px]">
           {/* Search */}
           <div
@@ -303,13 +290,11 @@ export function Header() {
                     Searching...
                   </div>
                 )}
-
                 {!isSearching && searchError && (
                   <div className="px-3 py-2 text-[13px] text-[#b42318]">
                     {searchError}
                   </div>
                 )}
-
                 {!isSearching &&
                   !searchError &&
                   visibleResults.length === 0 && (
@@ -317,18 +302,15 @@ export function Header() {
                       No books found.
                     </div>
                   )}
-
                 {!isSearching && !searchError && visibleResults.length > 0 && (
                   <div className="max-h-[580px] overflow-y-auto divide-y divide-[#f0ebe0]">
                     {visibleResults.map((book) => {
                       const { localBook } = toLibraryBook(book);
-
                       return (
                         <div
                           key={book.id}
                           className="group flex items-start gap-4 px-4 py-3.5 hover:bg-[#faf7f0] transition-colors duration-150"
                         >
-                          {/* Cover */}
                           <div className="relative flex-shrink-0">
                             <img
                               src={localBook.coverUrl}
@@ -336,19 +318,15 @@ export function Header() {
                               className="w-11 h-16 object-cover rounded shadow-sm ring-1 ring-black/10"
                             />
                           </div>
-
-                          {/* Info */}
                           <div className="min-w-0 flex-1 flex flex-col justify-between h-16">
                             <div>
                               <p className="text-[15px] font-medium leading-snug text-[#1c1208] line-clamp-2">
                                 {localBook.title}
                               </p>
                               <p className="text-[13px] mt-0.5 text-[#8b7355] truncate">
-                                {localBook.author}
+                                {localBook.authors.join(", ")}
                               </p>
                             </div>
-
-                            {/* Add button */}
                             <button
                               onMouseDown={() => handleAddBook(book)}
                               className="self-start mt-1.5 inline-flex items-center gap-1 text-[13px] font-medium text-[#00635d] border border-[#00635d]/50 bg-[#00635d]/5 hover:bg-[#00635d] hover:text-white px-2.5 py-0.5 rounded-full transition-all duration-150 cursor-pointer"
@@ -382,7 +360,6 @@ export function Header() {
             >
               <Users size={20} />
             </button>
-
             {showProfileMenu && userName && (
               <div
                 className="absolute top-full mt-2 bg-[#ffffff] border border-[#d8d0bb] rounded-md shadow-lg z-50 flex flex-col pt-2 pb-2 left-1/2 -translate-x-1/2"

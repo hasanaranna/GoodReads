@@ -68,14 +68,12 @@ function applyGenreHintFilter(books, genre) {
   const loweredGenre = genre.toLowerCase();
 
   return books.filter((book) => {
-    const categories = Array.isArray(book.categories) ? book.categories : [];
-    if (!categories.length) {
+    const genres = Array.isArray(book.genres) ? book.genres : [];
+    if (!genres.length) {
       return true;
     }
 
-    return categories.some((category) =>
-      category.toLowerCase().includes(loweredGenre),
-    );
+    return genres.some((g) => g.toLowerCase().includes(loweredGenre));
   });
 }
 

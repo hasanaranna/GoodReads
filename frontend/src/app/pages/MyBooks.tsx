@@ -12,9 +12,9 @@ import { Sidebar } from "../components/Sidebar";
 import { BookRow } from "../components/BookRow";
 
 const SHELF_NAMES: Record<string, string> = {
-  "want-to-read": "Want to Read",
-  "currently-reading": "Currently Reading",
-  read: "Read",
+  read_later: "Want to Read",
+  currently_reading: "Currently Reading",
+  completed_reading: "Read",
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -34,17 +34,18 @@ export function MyBooks() {
   const filtered = books.filter((b) => {
     const matchesShelf = !shelfId || b.shelf === shelfId;
     const query = searchQuery.trim().toLowerCase();
+    const authorStr = (b.authors || []).join(" ").toLowerCase();
     const matchesSearch =
       !query ||
       b.title.toLowerCase().includes(query) ||
-      b.author.toLowerCase().includes(query);
-
+      authorStr.includes(query);
     return matchesShelf && matchesSearch;
   });
 
   const sorted = [...filtered].sort((a, b) => {
     if (sortBy === "title") return a.title.localeCompare(b.title);
-    if (sortBy === "author") return a.author.localeCompare(b.author);
+    if (sortBy === "author")
+      return (a.authors[0] || "").localeCompare(b.authors[0] || "");
     if (sortBy === "rating") return b.rating - a.rating;
     return 0;
   });
@@ -93,7 +94,6 @@ export function MyBooks() {
 
       {/* Top bar */}
       <div className="flex flex-wrap items-center gap-4 mb-6">
-        {/* Search and add books */}
         <div className="flex items-center border border-[#ccc] rounded-full px-4 py-2 bg-[#f4f0e6] gap-3 text-[14px]">
           <input
             type="text"
@@ -107,7 +107,6 @@ export function MyBooks() {
           <Search size={16} className="text-[#888]" />
         </div>
 
-        {/* Actions */}
         <div className="ml-auto flex items-center gap-[1.75em] text-[1.08em]">
           <button
             onClick={() => {
@@ -146,21 +145,13 @@ export function MyBooks() {
           <span className="text-[#ccc]">|</span>
           <button
             onClick={() => setViewMode("list")}
-            className={`outline-none border-none bg-transparent shadow-none ${
-              viewMode === "list"
-                ? "text-[#382110]"
-                : "text-[#aaa] hover:text-[#382110]"
-            }`}
+            className={`outline-none border-none bg-transparent shadow-none ${viewMode === "list" ? "text-[#382110]" : "text-[#aaa] hover:text-[#382110]"}`}
           >
             <List size="1.35em" />
           </button>
           <button
             onClick={() => setViewMode("grid")}
-            className={`outline-none border-none bg-transparent shadow-none ${
-              viewMode === "grid"
-                ? "text-[#382110]"
-                : "text-[#aaa] hover:text-[#382110]"
-            }`}
+            className={`outline-none border-none bg-transparent shadow-none ${viewMode === "grid" ? "text-[#382110]" : "text-[#aaa] hover:text-[#382110]"}`}
           >
             <LayoutGrid size="1.35em" />
           </button>
@@ -168,10 +159,8 @@ export function MyBooks() {
       </div>
 
       <div className="flex items-start" style={{ gap: "48px" }}>
-        {/* Sidebar */}
         <Sidebar />
 
-        {/* Main content */}
         <div className="flex-1 min-w-0">
           {/* Sort bar */}
           <div
@@ -189,11 +178,7 @@ export function MyBooks() {
                   <button
                     key={s}
                     onClick={() => setSortBy(s)}
-                    className={`outline-none border-none bg-transparent shadow-none capitalize hover:underline ${
-                      sortBy === s
-                        ? "text-[#382110] underline"
-                        : "text-[#00635d]"
-                    }`}
+                    className={`outline-none border-none bg-transparent shadow-none capitalize hover:underline ${sortBy === s ? "text-[#382110] underline" : "text-[#00635d]"}`}
                   >
                     {s === "dateAdded" ? "Date Added" : s}
                   </button>
@@ -216,11 +201,7 @@ export function MyBooks() {
                 <button
                   key={p}
                   onClick={() => setCurrentPage(p)}
-                  className={`px-1 hover:underline ${
-                    currentPage === p
-                      ? "text-[#382110] underline"
-                      : "text-[#00635d]"
-                  }`}
+                  className={`px-1 hover:underline ${currentPage === p ? "text-[#382110] underline" : "text-[#00635d]"}`}
                 >
                   {p}
                 </button>
@@ -240,7 +221,6 @@ export function MyBooks() {
           {/* Book list or grid */}
           {viewMode === "list" ? (
             <div>
-              {/* Header row */}
               <div className="flex items-center gap-4 py-3 border-b-2 border-[#382110] text-[14px] text-gray-500">
                 {batchMode && <div className="w-5" />}
                 <div className="w-[84px] shrink-0" />
@@ -256,7 +236,6 @@ export function MyBooks() {
                 </div>
                 <div className="flex-1">Review</div>
               </div>
-
               {paginated.length === 0 ? (
                 <div className="py-14 text-center text-gray-400 text-[16px]">
                   No books found.{" "}
@@ -315,11 +294,7 @@ export function MyBooks() {
                 <button
                   key={p}
                   onClick={() => setCurrentPage(p)}
-                  className={`px-1 hover:underline ${
-                    currentPage === p
-                      ? "text-[#382110] underline"
-                      : "text-[#00635d]"
-                  }`}
+                  className={`px-1 hover:underline ${currentPage === p ? "text-[#382110] underline" : "text-[#00635d]"}`}
                 >
                   {p}
                 </button>

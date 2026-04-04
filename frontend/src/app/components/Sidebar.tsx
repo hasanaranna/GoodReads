@@ -8,22 +8,22 @@ export function Sidebar() {
   const shelves = [
     { id: "all", label: "All", count: shelfCounts.all, path: "/mybooks" },
     {
-      id: "want-to-read",
+      id: "read_later",
       label: "Want to Read",
-      count: shelfCounts.wantToRead,
-      path: "/mybooks/shelf/want-to-read",
+      count: shelfCounts.readLater,
+      path: "/mybooks/shelf/read_later",
     },
     {
-      id: "currently-reading",
+      id: "currently_reading",
       label: "Currently Reading",
       count: shelfCounts.currentlyReading,
-      path: "/mybooks/shelf/currently-reading",
+      path: "/mybooks/shelf/currently_reading",
     },
     {
-      id: "read",
+      id: "completed_reading",
       label: "Read",
-      count: shelfCounts.read,
-      path: "/mybooks/shelf/read",
+      count: shelfCounts.completedReading,
+      path: "/mybooks/shelf/completed_reading",
     },
   ];
 
@@ -55,10 +55,11 @@ export function Sidebar() {
             <li key={shelf.id}>
               <Link
                 to={shelf.path}
-                className={`no-underline flex justify-between items-center py-1 ${activeShelf === shelf.id
-                  ? "text-[#382110] font-semibold"
-                  : "text-[#382110] hover:underline"
-                  }`}
+                className={`no-underline flex justify-between items-center py-1 ${
+                  activeShelf === shelf.id
+                    ? "text-[#382110] font-semibold"
+                    : "text-[#382110] hover:underline"
+                }`}
               >
                 <span>{shelf.label}</span>
                 <span className="text-gray-500">({shelf.count})</span>

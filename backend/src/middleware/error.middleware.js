@@ -17,9 +17,8 @@ export function errorMiddleware(error, req, res, next) {
   const code = error?.code || (statusCode === 500 ? "INTERNAL_ERROR" : "ERROR");
   const message =
     statusCode === 500
-      ? "Unexpected server error."
+      ? (error?.message || "Unexpected server error.")
       : error?.message || "Request failed.";
-
   const payload = {
     success: false,
     error: {

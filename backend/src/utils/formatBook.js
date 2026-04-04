@@ -10,11 +10,18 @@ function pickCoverImage(imageLinks = {}) {
   );
 }
 
+function extractISBN(industryIdentifiers = []) {
+  if (!Array.isArray(industryIdentifiers)) return null;
+  const isbn13 = industryIdentifiers.find((i) => i.type === "ISBN_13");
+  if (isbn13) return isbn13.identifier;
+  const isbn10 = industryIdentifiers.find((i) => i.type === "ISBN_10");
+  if (isbn10) return isbn10.identifier;
+  return null;
+}
+
 export function formatBook(item = {}) {
   const volumeInfo = item.volumeInfo || {};
   const saleInfo = item.saleInfo || {};
-  // //print the item to see the structure of the data
-  // console.log("Raw book item:", item);
   return {
     id: item.id || null,
     googleBooksId: item.id || null,
@@ -26,17 +33,17 @@ export function formatBook(item = {}) {
     publishedDate: volumeInfo.publishedDate || null,
     pageCount:
       typeof volumeInfo.pageCount === "number" ? volumeInfo.pageCount : null,
-    categories: Array.isArray(volumeInfo.categories)
-      ? volumeInfo.categories
-      : [],
+    genres: Array.isArray(volumeInfo.categories) ? volumeInfo.categories : [],
+    isbn: extractISBN(volumeInfo.industryIdentifiers),
+    language: volumeInfo.language || null,
+    alternateTitles: [],
+    maturityRating: volumeInfo.maturityRating || null,
     averageRating:
       typeof volumeInfo.averageRating === "number"
         ? volumeInfo.averageRating
         : null,
     ratingsCount:
       typeof volumeInfo.ratingsCount === "number" ? volumeInfo.ratingsCount : 0,
-    language: volumeInfo.language || null,
-    maturityRating: volumeInfo.maturityRating || null,
     coverImage: pickCoverImage(volumeInfo.imageLinks),
     previewLink: volumeInfo.previewLink || null,
     infoLink: volumeInfo.infoLink || null,

@@ -7,13 +7,12 @@ import {
   getUserBook,
 } from "./shelves.service.js";
 
-const VALID_SHELVES = ["want-to-read", "currently-reading", "read"];
+const VALID_SHELVES = ["read_later", "currently_reading", "completed_reading"];
 
 export async function listBooksController(req, res, next) {
   try {
     const userId = req.user.id;
     const shelf = req.query.shelf || undefined;
-
     if (shelf && !VALID_SHELVES.includes(shelf)) {
       return res.status(400).json({
         success: false,
@@ -23,15 +22,9 @@ export async function listBooksController(req, res, next) {
         },
       });
     }
-
     const books = await getUserBooks(userId, shelf);
     const shelfCounts = await getShelfCounts(userId);
-
-    return res.status(200).json({
-      success: true,
-      data: books,
-      shelfCounts,
-    });
+    return res.status(200).json({ success: true, data: books, shelfCounts });
   } catch (error) {
     return next(error);
   }
@@ -40,46 +33,60 @@ export async function listBooksController(req, res, next) {
 export async function addBookController(req, res, next) {
   try {
     const userId = req.user.id;
-    const { google_books_id, title, author, cover_url, page_count, shelf, subtitle, description, published_date, categories, average_rating } = req.body;
+    const {
+      google_books_id,
+      title,
+      authors,
+      cover_url,
+      page_count,
+      shelf,
+      subtitle,
+      description,
+      published_date,
+      genres,
+      isbn,
+      language,
+      alternate_titles,
+      maturity_rating,
+      average_rating,
+    } = req.body;
 
-    // Validation
     const errors = [];
     if (!google_books_id) errors.push("google_books_id is required.");
     if (!title) errors.push("title is required.");
-    if (!author) errors.push("author is required.");
+    if (!authors || !Array.isArray(authors) || authors.length === 0) {
+      errors.push("authors must be a non-empty array.");
+    }
     if (!shelf || !VALID_SHELVES.includes(shelf)) {
       errors.push(`shelf must be one of: ${VALID_SHELVES.join(", ")}.`);
     }
-
     if (errors.length > 0) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: "VALIDATION_ERROR",
-          message: errors.join(" "),
-        },
-      });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error: { code: "VALIDATION_ERROR", message: errors.join(" ") },
+        });
     }
 
     const bookData = {
       google_books_id,
       title,
       subtitle,
-      author,
+      authors,
       cover_url,
       page_count,
       description,
       published_date,
-      categories,
+      genres,
+      isbn,
+      language,
+      alternate_titles,
+      maturity_rating,
       average_rating,
     };
-
     const result = await addBookToShelf(userId, bookData, shelf);
-
-    return res.status(201).json({
-      success: true,
-      data: result,
-    });
+    return res.status(201).json({ success: true, data: result });
   } catch (error) {
     return next(error);
   }
@@ -91,55 +98,55 @@ export async function updateBookController(req, res, next) {
     const { userBookId } = req.params;
     const { shelf, pages_completed, date_read } = req.body;
 
-    // Validate shelf if provided
     if (shelf && !VALID_SHELVES.includes(shelf)) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: "INVALID_SHELF",
-          message: `Shelf must be one of: ${VALID_SHELVES.join(", ")}.`,
-        },
-      });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error: {
+            code: "INVALID_SHELF",
+            message: `Shelf must be one of: ${VALID_SHELVES.join(", ")}.`,
+          },
+        });
     }
-
     if (
       pages_completed !== undefined &&
       (!Number.isInteger(pages_completed) || pages_completed < 0)
     ) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "pages_completed must be a non-negative integer.",
-        },
-      });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "pages_completed must be a non-negative integer.",
+          },
+        });
     }
-
     if (
       date_read !== undefined &&
       date_read !== null &&
       Number.isNaN(Date.parse(date_read))
     ) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "date_read must be a valid ISO date string or null.",
-        },
-      });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "date_read must be a valid ISO date string or null.",
+          },
+        });
     }
 
     const updates = {};
     if (shelf !== undefined) updates.shelf = shelf;
-    if (pages_completed !== undefined) updates.pages_completed = pages_completed;
+    if (pages_completed !== undefined)
+      updates.pages_completed = pages_completed;
     if (date_read !== undefined) updates.date_read = date_read;
 
     const result = await updateUserBook(userId, userBookId, updates);
-
-    return res.status(200).json({
-      success: true,
-      data: result,
-    });
+    return res.status(200).json({ success: true, data: result });
   } catch (error) {
     return next(error);
   }
@@ -149,9 +156,7 @@ export async function removeBookController(req, res, next) {
   try {
     const userId = req.user.id;
     const { userBookId } = req.params;
-
     await removeUserBook(userId, userBookId);
-
     return res.status(204).send();
   } catch (error) {
     return next(error);
@@ -162,13 +167,8 @@ export async function getBookController(req, res, next) {
   try {
     const userId = req.user.id;
     const { userBookId } = req.params;
-
     const result = await getUserBook(userId, userBookId);
-
-    return res.status(200).json({
-      success: true,
-      data: result,
-    });
+    return res.status(200).json({ success: true, data: result });
   } catch (error) {
     return next(error);
   }

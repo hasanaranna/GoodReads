@@ -15,6 +15,7 @@ import {
   updateReviewAPI,
   UserBookRow,
   ShelfBookData,
+  ShelfCounts,
 } from "../services/api";
 
 interface BooksContextType {
@@ -25,12 +26,7 @@ interface BooksContextType {
   addBook: (book: Book, bookData: ShelfBookData) => Promise<void>;
   removeBook: (id: string) => Promise<void>;
   getBook: (id: string) => Book | undefined;
-  shelfCounts: {
-    all: number;
-    read: number;
-    currentlyReading: number;
-    wantToRead: number;
-  };
+  shelfCounts: ShelfCounts;
   userName: string;
   setUserName: (name: string) => void;
   refreshBooks: () => Promise<void>;
@@ -84,9 +80,12 @@ function mapRowToBook(row: UserBookRow): Book {
     googleBooksId: row.google_books_id,
     title: row.title,
     subtitle: row.subtitle || undefined,
-    author: row.author,
+    authors: row.authors || [],
     coverUrl: row.cover_url || "https://placehold.co/120x180?text=No+Cover",
-    rating: row.rating,
+    rating:
+      typeof row.rating === "number"
+        ? row.rating
+        : parseFloat(row.rating as any) || 0,
     shelf: row.shelf,
     dateAdded,
     dateRead,
@@ -95,8 +94,20 @@ function mapRowToBook(row: UserBookRow): Book {
     totalPages: row.page_count || undefined,
     completionPercentage,
     description: row.description || undefined,
+    isbn: row.isbn || undefined,
+    language: row.language || undefined,
+    genres: row.genres || undefined,
+    alternateTitles: row.alternate_titles || undefined,
+    maturityRating: row.maturity_rating || undefined,
   };
 }
+
+const defaultShelfCounts: ShelfCounts = {
+  all: 0,
+  readLater: 0,
+  currentlyReading: 0,
+  completedReading: 0,
+};
 
 const BooksContext = createContext<BooksContextType | null>(null);
 
@@ -116,24 +127,19 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("user_name");
     }
   }, []);
-  const [shelfCounts, setShelfCounts] = useState({
-    all: 0,
-    read: 0,
-    currentlyReading: 0,
-    wantToRead: 0,
-  });
+
+  const [shelfCounts, setShelfCounts] =
+    useState<ShelfCounts>(defaultShelfCounts);
 
   const refreshBooks = useCallback(async () => {
     const token = localStorage.getItem("access_token");
     if (!token) {
       setBooks([]);
-      setShelfCounts({ all: 0, read: 0, currentlyReading: 0, wantToRead: 0 });
+      setShelfCounts(defaultShelfCounts);
       return;
     }
-
     setLoading(true);
     setError(null);
-
     try {
       const response = await fetchUserBooks();
       const mappedBooks = response.data.map(mapRowToBook);
@@ -149,7 +155,6 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Load books when a user is logged in
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (token) {
@@ -159,23 +164,23 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
 
   const addBook = useCallback(
     async (book: Book, bookData: ShelfBookData) => {
-      // Optimistic update
       setBooks((prev) => [...prev, book]);
       setShelfCounts((prev) => ({
         ...prev,
         all: prev.all + 1,
-        wantToRead:
-          book.shelf === "want-to-read" ? prev.wantToRead + 1 : prev.wantToRead,
+        readLater:
+          book.shelf === "read_later" ? prev.readLater + 1 : prev.readLater,
         currentlyReading:
-          book.shelf === "currently-reading"
+          book.shelf === "currently_reading"
             ? prev.currentlyReading + 1
             : prev.currentlyReading,
-        read: book.shelf === "read" ? prev.read + 1 : prev.read,
+        completedReading:
+          book.shelf === "completed_reading"
+            ? prev.completedReading + 1
+            : prev.completedReading,
       }));
-
       try {
         const response = await addBookToShelfAPI(bookData, book.shelf);
-        // Replace the optimistic entry with the real data
         const realBook = mapRowToBook(response.data);
         setBooks((prev) =>
           prev.map((b) =>
@@ -183,12 +188,10 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
           ),
         );
       } catch (err) {
-        // Rollback optimistic update
         setBooks((prev) =>
           prev.filter((b) => b.googleBooksId !== book.googleBooksId),
         );
         console.error("Failed to add book:", err);
-        // Refresh to get actual state
         await refreshBooks();
       }
     },
@@ -197,11 +200,9 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
 
   const updateBook = useCallback(
     async (id: string, updates: Partial<Book>) => {
-      // Optimistic update
       setBooks((prev) =>
         prev.map((b) => {
           if (b.id !== id) return b;
-
           const nextBook: Book = { ...b, ...updates };
           if (nextBook.pagesCompleted !== undefined) {
             const safePages = Math.max(nextBook.pagesCompleted, 0);
@@ -209,17 +210,14 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
               nextBook.totalPages && nextBook.totalPages > 0
                 ? Math.min(safePages, nextBook.totalPages)
                 : safePages;
-
             nextBook.completionPercentage = calculateCompletionPercentage(
               nextBook.pagesCompleted,
               nextBook.totalPages,
             );
           }
-
           return nextBook;
         }),
       );
-
       try {
         const apiUpdates: Record<string, unknown> = {};
         if (updates.shelf !== undefined) apiUpdates.shelf = updates.shelf;
@@ -227,7 +225,6 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
           apiUpdates.pages_completed = updates.pagesCompleted;
         if (updates.dateRead !== undefined)
           apiUpdates.date_read = updates.dateRead || null;
-
         if (Object.keys(apiUpdates).length > 0) {
           await updateUserBookAPI(
             id,
@@ -238,8 +235,6 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
             },
           );
         }
-
-        // Refresh counts
         await refreshBooks();
       } catch (err) {
         console.error("Failed to update book:", err);
@@ -251,11 +246,9 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
 
   const updateReview = useCallback(
     async (id: string, updates: { rating?: number; review?: string }) => {
-      // Optimistic update
       setBooks((prev) =>
         prev.map((b) => (b.id === id ? { ...b, ...updates } : b)),
       );
-
       try {
         await updateReviewAPI(id, updates);
       } catch (err) {
@@ -269,14 +262,11 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
   const removeBook = useCallback(
     async (id: string) => {
       const bookToRemove = books.find((b) => b.id === id);
-      // Optimistic update
       setBooks((prev) => prev.filter((b) => b.id !== id));
-
       try {
         await removeUserBookAPI(id);
         await refreshBooks();
       } catch (err) {
-        // Rollback
         if (bookToRemove) {
           setBooks((prev) => [...prev, bookToRemove]);
         }

@@ -152,7 +152,7 @@ export function InputProgress() {
           <div className="text-[13px] text-gray-600">
             by{" "}
             <a href="#" className="text-[#382110] hover:underline no-underline">
-              {book.author}
+              {(book.authors || []).join(", ")}
             </a>
           </div>
         </div>

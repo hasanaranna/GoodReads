@@ -1,6 +1,5 @@
 import cors from "cors";
 import express from "express";
-
 import {
   errorMiddleware,
   notFoundMiddleware,
@@ -11,14 +10,17 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import shelvesRouter from "./modules/shelves/shelves.routes.js";
 import { getBookReviewsController } from "./modules/reviews/reviews.controller.js";
 import reviewsRouter from "./modules/reviews/reviews.routes.js";
+import activitiesRouter from "./modules/activities/activities.routes.js";
 
 const app = express();
 
-app.use(cors({
-  origin: "http://localhost:5173",
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 app.get("/health", (req, res) => {
@@ -30,6 +32,7 @@ app.get("/health", (req, res) => {
 app.use("/api/books", booksRouter);
 app.use("/api/auth", authRoutes);
 app.use("/api/shelves", authenticate, shelvesRouter);
+app.use("/api/activities", authenticate, activitiesRouter);
 
 // Public reviews route (no auth) — must be registered BEFORE the protected reviews routes
 app.get("/api/reviews/book/:googleBooksId", getBookReviewsController);
