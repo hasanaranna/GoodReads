@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
     fetchRecommendations,
     type RecommendedBook,
@@ -134,11 +134,20 @@ interface BookCardProps {
 
 function BookCard({ book, onWantToRead, shelvedIds }: BookCardProps) {
     const shelved = shelvedIds.has(book.id);
+    const navigate = useNavigate();
 
     return (
-        <article className="flex border-b border-[#e8e0d0] group" style={{ gap: "16px", paddingTop: "16px", paddingBottom: "16px" }}>
+        <article className="flex border-b border-[#e8e0d0] group cursor-pointer hover:bg-[#faf7f0] transition-colors" style={{ gap: "16px", paddingTop: "16px", paddingBottom: "16px" }}
+        onClick={(e) => {
+            if ((e.target as HTMLElement).closest('select')) return;
+            navigate(`/book/${book.googleBooksId}`);
+        }}>
             {/* Cover */}
-            <Link to={`/book/${book.googleBooksId}`} className="flex-shrink-0 no-underline text-inherit">
+            <Link 
+                to={`/book/${book.googleBooksId}`} 
+                onClick={(e) => { e.preventDefault(); navigate(`/book/${book.googleBooksId}`); }}
+                className="flex-shrink-0 no-underline text-inherit"
+            >
                 {book.coverUrl ? (
                     <img
                         src={book.coverUrl}
@@ -161,6 +170,7 @@ function BookCard({ book, onWantToRead, shelvedIds }: BookCardProps) {
                     <div className="min-w-0">
                         <Link
                             to={`/book/${book.googleBooksId}`}
+                            onClick={(e) => { e.preventDefault(); navigate(`/book/${book.googleBooksId}`); }}
                             className="no-underline text-[#382110] font-semibold text-[15px] hover:underline leading-snug block"
                             style={{ fontFamily: "Georgia, serif" }}
                         >
