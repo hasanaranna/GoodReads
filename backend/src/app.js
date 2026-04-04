@@ -11,6 +11,7 @@ import authRoutes from './modules/auth/auth.routes.js';
 import shelvesRouter from './modules/shelves/shelves.routes.js';
 import { getBookReviewsController } from './modules/reviews/reviews.controller.js';
 import reviewsRouter from './modules/reviews/reviews.routes.js';
+import recommendationRoutes from './modules/recommendations/recommendations.routes.js';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.get('/health', (req, res) => {
 app.use('/api/books', booksRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api/shelves', authenticate, shelvesRouter);
+app.use('/api/recommendations', authenticate, recommendationRoutes);
 
 // Public reviews route (no auth) — must be registered BEFORE the protected reviews routes
 app.get('/api/reviews/book/:googleBooksId', getBookReviewsController);

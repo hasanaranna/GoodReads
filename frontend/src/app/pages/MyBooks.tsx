@@ -21,7 +21,7 @@ const ITEMS_PER_PAGE = 10;
 
 export function MyBooks() {
   const { shelfId } = useParams();
-  const { books } = useBooks();
+  const { books, loading } = useBooks();
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<
@@ -30,6 +30,7 @@ export function MyBooks() {
   const [batchMode, setBatchMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
+  const [openShelfMenuId, setOpenShelfMenuId] = useState<string | null>(null);
 
   const filtered = books.filter((b) => {
     const matchesShelf = !shelfId || b.shelf === shelfId;
@@ -146,21 +147,19 @@ export function MyBooks() {
           <span className="text-[#ccc]">|</span>
           <button
             onClick={() => setViewMode("list")}
-            className={`outline-none border-none bg-transparent shadow-none ${
-              viewMode === "list"
+            className={`outline-none border-none bg-transparent shadow-none ${viewMode === "list"
                 ? "text-[#382110]"
                 : "text-[#aaa] hover:text-[#382110]"
-            }`}
+              }`}
           >
             <List size="1.35em" />
           </button>
           <button
             onClick={() => setViewMode("grid")}
-            className={`outline-none border-none bg-transparent shadow-none ${
-              viewMode === "grid"
+            className={`outline-none border-none bg-transparent shadow-none ${viewMode === "grid"
                 ? "text-[#382110]"
                 : "text-[#aaa] hover:text-[#382110]"
-            }`}
+              }`}
           >
             <LayoutGrid size="1.35em" />
           </button>
@@ -189,11 +188,10 @@ export function MyBooks() {
                   <button
                     key={s}
                     onClick={() => setSortBy(s)}
-                    className={`outline-none border-none bg-transparent shadow-none capitalize hover:underline ${
-                      sortBy === s
+                    className={`outline-none border-none bg-transparent shadow-none capitalize hover:underline ${sortBy === s
                         ? "text-[#382110] underline"
                         : "text-[#00635d]"
-                    }`}
+                      }`}
                   >
                     {s === "dateAdded" ? "Date Added" : s}
                   </button>
@@ -216,11 +214,10 @@ export function MyBooks() {
                 <button
                   key={p}
                   onClick={() => setCurrentPage(p)}
-                  className={`px-1 hover:underline ${
-                    currentPage === p
+                  className={`px-1 hover:underline ${currentPage === p
                       ? "text-[#382110] underline"
                       : "text-[#00635d]"
-                  }`}
+                    }`}
                 >
                   {p}
                 </button>
@@ -253,12 +250,16 @@ export function MyBooks() {
                 <div className="w-[170px] shrink-0">Rating / Shelf</div>
                 <div className="hidden md:block w-[150px] shrink-0">
                   Date Added / Read
-              </div>
+                </div>
                 <div className="flex-1">Review</div>
               </div>
 
               <div className="max-h-[600px] overflow-y-auto pr-2">
-                {paginated.length === 0 ? (
+                {loading ? (
+                  <div className="loader">
+                    <div className="justify-content-center jimu-primary-loading"></div>
+                  </div>
+                ) : paginated.length === 0 ? (
                   <div className="py-14 text-center text-gray-400 text-[16px]">
                     No books found.{" "}
                     <Link
@@ -277,10 +278,18 @@ export function MyBooks() {
                       selected={selectedIds.has(book.id)}
                       onSelect={toggleSelect}
                       batchMode={batchMode}
+                      isShelfMenuOpen={openShelfMenuId === book.id}
+                      onToggleShelfMenu={() =>
+                        setOpenShelfMenuId(openShelfMenuId === book.id ? null : book.id)
+                      }
                     />
                   ))
                 )}
               </div>
+            </div>
+          ) : loading ? (
+            <div className="loader">
+              <div className="justify-content-center jimu-primary-loading"></div>
             </div>
           ) : (
             <div className="grid grid-cols-8 md:grid-cols-4 gap-3 pt-3 max-h-[600px] overflow-y-auto pr-2">
@@ -297,6 +306,10 @@ export function MyBooks() {
                     selected={selectedIds.has(book.id)}
                     onSelect={toggleSelect}
                     batchMode={batchMode}
+                    isShelfMenuOpen={openShelfMenuId === book.id}
+                    onToggleShelfMenu={() =>
+                      setOpenShelfMenuId(openShelfMenuId === book.id ? null : book.id)
+                    }
                   />
                 ))
               )}
@@ -317,11 +330,10 @@ export function MyBooks() {
                 <button
                   key={p}
                   onClick={() => setCurrentPage(p)}
-                  className={`px-1 hover:underline ${
-                    currentPage === p
+                  className={`px-1 hover:underline ${currentPage === p
                       ? "text-[#382110] underline"
                       : "text-[#00635d]"
-                  }`}
+                    }`}
                 >
                   {p}
                 </button>
