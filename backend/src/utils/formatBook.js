@@ -13,7 +13,8 @@ function pickCoverImage(imageLinks = {}) {
 export function formatBook(item = {}) {
   const volumeInfo = item.volumeInfo || {};
   const saleInfo = item.saleInfo || {};
-
+  // //print the item to see the structure of the data
+  // console.log("Raw book item:", item);
   return {
     id: item.id || null,
     googleBooksId: item.id || null,
