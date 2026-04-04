@@ -49,7 +49,7 @@ export function StarRating({
         ))}
       </div>
       {showCount && (
-        <span className="text-[11px] text-gray-500">{rating > 0 ? `${rating}/5` : ''}</span>
+        <span className="text-[11px] text-gray-500 min-h-[16px] flex items-center">{rating > 0 ? `${rating}/5` : '\u00A0'}</span>
       )}
     </div>
   );

@@ -137,7 +137,8 @@
         font-family: 'Merriweather', 'Lora', Georgia, serif;
         line-height: var(--line-height);
         font-size: 1.05rem;
-        padding: 0.8rem;
+        margin: 0;
+        padding: 0;
         letter-spacing: 0.01em;
     }
 

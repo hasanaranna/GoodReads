@@ -106,6 +106,7 @@ export function EditReview() {
   }
 
   function addReadDate() {
+    if (readDates.length >= 1) return;
     setReadDates((prev) => [
       ...prev,
       { id: Date.now().toString(), started: "", finished: "" },
@@ -134,11 +135,11 @@ export function EditReview() {
       </div>
 
       {/* Book info */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex" style={{ gap: "16px", marginBottom: "16px" }}>
         <img
           src={book.coverUrl}
           alt={book.title}
-          className="w-[75px] h-[105px] object-cover shadow"
+          className="w-[95px] h-[135px] object-cover shadow"
         />
         <div>
           <div className="text-[14px] text-[#382110] leading-snug mb-1">
@@ -156,7 +157,8 @@ export function EditReview() {
 
       <a
         href="#"
-        className="text-[12px] text-[#00635d] hover:underline no-underline mb-6 block"
+        className="text-[12px] text-[#00635d] hover:underline no-underline block"
+        style={{ marginBottom: "16px" }}
       >
         Change Edition
       </a>
@@ -164,7 +166,7 @@ export function EditReview() {
       <div className="border-t border-[#ddd]" />
 
       {/* Rating */}
-      <div className="py-4 flex items-center gap-3 border-b border-[#ddd]">
+      <div className="flex flex-wrap items-center border-b border-[#ddd]" style={{ paddingTop: "16px", paddingBottom: "16px", gap: "16px" }}>
         <span className="text-[14px] text-[#382110]">My Rating:</span>
         <StarRating
           rating={rating}
@@ -183,12 +185,12 @@ export function EditReview() {
       </div>
 
       {/* Shelves */}
-      <div className="py-4 flex items-center gap-3 border-b border-[#ddd]">
+      <div className="flex flex-wrap items-center border-b border-[#ddd]" style={{ paddingTop: "16px", paddingBottom: "16px", gap: "16px" }}>
         <span className="text-[14px] text-[#382110]">Bookshelves/tags:</span>
         <div className="relative">
           <button
             onClick={() => setShowShelfMenu(!showShelfMenu)}
-            className="flex items-center gap-1 text-[13px] border border-[#aaa] px-2 py-0.5 bg-[#ffffff] hover:bg-[#f4f0e6] text-[#382110]"
+            className="flex items-center gap-1 text-[13px] border border-[#aaa] px-4 py-1.5 bg-[#ffffff] hover:bg-[#f4f0e6] text-[#382110] rounded"
           >
             Choose shelves… <ChevronDown size={12} />
           </button>
@@ -198,8 +200,8 @@ export function EditReview() {
                 <button
                   key={key}
                   className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f4f0e6] ${shelf === key
-                      ? "font-semibold text-[#382110]"
-                      : "text-[#382110]"
+                    ? "font-semibold text-[#382110]"
+                    : "text-[#382110]"
                     }`}
                   onClick={() => {
                     setShelf(key as Book["shelf"]);
@@ -219,17 +221,17 @@ export function EditReview() {
       </div>
 
       {/* Review */}
-      <div className="py-4 border-b border-[#ddd]">
-        <div className="flex items-center justify-between mb-2">
+      <div className="border-b border-[#ddd]" style={{ paddingTop: "16px", paddingBottom: "16px" }}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between" style={{ marginBottom: "8px", gap: "8px" }}>
           <span className="text-[15px] text-[#382110]">
             What did you think?
           </span>
-          <div className="flex items-center gap-2 text-[12px] text-[#00635d]">
-            <button className="hover:underline">Formatting tips</button>
-            <span>|</span>
-            <button className="hover:underline">Insert book/author</button>
-            <span>|</span>
-            <button className="hover:underline">Enlarge text field</button>
+          <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-[#00635d]">
+            <button className="hover:underline" style={{ padding: 0, backgroundColor: "transparent", minHeight: "auto", border: "none", color: "inherit" }}>Formatting tips</button>
+            <span className="text-[#00635d]">|</span>
+            <button className="hover:underline" style={{ padding: 0, backgroundColor: "transparent", minHeight: "auto", border: "none", color: "inherit" }}>Insert book/author</button>
+            <span className="text-[#00635d]">|</span>
+            <button className="hover:underline" style={{ padding: 0, backgroundColor: "transparent", minHeight: "auto", border: "none", color: "inherit" }}>Enlarge text field</button>
           </div>
         </div>
         <textarea
@@ -238,7 +240,7 @@ export function EditReview() {
           placeholder="Enter your review (optional)"
           className="w-full border border-[#ccc] rounded p-3 text-[13px] text-[#382110] focus:outline-none focus:border-[#00635d] resize-y min-h-[180px]"
         />
-        <div className="mt-2 flex items-center gap-2">
+        <div className="flex items-center" style={{ marginTop: "8px", gap: "12px" }}>
           <input
             type="checkbox"
             id="spoilers"
@@ -256,16 +258,16 @@ export function EditReview() {
       </div>
 
       {/* Dates read */}
-      <div className="py-4 border-b border-[#ddd]">
-        <div className="text-[16px] text-[#382110] mb-2">Dates read</div>
-        <div className="text-[13px] text-[#382110] mb-1">Rereading?</div>
-        <div className="text-[12px] text-gray-500 mb-3">
+      <div className="border-b border-[#ddd]" style={{ paddingTop: "16px", paddingBottom: "16px" }}>
+        <div className="text-[16px] text-[#382110]" style={{ marginBottom: "8px" }}>Dates read</div>
+        <div className="text-[13px] text-[#382110]" style={{ marginBottom: "8px" }}>Rereading?</div>
+        <div className="text-[12px] text-gray-500" style={{ marginBottom: "8px" }}>
           Now you can track all the times you have read a book. Make sure to
           fill in the year finished to have it added to your Reading Challenge!
         </div>
 
         {readDates.map((rd) => (
-          <div key={rd.id} className="flex items-center gap-3 mb-2 text-[13px]">
+          <div key={rd.id} className="flex flex-wrap items-center gap-3 mb-2 mt-4 text-[13px]">
             <div className="flex items-center gap-2">
               <label className="text-gray-500 text-[12px]">Started:</label>
               <input
@@ -307,17 +309,21 @@ export function EditReview() {
           </div>
         ))}
 
-        <button
-          onClick={addReadDate}
-          className="text-[12px] bg-[#f4f0e6] border border-[#ccc] px-3 py-1 text-[#382110] hover:bg-[#e8e2d0] rounded"
-        >
-          Add read data
-        </button>
+        {readDates.length === 0 && (
+          <div style={{ marginTop: "8px", marginBottom: "8px" }}>
+            <button
+              onClick={addReadDate}
+              className="text-[12px] bg-[#f4f0e6] border border-[#ccc] px-4 py-2 text-[#382110] hover:bg-[#e8e2d0] rounded"
+            >
+              Add read data
+            </button>
+          </div>
+        )}
 
-        <div className="mt-3">
+        <div style={{ marginTop: "16px", paddingBottom: "16px" }}>
           <button
             onClick={() => setShowMoreDetails(!showMoreDetails)}
-            className="text-[12px] text-[#382110] flex items-center gap-1 hover:underline"
+            className="text-[12px] text-[#382110] flex items-center gap-1 hover:underline bg-[#f4f0e6] border border-[#ccc] px-4 py-2 rounded"
           >
             More details{" "}
             {showMoreDetails ? (
@@ -327,7 +333,7 @@ export function EditReview() {
             )}
           </button>
           {showMoreDetails && (
-            <div className="mt-3 grid grid-cols-2 gap-3 text-[13px] text-[#382110]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 text-[13px] text-[#382110]" style={{ marginTop: "8px", gap: "16px" }}>
               <div>
                 <label className="block text-gray-500 text-[11px] mb-1">
                   Owned?
@@ -356,15 +362,15 @@ export function EditReview() {
       </div>
 
       {/* Post button */}
-      <div className="py-4 flex flex-wrap items-center gap-4">
+      <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4" style={{ paddingTop: "16px", paddingBottom: "16px" }}>
         <button
           onClick={handlePost}
           disabled={isSaving}
-          className="bg-[#f4f0e6] border border-[#999] px-5 py-1.5 text-[13px] text-[#382110] hover:bg-[#e8e2d0] rounded disabled:opacity-50"
+          className="bg-[#f4f0e6] border border-[#999] px-6 py-2 text-[13px] text-[#382110] hover:bg-[#e8e2d0] rounded disabled:opacity-50"
         >
           {isSaving ? "Saving..." : "Post"}
         </button>
-        <div className="flex items-center gap-4 ml-auto text-[12px]">
+        <div className="flex flex-wrap items-center gap-4 sm:ml-auto text-[12px]">
           <label className="flex items-center gap-1.5 cursor-pointer text-[#382110]">
             <input
               type="checkbox"
@@ -406,7 +412,7 @@ export function EditReview() {
       </div>
 
       {/* ===== Community Reviews Section ===== */}
-      <div className="py-6">
+      <div className="py-6" style={{ paddingBottom: "64px" }}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[18px] font-medium text-[#382110]">
             Community Reviews
@@ -478,7 +484,7 @@ export function EditReview() {
 
                 {/* Review text */}
                 {review.review && (
-                  <div className="ml-12 mt-1">
+                  <div className="sm:ml-12 ml-0 mt-1">
                     <p className="text-[13px] text-[#382110] leading-relaxed whitespace-pre-wrap">
                       {review.review}
                     </p>
@@ -487,7 +493,7 @@ export function EditReview() {
 
                 {/* Rating only (no text) */}
                 {!review.review && review.rating > 0 && (
-                  <div className="ml-12 mt-1">
+                  <div className="sm:ml-12 ml-0 mt-1">
                     <p className="text-[12px] text-gray-400 italic">
                       Rated this book {review.rating} out of 5 stars
                     </p>
