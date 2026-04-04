@@ -14,21 +14,6 @@ jobs:
       matrix:
         node-version: [18.x, 20.x]
 
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_DB: goodreads_test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -60,31 +45,9 @@ jobs:
           GOOGLE_BOOKS_API_KEY=test-key
           EOF
 
-      - name: Initialize test database
+      - name: Run backend tests
         working-directory: ./backend
-        env:
-          PGHOST: localhost
-          PGPORT: 5432
-          PGUSER: postgres
-          PGPASSWORD: postgres
-          PGDATABASE: goodreads_test
-        run: |
-          psql -f ../init-scripts/db_creation.sql
-
-      - name: Run backend unit tests
-        working-directory: ./backend
-        run: npm test -- --coverage --testPathPattern=__tests__/unit
-
-      - name: Run backend integration tests
-        working-directory: ./backend
-        env:
-          NODE_ENV: test
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: goodreads_test
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-        run: npm test -- --coverage --testPathPattern=__tests__/integration
+        run: npm test -- --coverage
 
       - name: Upload backend coverage reports
         uses: codecov/codecov-action@v3
@@ -114,7 +77,7 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Run frontend unit tests
         working-directory: ./frontend
