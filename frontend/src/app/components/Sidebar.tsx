@@ -55,11 +55,10 @@ export function Sidebar() {
             <li key={shelf.id}>
               <Link
                 to={shelf.path}
-                className={`no-underline flex justify-between items-center py-1 ${
-                  activeShelf === shelf.id
-                    ? "text-[#382110] font-semibold"
-                    : "text-[#382110] hover:underline"
-                }`}
+                className={`no-underline flex justify-between items-center py-1 ${activeShelf === shelf.id
+                  ? "text-[#382110] font-semibold"
+                  : "text-[#382110] hover:underline"
+                  }`}
               >
                 <span>{shelf.label}</span>
                 <span className="text-gray-500">({shelf.count})</span>
@@ -104,14 +103,26 @@ export function Sidebar() {
           Add books
         </div>
         <ul className="space-y-1.5">
-          {["*Recommendations", "*Explore"].map((item) => (
-            <li key={item}>
-              <a
-                href="#"
-                className="text-[#382110] hover:underline no-underline text-[15px]"
-              >
-                {item}
-              </a>
+          {[
+            { label: "Recommendations", path: "/recommendations" },
+            { label: "*Explore", path: "#" },
+          ].map((item) => (
+            <li key={item.label}>
+              {item.path === "#" ? (
+                <a
+                  href="#"
+                  className="text-[#382110] hover:underline no-underline text-[15px]"
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  to={item.path}
+                  className="text-[#382110] hover:underline no-underline text-[15px]"
+                >
+                  {item.label}
+                </Link>
+              )}
             </li>
           ))}
         </ul>
