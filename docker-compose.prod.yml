@@ -16,5 +16,3 @@ services:
       - /root/backend.env
     environment:
       - NODE_ENV=production
-    depends_on:
-      - db
