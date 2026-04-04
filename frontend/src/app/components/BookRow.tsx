@@ -140,16 +140,17 @@ export function BookRow({
 
       {/* Rating + Shelf */}
       <div
-        className="w-[170px] shrink-0 flex flex-col items-center gap-2"
+        className="w-[170px] shrink-0 flex flex-col items-center gap-4"
         style={{ padding: "18px 0" }}
       >
         <StarRating rating={book.rating} showCount size="sm" />
-        <div className="relative">
+        <div className="relative w-[140px] mt-2">
           <button
             onClick={() => setShowShelfMenu(!showShelfMenu)}
-            className="flex items-center gap-1 text-[13px] text-[#382110] border border-[#ccc] rounded px-3 py-1 bg-[#f4f0e6] hover:bg-[#e8e2d0]"
+            className="flex items-center justify-between w-full text-[13px] text-[#382110] border border-[#ccc] rounded px-3 py-1.5 bg-[#f4f0e6] hover:bg-[#e8e2d0]"
           >
-            {SHELF_LABELS[book.shelf]} <ChevronDown size={12} />
+            <span className="truncate text-left">{SHELF_LABELS[book.shelf]}</span>
+            <ChevronDown size={14} className="shrink-0 ml-1" />
           </button>
           {showShelfMenu && (
             <div className="absolute top-full left-0 z-20 bg-[#ffffff] border border-[#ddd] rounded shadow-md min-w-[180px]">

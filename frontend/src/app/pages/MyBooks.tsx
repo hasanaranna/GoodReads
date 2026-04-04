@@ -253,35 +253,37 @@ export function MyBooks() {
                 <div className="w-[170px] shrink-0">Rating / Shelf</div>
                 <div className="hidden md:block w-[150px] shrink-0">
                   Date Added / Read
-                </div>
+              </div>
                 <div className="flex-1">Review</div>
               </div>
 
-              {paginated.length === 0 ? (
-                <div className="py-14 text-center text-gray-400 text-[16px]">
-                  No books found.{" "}
-                  <Link
-                    to="/mybooks"
-                    className="text-[#00635d] hover:underline no-underline"
-                  >
-                    View all books
-                  </Link>
-                </div>
-              ) : (
-                paginated.map((book) => (
-                  <BookRow
-                    key={book.id}
-                    book={book}
-                    viewMode="list"
-                    selected={selectedIds.has(book.id)}
-                    onSelect={toggleSelect}
-                    batchMode={batchMode}
-                  />
-                ))
-              )}
+              <div className="max-h-[600px] overflow-y-auto pr-2">
+                {paginated.length === 0 ? (
+                  <div className="py-14 text-center text-gray-400 text-[16px]">
+                    No books found.{" "}
+                    <Link
+                      to="/mybooks"
+                      className="text-[#00635d] hover:underline no-underline"
+                    >
+                      View all books
+                    </Link>
+                  </div>
+                ) : (
+                  paginated.map((book) => (
+                    <BookRow
+                      key={book.id}
+                      book={book}
+                      viewMode="list"
+                      selected={selectedIds.has(book.id)}
+                      onSelect={toggleSelect}
+                      batchMode={batchMode}
+                    />
+                  ))
+                )}
+              </div>
             </div>
           ) : (
-            <div className="grid grid-cols-8 md:grid-cols-4 gap-3 pt-3">
+            <div className="grid grid-cols-8 md:grid-cols-4 gap-3 pt-3 max-h-[600px] overflow-y-auto pr-2">
               {paginated.length === 0 ? (
                 <div className="py-14 text-center text-gray-400 text-[16px] w-full">
                   No books found.
