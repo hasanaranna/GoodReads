@@ -1,23 +1,19 @@
 services:
   frontend:
     build: ./frontend
+    image: ghcr.io/hasanaranna/goodreads-frontend:latest
     container_name: goodreads-frontend
     ports:
       - "5173:5173"
-    volumes:
-      - /app/node_modules
-      - ./frontend:/app:z
     environment:
       - CHOKIDAR_USEPOLLING=true
 
   backend:
     build: ./backend
+    image: ghcr.io/hasanaranna/goodreads-backend:latest
     container_name: goodreads-backend
     ports:
       - "8080:8080"
-    volumes:
-      - /app/node_modules
-      - ./backend:/app:z
     env_file:
       - ./backend/.env
     environment:
@@ -36,7 +32,6 @@ services:
       - POSTGRES_PASSWORD=postgres
     volumes:
       - db_data:/var/lib/postgresql/data:z
-      - ./init-scripts:/docker-entrypoint-initdb.d:z
 
 volumes:
   db_data:
