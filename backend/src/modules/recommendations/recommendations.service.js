@@ -4,37 +4,37 @@ import { pool } from "../../config/db.js";
 
 /** Normalise a raw score array to [0, 1] */
 function normalise(items, key) {
-    const max = Math.max(...items.map((i) => i[key]), 0.0001);
-    return items.map((i) => ({ ...i, [key]: i[key] / max }));
+  const max = Math.max(...items.map((i) => i[key]), 0.0001);
+  return items.map((i) => ({ ...i, [key]: i[key] / max }));
 }
 
 /** Deduplicate by book_id, keeping the highest score */
 function dedupe(items) {
-    const map = new Map();
-    for (const item of items) {
-        const existing = map.get(item.book_id);
-        if (!existing || item.score > existing.score) map.set(item.book_id, item);
-    }
-    return [...map.values()];
+  const map = new Map();
+  for (const item of items) {
+    const existing = map.get(item.book_id);
+    if (!existing || item.score > existing.score) map.set(item.book_id, item);
+  }
+  return [...map.values()];
 }
 
 /** Format a raw DB book row for the API response */
 function formatBook(row, score, reason) {
-    return {
-        id: row.id,
-        googleBooksId: row.google_books_id,
-        title: row.title,
-        subtitle: row.subtitle || null,
-        author: row.author,
-        coverUrl: row.cover_url || null,
-        description: row.description || null,
-        pageCount: row.page_count || null,
-        publishedDate: row.published_date || null,
-        categories: row.categories || [],
-        averageRating: parseFloat(row.average_rating) || 0,
-        score: parseFloat(score.toFixed(4)),
-        reason,
-    };
+  return {
+    id: row.id,
+    googleBooksId: row.google_books_id,
+    title: row.title,
+    subtitle: row.subtitle || null,
+    author: row.author,
+    coverUrl: row.cover_url || null,
+    description: row.description || null,
+    pageCount: row.page_count || null,
+    publishedDate: row.published_date || null,
+    categories: row.categories || [],
+    averageRating: parseFloat(row.average_rating) || 0,
+    score: parseFloat(score.toFixed(4)),
+    reason,
+  };
 }
 
 // 1. COLLABORATIVE FILTERING (weight: 50%)
@@ -64,7 +64,7 @@ function formatBook(row, score, reason) {
 //      A book loved by one very-similar user can outscore a book mildly liked by ten weakly-similar users.
 
 async function getCollaborativeRecs(userId, limit = 20) {
-    const query = `
+  const query = `
     WITH
     -- Books the target user has rated (rating > 0)
     target_ratings AS (
@@ -117,12 +117,12 @@ async function getCollaborativeRecs(userId, limit = 20) {
     ORDER  BY cs.cf_score DESC;
   `;
 
-    const { rows } = await pool.query(query, [userId, limit]);
-    const normalised = normalise(
-        rows.map((r) => ({ book_id: r.id, raw_score: parseFloat(r.raw_score), row: r })),
-        "raw_score"
-    );
-    return normalised.map(({ row, raw_score }) => formatBook(row, raw_score, "cf"));
+  const { rows } = await pool.query(query, [userId, limit]);
+  const normalised = normalise(
+    rows.map((r) => ({ book_id: r.id, raw_score: parseFloat(r.raw_score), row: r })),
+    "raw_score"
+  );
+  return normalised.map(({ row, raw_score }) => formatBook(row, raw_score, "cf"));
 }
 
 // 2. Genre Match (30% weight) 
@@ -141,7 +141,7 @@ async function getCollaborativeRecs(userId, limit = 20) {
 //                 + (Average Rating×0.3) (small popularity nudge)
 
 async function getGenreRecs(userId, limit = 20) {
-    const query = `
+  const query = `
     WITH
     -- Frequency-weighted favourite categories from the user's highly-rated books
     fav_categories AS (
@@ -179,12 +179,12 @@ async function getGenreRecs(userId, limit = 20) {
     LIMIT  $2;
   `;
 
-    const { rows } = await pool.query(query, [userId, limit]);
-    const normalised = normalise(
-        rows.map((r) => ({ book_id: r.id, raw_score: parseFloat(r.raw_score), row: r })),
-        "raw_score"
-    );
-    return normalised.map(({ row, raw_score }) => formatBook(row, raw_score, "genre"));
+  const { rows } = await pool.query(query, [userId, limit]);
+  const normalised = normalise(
+    rows.map((r) => ({ book_id: r.id, raw_score: parseFloat(r.raw_score), row: r })),
+    "raw_score"
+  );
+  return normalised.map(({ row, raw_score }) => formatBook(row, raw_score, "genre"));
 }
 
 // Engine 3 — Author Match (weight: 20%)
@@ -203,7 +203,7 @@ async function getGenreRecs(userId, limit = 20) {
 
 
 async function getAuthorRecs(userId, limit = 20) {
-    const query = `
+  const query = `
     WITH
     -- Authors the user has rated, with their personal avg rating per author
     fav_authors AS (
@@ -229,12 +229,12 @@ async function getAuthorRecs(userId, limit = 20) {
     LIMIT  $2;
   `;
 
-    const { rows } = await pool.query(query, [userId, limit]);
-    const normalised = normalise(
-        rows.map((r) => ({ book_id: r.id, raw_score: parseFloat(r.raw_score), row: r })),
-        "raw_score"
-    );
-    return normalised.map(({ row, raw_score }) => formatBook(row, raw_score, "author"));
+  const { rows } = await pool.query(query, [userId, limit]);
+  const normalised = normalise(
+    rows.map((r) => ({ book_id: r.id, raw_score: parseFloat(r.raw_score), row: r })),
+    "raw_score"
+  );
+  return normalised.map(({ row, raw_score }) => formatBook(row, raw_score, "author"));
 }
 
 // 4. Cold Start Check
@@ -245,7 +245,7 @@ async function getAuthorRecs(userId, limit = 20) {
 //  Weighted Score=(Average Rating×Number of Ratings)​/(Number of Ratings+Confidence Constant)
 
 async function getColdStartRecs(userId, limit = 20) {
-    const query = `
+  const query = `
     SELECT b.*,
       (b.average_rating * COUNT(ub.id)::FLOAT / NULLIF(COUNT(ub.id) + 5, 0))
         AS raw_score
@@ -258,9 +258,9 @@ async function getColdStartRecs(userId, limit = 20) {
     LIMIT  $2;
   `;
 
-    const { rows } = await pool.query(query, [userId, limit]);
-    // Cold-start books are tagged "cf" so they still render on the page
-    return rows.map((r) => formatBook(r, parseFloat(r.raw_score) || 0, "cf"));
+  const { rows } = await pool.query(query, [userId, limit]);
+  // Cold-start books are tagged "cf" so they still render on the page
+  return rows.map((r) => formatBook(r, parseFloat(r.raw_score) || 0, "cf"));
 }
 
 // MAIN EXPORT 
@@ -276,51 +276,51 @@ async function getColdStartRecs(userId, limit = 20) {
  * @returns {{ books: BookResult[], total: number, hasMore: boolean, isColdStart: boolean }}
  */
 async function getRecommendations(userId, { page = 1, perPage = 10, reason = null } = {}) {
-    // Check how many ratings the user has (cold-start guard)
-    const { rows: ratingCount } = await pool.query(
-        `SELECT COUNT(*) AS cnt FROM user_books WHERE user_id = $1 AND rating > 0`,
-        [userId]
-    );
-    const totalRatings = parseInt(ratingCount[0].cnt, 10);
-    const isColdStart = totalRatings < 5;
+  // Check how many ratings the user has (cold-start guard)
+  const { rows: ratingCount } = await pool.query(
+    `SELECT COUNT(*) AS cnt FROM user_books WHERE user_id = $1 AND rating > 0`,
+    [userId]
+  );
+  const totalRatings = parseInt(ratingCount[0].cnt, 10);
+  const isColdStart = totalRatings < 5;
 
-    let allBooks = [];
+  let allBooks = [];
 
-    if (isColdStart) {
-        allBooks = await getColdStartRecs(userId, 40);
-    } else {
-        // Run all three engines in parallel
-        const [cfBooks, genreBooks, authorBooks] = await Promise.all([
-            getCollaborativeRecs(userId, 25),
-            getGenreRecs(userId, 25),
-            getAuthorRecs(userId, 20),
-        ]);
+  if (isColdStart) {
+    allBooks = await getColdStartRecs(userId, 40);
+  } else {
+    // Run all three engines in parallel
+    const [cfBooks, genreBooks, authorBooks] = await Promise.all([
+      getCollaborativeRecs(userId, 25),
+      getGenreRecs(userId, 25),
+      getAuthorRecs(userId, 20),
+    ]);
 
-        //  Hybrid blend: weighted score per reason 
-        const WEIGHTS = { cf: 0.50, genre: 0.30, author: 0.20 };
+    //  Hybrid blend: weighted score per reason 
+    const WEIGHTS = { cf: 0.50, genre: 0.30, author: 0.20 };
 
-        const weighted = [
-            ...cfBooks.map((b) => ({ ...b, score: b.score * WEIGHTS.cf })),
-            ...genreBooks.map((b) => ({ ...b, score: b.score * WEIGHTS.genre })),
-            ...authorBooks.map((b) => ({ ...b, score: b.score * WEIGHTS.author })),
-        ];
+    const weighted = [
+      ...cfBooks.map((b) => ({ ...b, score: b.score * WEIGHTS.cf })),
+      ...genreBooks.map((b) => ({ ...b, score: b.score * WEIGHTS.genre })),
+      ...authorBooks.map((b) => ({ ...b, score: b.score * WEIGHTS.author })),
+    ];
 
-        // Deduplicate: keep highest blended score per book
-        allBooks = dedupe(
-            weighted.map((b) => ({ ...b, book_id: b.id }))
-        ).sort((a, b) => b.score - a.score);
-    }
+    // Deduplicate: keep highest blended score per book
+    allBooks = dedupe(
+      weighted.map((b) => ({ ...b, book_id: b.id }))
+    ).sort((a, b) => b.score - a.score);
+  }
 
-    // Filter by reason if requested 
-    const filtered = reason ? allBooks.filter((b) => b.reason === reason) : allBooks;
+  // Filter by reason if requested 
+  const filtered = reason ? allBooks.filter((b) => b.reason === reason) : allBooks;
 
-    // Paginate 
-    const total = filtered.length;
-    const start = (page - 1) * perPage;
-    const slice = filtered.slice(start, start + perPage);
-    const hasMore = start + perPage < total;
+  // Paginate 
+  const total = filtered.length;
+  const start = (page - 1) * perPage;
+  const slice = filtered.slice(start, start + perPage);
+  const hasMore = start + perPage < total;
 
-    return { books: slice, total, hasMore, isColdStart };
+  return { books: slice, total, hasMore, isColdStart };
 }
 
 export { getRecommendations };
