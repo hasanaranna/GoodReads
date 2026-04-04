@@ -5,8 +5,6 @@ services:
     container_name: goodreads-frontend
     ports:
       - "5173:5173"
-    volumes:
-      - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
 
@@ -16,8 +14,6 @@ services:
     container_name: goodreads-backend
     ports:
       - "8080:8080"
-    volumes:
-      - /app/node_modules
     env_file:
       - ./backend/.env
     environment:
