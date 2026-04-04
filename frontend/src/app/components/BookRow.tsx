@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MessageSquare, ChevronDown } from "lucide-react";
 import { Link } from "react-router";
 import { Book } from "../data/initialBooks";
@@ -32,11 +32,33 @@ export function BookRow({
 }: BookRowProps) {
   const { updateBook } = useBooks();
   const [internalShelfMenuOpen, setInternalShelfMenuOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const showShelfMenu =
     isShelfMenuOpen !== undefined ? isShelfMenuOpen : internalShelfMenuOpen;
   const toggleShelfMenu =
     onToggleShelfMenu || (() => setInternalShelfMenuOpen(!internalShelfMenuOpen));
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        if (showShelfMenu) {
+          if (isShelfMenuOpen !== undefined && onToggleShelfMenu) {
+            onToggleShelfMenu();
+          } else {
+            setInternalShelfMenuOpen(false);
+          }
+        }
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showShelfMenu, isShelfMenuOpen, onToggleShelfMenu]);
 
   const progress = (() => {
     if (book.totalPages && book.totalPages > 0) {
@@ -157,7 +179,7 @@ export function BookRow({
         style={{ padding: "18px 0" }}
       >
         <StarRating rating={book.rating} showCount size="sm" />
-        <div className="relative w-[140px] mt-2">
+        <div className="relative w-[140px] mt-2" ref={dropdownRef}>
           <button
             onClick={toggleShelfMenu}
             className="flex items-center justify-between w-full text-[13px] text-[#382110] border border-[#ccc] rounded px-3 py-1.5 bg-[#f4f0e6] hover:bg-[#e8e2d0]"
