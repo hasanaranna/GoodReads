@@ -1,44 +1,36 @@
 /**
  * Integration tests for authentication API
  *
- * Uses supertest to hit the real Express routes with a mocked database pool,
- * so we exercise controller validation, bcrypt hashing, JWT signing, and
- * response shapes without needing a live Postgres instance.
+ * Uses supertest against the real Express app with mocked db, bcrypt, and jwt.
+ * bcryptjs uses backend/__mocks__/bcryptjs.js (Jest manual mock) for reliable default export.
  */
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import supertest from 'supertest';
 
-// ---------- mock pg (must be before any module that imports db.js) ----------
-const mockQuery = jest.fn();
-const mockConnect = jest.fn().mockResolvedValue({ release: jest.fn() });
-
-jest.unstable_mockModule('../../src/config/db.js', () => ({
-  pool: { query: mockQuery, connect: mockConnect },
+jest.mock('../../src/config/db.js', () => ({
+  pool: {
+    query: jest.fn(),
+    connect: jest.fn().mockResolvedValue({ release: jest.fn() }),
+  },
   connectDB: jest.fn().mockResolvedValue(undefined),
 }));
 
-// ---------- deterministic JWT values ----------
-jest.unstable_mockModule('jsonwebtoken', () => ({
+jest.mock('jsonwebtoken', () => ({
+  __esModule: true,
   default: {
     sign: jest.fn(() => 'mocked-jwt-token'),
     verify: jest.fn(() => ({ id: 'user-1' })),
   },
 }));
 
-// ---------- deterministic bcrypt ----------
-jest.unstable_mockModule('bcryptjs', () => ({
-  default: {
-    genSalt: jest.fn().mockResolvedValue('salt'),
-    hash: jest.fn().mockResolvedValue('hashed-password'),
-    compare: jest.fn().mockResolvedValue(true),
-  },
-}));
+jest.mock('bcryptjs');
 
-// Dynamic imports so the mocks take effect
-const { default: bcrypt } = await import('bcryptjs');
-const { default: supertest } = await import('supertest');
-const { default: app } = await import('../../src/app.js');
+import { pool } from '../../src/config/db.js';
+import bcrypt from 'bcryptjs';
+import app from '../../src/app.js';
 
+const mockQuery = pool.query;
 const request = supertest(app);
 
 describe('Auth API – Register (POST /api/auth/register)', () => {
@@ -114,8 +106,8 @@ describe('Auth API – Register (POST /api/auth/register)', () => {
 
   it('should return 201 with tokens on successful registration', async () => {
     mockQuery
-      .mockResolvedValueOnce({ rows: [] }) // no conflict
-      .mockResolvedValueOnce({             // INSERT returning user
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({
         rows: [{
           id: 'user-1',
           name: 'Test',
@@ -124,7 +116,7 @@ describe('Auth API – Register (POST /api/auth/register)', () => {
           created_at: new Date(),
         }],
       })
-      .mockResolvedValueOnce({ rows: [] }); // UPDATE refresh_token
+      .mockResolvedValueOnce({ rows: [] });
 
     const res = await request.post('/api/auth/register').send({
       name: 'Test',
@@ -187,7 +179,7 @@ describe('Auth API – Login (POST /api/auth/login)', () => {
           created_at: new Date(),
         }],
       })
-      .mockResolvedValueOnce({ rows: [] }); // UPDATE refresh_token
+      .mockResolvedValueOnce({ rows: [] });
 
     const res = await request.post('/api/auth/login').send({
       username: 'real',
