@@ -157,6 +157,17 @@ jobs:
               body: '✅ All tests passed! This PR is ready for review.'
             })
 
+  # Merge to main notification
+  notify-merge:
+    needs: [backend-tests, frontend-tests, lint]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && success()
+
+    steps:
+      - name: Notify successful merge to main
+        run: |
+          echo "✅ Code successfully merged to main branch with all tests passing"
+
   # Continuous deployment build step
   build:
     needs: [backend-tests, frontend-tests, lint]
@@ -234,14 +245,3 @@ jobs:
             
             # Clean up old images to prevent disk space issues
             docker image prune -f
-
-  # Merge to main notification
-  notify-merge:
-    needs: [backend-tests, frontend-tests, lint]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && success()
-
-    steps:
-      - name: Notify successful merge to main
-        run: |
-          echo "✅ Code successfully merged to main branch with all tests passing"
