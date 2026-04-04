@@ -106,6 +106,7 @@ export function EditReview() {
   }
 
   function addReadDate() {
+    if (readDates.length >= 1) return;
     setReadDates((prev) => [
       ...prev,
       { id: Date.now().toString(), started: "", finished: "" },
@@ -188,7 +189,7 @@ export function EditReview() {
         <div className="relative">
           <button
             onClick={() => setShowShelfMenu(!showShelfMenu)}
-            className="flex items-center gap-1 text-[13px] border border-[#aaa] px-2 py-0.5 bg-[#ffffff] hover:bg-[#f4f0e6] text-[#382110]"
+            className="flex items-center gap-1 text-[13px] border border-[#aaa] px-4 py-1.5 bg-[#ffffff] hover:bg-[#f4f0e6] text-[#382110] rounded"
           >
             Choose shelves… <ChevronDown size={12} />
           </button>
@@ -265,7 +266,7 @@ export function EditReview() {
         </div>
 
         {readDates.map((rd) => (
-          <div key={rd.id} className="flex items-center gap-3 mb-2 text-[13px]">
+          <div key={rd.id} className="flex items-center gap-3 mb-2 mt-4 text-[13px]">
             <div className="flex items-center gap-2">
               <label className="text-gray-500 text-[12px]">Started:</label>
               <input
@@ -307,17 +308,21 @@ export function EditReview() {
           </div>
         ))}
 
-        <button
-          onClick={addReadDate}
-          className="text-[12px] bg-[#f4f0e6] border border-[#ccc] px-3 py-1 text-[#382110] hover:bg-[#e8e2d0] rounded"
-        >
-          Add read data
-        </button>
+        {readDates.length === 0 && (
+          <div style={{ marginTop: "16px", marginBottom: "16px" }}>
+            <button
+              onClick={addReadDate}
+              className="text-[12px] bg-[#f4f0e6] border border-[#ccc] px-4 py-2 text-[#382110] hover:bg-[#e8e2d0] rounded"
+            >
+              Add read data
+            </button>
+          </div>
+        )}
 
-        <div className="mt-3">
+        <div style={{ marginTop: "24px", paddingBottom: "16px" }}>
           <button
             onClick={() => setShowMoreDetails(!showMoreDetails)}
-            className="text-[12px] text-[#382110] flex items-center gap-1 hover:underline"
+            className="text-[12px] text-[#382110] flex items-center gap-1 hover:underline bg-[#f4f0e6] border border-[#ccc] px-4 py-2 rounded"
           >
             More details{" "}
             {showMoreDetails ? (
@@ -327,7 +332,7 @@ export function EditReview() {
             )}
           </button>
           {showMoreDetails && (
-            <div className="mt-3 grid grid-cols-2 gap-3 text-[13px] text-[#382110]">
+            <div className="grid grid-cols-2 text-[13px] text-[#382110]" style={{ marginTop: "16px", gap: "16px" }}>
               <div>
                 <label className="block text-gray-500 text-[11px] mb-1">
                   Owned?
@@ -356,11 +361,11 @@ export function EditReview() {
       </div>
 
       {/* Post button */}
-      <div className="py-4 flex flex-wrap items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4" style={{ paddingTop: "24px", paddingBottom: "24px" }}>
         <button
           onClick={handlePost}
           disabled={isSaving}
-          className="bg-[#f4f0e6] border border-[#999] px-5 py-1.5 text-[13px] text-[#382110] hover:bg-[#e8e2d0] rounded disabled:opacity-50"
+          className="bg-[#f4f0e6] border border-[#999] px-6 py-2 text-[13px] text-[#382110] hover:bg-[#e8e2d0] rounded disabled:opacity-50"
         >
           {isSaving ? "Saving..." : "Post"}
         </button>
