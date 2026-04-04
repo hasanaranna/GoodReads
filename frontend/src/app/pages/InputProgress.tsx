@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { useBooks } from "../context/BooksContext";
 
 const EXPLORE_BOOKS = [
@@ -68,6 +68,12 @@ export function InputProgress() {
   >([]);
   const [isSaving, setIsSaving] = useState(false);
 
+  useEffect(() => {
+    if (totalPages > 0) {
+      setPagesCompleted((prev) => Math.min(Math.max(prev, 0), totalPages));
+    }
+  }, [totalPages]);
+
   if (!book) {
     return (
       <div className="max-w-[860px] mx-auto px-4 py-10 text-center">
@@ -81,12 +87,6 @@ export function InputProgress() {
       </div>
     );
   }
-
-  useEffect(() => {
-    if (totalPages > 0) {
-      setPagesCompleted((prev) => Math.min(Math.max(prev, 0), totalPages));
-    }
-  }, [totalPages]);
 
   const normalizedPagesCompleted =
     totalPages > 0
@@ -138,11 +138,11 @@ export function InputProgress() {
       </div>
 
       {/* Book info */}
-      <div className="flex gap-4 mb-4">
+      <div className="flex" style={{ gap: "16px", marginBottom: "16px" }}>
         <img
           src={book.coverUrl}
           alt={book.title}
-          className="w-[75px] h-[105px] object-cover shadow shrink-0"
+          className="w-[95px] h-[135px] object-cover shadow shrink-0"
         />
         <div>
           <div className="text-[14px] text-[#382110] leading-snug mb-1">
@@ -160,7 +160,8 @@ export function InputProgress() {
 
       <a
         href="#"
-        className="text-[12px] text-[#00635d] hover:underline no-underline mb-4 block"
+        className="text-[12px] text-[#00635d] hover:underline no-underline block"
+        style={{ marginBottom: "16px" }}
       >
         Change Edition
       </a>
@@ -168,7 +169,7 @@ export function InputProgress() {
       <div className="border-t border-[#ddd]" />
 
       {/* Progress fields */}
-      <div className="py-4 border-b border-[#ddd]">
+      <div className="border-b border-[#ddd]" style={{ paddingTop: "16px", paddingBottom: "16px" }}>
         {/* Progress bar */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-1">
@@ -184,7 +185,7 @@ export function InputProgress() {
         </div>
 
         {/* Pages Completed */}
-        <div className="flex items-center gap-4 py-2 border-b border-[#eee]">
+        <div className="flex flex-wrap items-center gap-4 py-2 border-b border-[#eee]">
           <div className="w-[160px] text-[13px] text-[#382110]">
             Pages Completed
           </div>
@@ -246,7 +247,7 @@ export function InputProgress() {
         </div>
 
         {/* Total Pages */}
-        <div className="flex items-center gap-4 py-2 border-b border-[#eee]">
+        <div className="flex flex-wrap items-center gap-4 py-2 border-b border-[#eee]">
           <div className="w-[160px] text-[13px] text-[#382110]">
             Total Pages
           </div>
@@ -293,7 +294,7 @@ export function InputProgress() {
         </div>
 
         {/* Percentage */}
-        <div className="flex items-center gap-4 py-2">
+        <div className="flex flex-wrap items-center gap-4 py-2">
           <div className="w-[160px] text-[13px] text-[#382110]">Percentage</div>
           {editingField === "pct" ? (
             <div className="flex items-center gap-2">
@@ -337,16 +338,16 @@ export function InputProgress() {
       </div>
 
       {/* Dates read */}
-      <div className="py-4 border-b border-[#ddd]">
-        <div className="text-[16px] text-[#382110] mb-2">Dates read</div>
-        <div className="text-[13px] text-[#382110] mb-1">Rereading?</div>
-        <div className="text-[12px] text-gray-500 mb-3">
+      <div className="border-b border-[#ddd]" style={{ paddingTop: "16px", paddingBottom: "16px" }}>
+        <div className="text-[16px] text-[#382110]" style={{ marginBottom: "8px" }}>Dates read</div>
+        <div className="text-[13px] text-[#382110]" style={{ marginBottom: "8px" }}>Rereading?</div>
+        <div className="text-[12px] text-gray-500" style={{ marginBottom: "8px" }}>
           Now you can track all the times you have read a book. Make sure to
           fill in the year finished to have it added to your Reading Challenge!
         </div>
 
         {readDates.map((rd) => (
-          <div key={rd.id} className="flex items-center gap-3 mb-2 text-[13px]">
+          <div key={rd.id} className="flex flex-wrap items-center gap-3 mb-2 mt-4 text-[13px]">
             <div className="flex items-center gap-2">
               <label className="text-gray-500 text-[12px]">Started:</label>
               <input
@@ -377,25 +378,38 @@ export function InputProgress() {
                 className="border border-[#ccc] rounded px-2 py-0.5 text-[12px]"
               />
             </div>
+            <button
+              onClick={() =>
+                setReadDates((prev) => prev.filter((d) => d.id !== rd.id))
+              }
+              className="text-gray-400 hover:text-red-400"
+            >
+              <X size={14} />
+            </button>
           </div>
         ))}
 
-        <button
-          onClick={() =>
-            setReadDates((prev) => [
-              ...prev,
-              { id: Date.now().toString(), started: "", finished: "" },
-            ])
-          }
-          className="text-[12px] bg-[#f4f0e6] border border-[#ccc] px-3 py-1 text-[#382110] hover:bg-[#e8e2d0] rounded"
-        >
-          Add read data
-        </button>
+        {readDates.length === 0 && (
+          <div style={{ marginTop: "8px", marginBottom: "8px" }}>
+            <button
+              onClick={() => {
+                if (readDates.length >= 1) return;
+                setReadDates((prev) => [
+                  ...prev,
+                  { id: Date.now().toString(), started: "", finished: "" },
+                ]);
+              }}
+              className="text-[12px] bg-[#f4f0e6] border border-[#ccc] px-4 py-2 text-[#382110] hover:bg-[#e8e2d0] rounded"
+            >
+              Add read data
+            </button>
+          </div>
+        )}
 
-        <div className="mt-3">
+        <div style={{ marginTop: "16px", paddingBottom: "16px" }}>
           <button
             onClick={() => setShowMoreDetails(!showMoreDetails)}
-            className="text-[12px] text-[#382110] flex items-center gap-1 hover:underline"
+            className="text-[12px] text-[#382110] flex items-center gap-1 hover:underline bg-[#f4f0e6] border border-[#ccc] px-4 py-2 rounded"
           >
             More details{" "}
             {showMoreDetails ? (
@@ -405,7 +419,7 @@ export function InputProgress() {
             )}
           </button>
           {showMoreDetails && (
-            <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 text-[13px] text-[#382110]" style={{ marginTop: "8px", gap: "16px" }}>
               <div>
                 <label className="block text-[11px] text-gray-500 mb-1">
                   Owned?
@@ -434,7 +448,7 @@ export function InputProgress() {
       </div>
 
       {/* Update button */}
-      <div className="py-4 border-b border-[#ddd] flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4 border-b border-[#ddd]" style={{ paddingTop: "16px", paddingBottom: "16px" }}>
         <button
           onClick={handleUpdate}
           disabled={isSaving}
@@ -445,7 +459,7 @@ export function InputProgress() {
       </div>
 
       {/* Footer links */}
-      <div className="text-[12px] flex items-center gap-2 py-3 border-b border-[#ddd]">
+      <div className="text-[12px] flex items-center gap-2 border-b border-[#ddd]" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
         <a href="#" className="text-[#00635d] hover:underline no-underline">
           Preview
         </a>
@@ -464,7 +478,7 @@ export function InputProgress() {
       </div>
 
       {/* Explore more */}
-      <div className="pt-6">
+      <div className="py-6" style={{ paddingBottom: "64px" }}>
         <div className="text-[16px] text-[#382110] mb-4">Explore more</div>
         <div className="flex gap-5 overflow-x-auto pb-2">
           {EXPLORE_BOOKS.map((eb) => (
