@@ -30,6 +30,7 @@ export function MyBooks() {
   const [batchMode, setBatchMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
+  const [openShelfMenuId, setOpenShelfMenuId] = useState<string | null>(null);
 
   const filtered = books.filter((b) => {
     const matchesShelf = !shelfId || b.shelf === shelfId;
@@ -273,6 +274,10 @@ export function MyBooks() {
                       selected={selectedIds.has(book.id)}
                       onSelect={toggleSelect}
                       batchMode={batchMode}
+                      isShelfMenuOpen={openShelfMenuId === book.id}
+                      onToggleShelfMenu={() =>
+                        setOpenShelfMenuId(openShelfMenuId === book.id ? null : book.id)
+                      }
                     />
                   ))
                 )}
@@ -293,6 +298,10 @@ export function MyBooks() {
                     selected={selectedIds.has(book.id)}
                     onSelect={toggleSelect}
                     batchMode={batchMode}
+                    isShelfMenuOpen={openShelfMenuId === book.id}
+                    onToggleShelfMenu={() =>
+                      setOpenShelfMenuId(openShelfMenuId === book.id ? null : book.id)
+                    }
                   />
                 ))
               )}

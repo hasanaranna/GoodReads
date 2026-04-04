@@ -11,6 +11,8 @@ interface BookRowProps {
   selected?: boolean;
   onSelect?: (id: string) => void;
   batchMode?: boolean;
+  isShelfMenuOpen?: boolean;
+  onToggleShelfMenu?: () => void;
 }
 
 const SHELF_LABELS: Record<string, string> = {
@@ -25,9 +27,16 @@ export function BookRow({
   selected = false,
   onSelect,
   batchMode = false,
+  isShelfMenuOpen,
+  onToggleShelfMenu,
 }: BookRowProps) {
   const { updateBook } = useBooks();
-  const [showShelfMenu, setShowShelfMenu] = useState(false);
+  const [internalShelfMenuOpen, setInternalShelfMenuOpen] = useState(false);
+
+  const showShelfMenu =
+    isShelfMenuOpen !== undefined ? isShelfMenuOpen : internalShelfMenuOpen;
+  const toggleShelfMenu =
+    onToggleShelfMenu || (() => setInternalShelfMenuOpen(!internalShelfMenuOpen));
 
   const progress = (() => {
     if (book.totalPages && book.totalPages > 0) {
@@ -55,7 +64,11 @@ export function BookRow({
       updates.pagesCompleted = 0;
     }
     await updateBook(book.id, updates);
-    setShowShelfMenu(false);
+    if (isShelfMenuOpen !== undefined && onToggleShelfMenu) {
+      if (isShelfMenuOpen) onToggleShelfMenu();
+    } else {
+      setInternalShelfMenuOpen(false);
+    }
   }
 
   if (viewMode === "grid") {
@@ -146,7 +159,7 @@ export function BookRow({
         <StarRating rating={book.rating} showCount size="sm" />
         <div className="relative w-[140px] mt-2">
           <button
-            onClick={() => setShowShelfMenu(!showShelfMenu)}
+            onClick={toggleShelfMenu}
             className="flex items-center justify-between w-full text-[13px] text-[#382110] border border-[#ccc] rounded px-3 py-1.5 bg-[#f4f0e6] hover:bg-[#e8e2d0]"
           >
             <span className="truncate text-left">{SHELF_LABELS[book.shelf]}</span>
