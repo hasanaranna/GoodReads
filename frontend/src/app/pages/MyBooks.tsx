@@ -21,7 +21,7 @@ const ITEMS_PER_PAGE = 10;
 
 export function MyBooks() {
   const { shelfId } = useParams();
-  const { books } = useBooks();
+  const { books, loading } = useBooks();
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<
@@ -255,7 +255,11 @@ export function MyBooks() {
               </div>
 
               <div className="max-h-[600px] overflow-y-auto pr-2">
-                {paginated.length === 0 ? (
+                {loading ? (
+                  <div className="loader">
+                    <div className="justify-content-center jimu-primary-loading"></div>
+                  </div>
+                ) : paginated.length === 0 ? (
                   <div className="py-14 text-center text-gray-400 text-[16px]">
                     No books found.{" "}
                     <Link
@@ -282,6 +286,10 @@ export function MyBooks() {
                   ))
                 )}
               </div>
+            </div>
+          ) : loading ? (
+            <div className="loader">
+              <div className="justify-content-center jimu-primary-loading"></div>
             </div>
           ) : (
             <div className="grid grid-cols-8 md:grid-cols-4 gap-3 pt-3 max-h-[600px] overflow-y-auto pr-2">

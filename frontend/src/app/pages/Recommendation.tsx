@@ -69,20 +69,10 @@ const SECTION_HEADERS: Record<
 
 // Sub-components 
 
-function SkeletonCard() {
+function JimuLoader() {
     return (
-        <div className="flex border-b border-[#e8e0d0]" style={{ gap: "16px", paddingTop: "16px", paddingBottom: "16px" }}>
-            <div className="w-[60px] h-[90px] rounded bg-[#ece7da] flex-shrink-0 animate-pulse" />
-            <div className="flex-1 space-y-2 pt-1">
-                <div className="h-4 bg-[#ece7da] rounded w-2/3 animate-pulse" />
-                <div className="h-3 bg-[#ece7da] rounded w-1/3 animate-pulse" />
-                <div className="h-3 bg-[#ece7da] rounded w-full mt-3 animate-pulse" />
-                <div className="h-3 bg-[#ece7da] rounded w-5/6 animate-pulse" />
-                <div className="flex gap-2 mt-3">
-                    <div className="h-7 w-28 bg-[#ece7da] rounded animate-pulse" />
-                    <div className="h-7 w-20 bg-[#ece7da] rounded animate-pulse" />
-                </div>
-            </div>
+        <div className="loader">
+            <div className="justify-content-center jimu-primary-loading"></div>
         </div>
     );
 }
@@ -148,7 +138,7 @@ function BookCard({ book, onWantToRead, shelvedIds }: BookCardProps) {
     return (
         <article className="flex border-b border-[#e8e0d0] group" style={{ gap: "16px", paddingTop: "16px", paddingBottom: "16px" }}>
             {/* Cover */}
-            <Link to={`/book/${book.googleBooksId}`} className="flex-shrink-0">
+            <Link to={`/book/${book.googleBooksId}`} className="flex-shrink-0 no-underline text-inherit">
                 {book.coverUrl ? (
                     <img
                         src={book.coverUrl}
@@ -171,7 +161,7 @@ function BookCard({ book, onWantToRead, shelvedIds }: BookCardProps) {
                     <div className="min-w-0">
                         <Link
                             to={`/book/${book.googleBooksId}`}
-                            className="text-[#382110] font-semibold text-[15px] hover:underline leading-snug block"
+                            className="no-underline text-[#382110] font-semibold text-[15px] hover:underline leading-snug block"
                             style={{ fontFamily: "Georgia, serif" }}
                         >
                             {book.title}
@@ -490,13 +480,9 @@ export function Recommendation() {
                 <ErrorState onRetry={() => load(1, activeTab, true)} />
             )}
 
-            {/* Skeleton (first load) */}
+            {/* Loader (first load) */}
             {status === "loading" && books.length === 0 && (
-                <div>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                        <SkeletonCard key={i} />
-                    ))}
-                </div>
+                <JimuLoader />
             )}
 
             {/* Book lists  */}
