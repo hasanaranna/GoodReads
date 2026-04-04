@@ -260,7 +260,8 @@ export function BookDetail() {
     }
   }
 
-  const desc = description ?? "";
+  const descRaw = description ?? "";
+  const desc = descRaw.replace(/<[^>]+>/g, "");
   const isLongDesc = desc.length > 500;
   const displayDesc = isLongDesc && !showFullDesc ? desc.slice(0, 500) + "…" : desc;
 
