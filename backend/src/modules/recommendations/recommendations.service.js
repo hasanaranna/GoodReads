@@ -1,6 +1,6 @@
-import { pool } from "../../config/db.js";
+import { pool } from '../../config/db.js';
 
-// helpers 
+// helpers
 
 /** Normalise a raw score array to [0, 1] */
 function normalise(items, key) {
@@ -33,7 +33,7 @@ function formatBook(row, score, reason) {
     categories: row.categories || [],
     averageRating: parseFloat(row.average_rating) || 0,
     score: parseFloat(score.toFixed(4)),
-    reason,
+    reason
   };
 }
 
@@ -45,13 +45,13 @@ function formatBook(row, score, reason) {
 //      Pull every (book_id, rating) pair where you've given a score.
 //      This is your taste fingerprint.
 // **Stage 2 — find similar users.
-//      Look at every other user who has rated at least 2 of the same books you have. 
+//      Look at every other user who has rated at least 2 of the same books you have.
 //      For each of them, compute cosine similarity against your ratings:
 //
 //      similarity = (your_ratings · their_ratings) / (|your_ratings| × |their_ratings|)
 //
-//      Cosine similarity gives a score between 0 and 1. 
-//      A user who rated all the same books the same way as you scores 1.0. 
+//      Cosine similarity gives a score between 0 and 1.
+//      A user who rated all the same books the same way as you scores 1.0.
 //      Someone who rated them oppositely scores near 0. The query keeps the top 30 most similar users.
 //
 // **Stage 3 — score candidate books.
@@ -60,7 +60,7 @@ function formatBook(row, score, reason) {
 //
 //      cf_score = Σ(similarity × their_rating) / Σ|similarity|
 //
-//      Books that many highly-similar users loved rise to the top. 
+//      Books that many highly-similar users loved rise to the top.
 //      A book loved by one very-similar user can outscore a book mildly liked by ten weakly-similar users.
 
 async function getCollaborativeRecs(userId, limit = 20) {
@@ -120,23 +120,23 @@ async function getCollaborativeRecs(userId, limit = 20) {
   const { rows } = await pool.query(query, [userId, limit]);
   const normalised = normalise(
     rows.map((r) => ({ book_id: r.id, raw_score: parseFloat(r.raw_score), row: r })),
-    "raw_score"
+    'raw_score'
   );
-  return normalised.map(({ row, raw_score }) => formatBook(row, raw_score, "cf"));
+  return normalised.map(({ row, raw_score }) => formatBook(row, raw_score, 'cf'));
 }
 
-// 2. Genre Match (30% weight) 
+// 2. Genre Match (30% weight)
 //  Finds your top 10 categories from books you rated ≥ 4, weighted by how frequently they appear
 //  Scores unread books by how much their categories overlap with yours,
 //  with a small popularity boost (average_rating × 0.3)
 //  **Step 1 — build your genre profile.
 //       Unnest the categories array for every book you've rated ≥ 4 and count frequency.
 //       If you've loved 6 fantasy books and 2 historical fiction books,
-//       "Fantasy" gets weight 6, "Historical Fiction" gets weight 2. 
+//       "Fantasy" gets weight 6, "Historical Fiction" gets weight 2.
 //       The top 10 categories are kept.
 
 // **Step 2 — score every unread book.** For each candidate book the user hasn't touched:
-// 
+//
 //         Score = ∑Matched Category Frequencies
 //                 + (Average Rating×0.3) (small popularity nudge)
 
@@ -182,23 +182,23 @@ async function getGenreRecs(userId, limit = 20) {
   const { rows } = await pool.query(query, [userId, limit]);
   const normalised = normalise(
     rows.map((r) => ({ book_id: r.id, raw_score: parseFloat(r.raw_score), row: r })),
-    "raw_score"
+    'raw_score'
   );
-  return normalised.map(({ row, raw_score }) => formatBook(row, raw_score, "genre"));
+  return normalised.map(({ row, raw_score }) => formatBook(row, raw_score, 'genre'));
 }
 
 // Engine 3 — Author Match (weight: 20%)
 // The "more from authors you love" signal. Cleanly separated from genre so the two don't blur.
 // **Step 1 — build your author profile.
-//      For every author whose books you've rated ≥ 3, compute your personal average rating for that author. 
+//      For every author whose books you've rated ≥ 3, compute your personal average rating for that author.
 //      Keep the top 10 authors.
 
 // **Step 2 — score unread books by those authors:
 //
 //      author_score = your_avg_rating_for_author × book.average_rating
-// 
-//      Multiplying the two together means both dimensions matter. 
-//      An author you rate 5/5 who wrote a poorly-regarded book still gets pulled down by that book's quality. 
+//
+//      Multiplying the two together means both dimensions matter.
+//      An author you rate 5/5 who wrote a poorly-regarded book still gets pulled down by that book's quality.
 //      A book you'd probably love from an author you only mildly like also gets appropriately discounted. The top 20 are returned.
 
 
@@ -232,9 +232,9 @@ async function getAuthorRecs(userId, limit = 20) {
   const { rows } = await pool.query(query, [userId, limit]);
   const normalised = normalise(
     rows.map((r) => ({ book_id: r.id, raw_score: parseFloat(r.raw_score), row: r })),
-    "raw_score"
+    'raw_score'
   );
-  return normalised.map(({ row, raw_score }) => formatBook(row, raw_score, "author"));
+  return normalised.map(({ row, raw_score }) => formatBook(row, raw_score, 'author'));
 }
 
 // 4. Cold Start Check
@@ -242,7 +242,7 @@ async function getAuthorRecs(userId, limit = 20) {
 //  If it's fewer than 3, the entire personalisation stack is skipped and you get a cold-start fallback
 //  globally popular books ranked by a Bayesian average. The frontend shows the yellow rate more books banner in this case.
 //  Once you have 3+ ratings, all three engines fire inn parallel via Promise.all, then their results get blended.
-//  Weighted Score=(Average Rating×Number of Ratings)​/(Number of Ratings+Confidence Constant)
+//  Weighted Score = (Average Rating x Number of Ratings) / (Number of Ratings + Confidence Constant)
 
 async function getColdStartRecs(userId, limit = 20) {
   const query = `
@@ -260,10 +260,10 @@ async function getColdStartRecs(userId, limit = 20) {
 
   const { rows } = await pool.query(query, [userId, limit]);
   // Cold-start books are tagged "cf" so they still render on the page
-  return rows.map((r) => formatBook(r, parseFloat(r.raw_score) || 0, "cf"));
+  return rows.map((r) => formatBook(r, parseFloat(r.raw_score) || 0, 'cf'));
 }
 
-// MAIN EXPORT 
+// MAIN EXPORT
 
 /**
  * getRecommendations
@@ -278,7 +278,7 @@ async function getColdStartRecs(userId, limit = 20) {
 async function getRecommendations(userId, { page = 1, perPage = 10, reason = null } = {}) {
   // Check how many ratings the user has (cold-start guard)
   const { rows: ratingCount } = await pool.query(
-    `SELECT COUNT(*) AS cnt FROM user_books WHERE user_id = $1 AND rating > 0`,
+    'SELECT COUNT(*) AS cnt FROM user_books WHERE user_id = $1 AND rating > 0',
     [userId]
   );
   const totalRatings = parseInt(ratingCount[0].cnt, 10);
@@ -293,16 +293,16 @@ async function getRecommendations(userId, { page = 1, perPage = 10, reason = nul
     const [cfBooks, genreBooks, authorBooks] = await Promise.all([
       getCollaborativeRecs(userId, 25),
       getGenreRecs(userId, 25),
-      getAuthorRecs(userId, 20),
+      getAuthorRecs(userId, 20)
     ]);
 
-    //  Hybrid blend: weighted score per reason 
+    //  Hybrid blend: weighted score per reason
     const WEIGHTS = { cf: 0.50, genre: 0.30, author: 0.20 };
 
     const weighted = [
       ...cfBooks.map((b) => ({ ...b, score: b.score * WEIGHTS.cf })),
       ...genreBooks.map((b) => ({ ...b, score: b.score * WEIGHTS.genre })),
-      ...authorBooks.map((b) => ({ ...b, score: b.score * WEIGHTS.author })),
+      ...authorBooks.map((b) => ({ ...b, score: b.score * WEIGHTS.author }))
     ];
 
     // Deduplicate: keep highest blended score per book
@@ -311,10 +311,10 @@ async function getRecommendations(userId, { page = 1, perPage = 10, reason = nul
     ).sort((a, b) => b.score - a.score);
   }
 
-  // Filter by reason if requested 
+  // Filter by reason if requested
   const filtered = reason ? allBooks.filter((b) => b.reason === reason) : allBooks;
 
-  // Paginate 
+  // Paginate
   const total = filtered.length;
   const start = (page - 1) * perPage;
   const slice = filtered.slice(start, start + perPage);
