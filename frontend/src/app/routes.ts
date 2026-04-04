@@ -4,6 +4,7 @@ import { Login } from "./pages/Login";
 import { MyBooks } from "./pages/MyBooks";
 import { EditReview } from "./pages/EditReview";
 import { InputProgress } from "./pages/InputProgress";
+import { Recommendation } from "./pages/Recommendation";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export const router = createBrowserRouter([
@@ -33,6 +34,10 @@ export const router = createBrowserRouter([
           {
             path: "book/:bookId/progress",
             Component: InputProgress,
+          },
+          {
+            path: "recommendations",
+            Component: Recommendation,
           },
         ],
       },
