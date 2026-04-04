@@ -161,6 +161,8 @@ export function BookDetail() {
   const [isSavingShelf, setIsSavingShelf] = useState(false);
   const [showFullDesc, setShowFullDesc] = useState(false);
 
+  const [fetchedBook, setFetchedBook] = useState<any>(null);
+
   // If book is on shelf, keep rating/shelf in sync
   useEffect(() => {
     if (shelfBook) {
@@ -169,9 +171,23 @@ export function BookDetail() {
     }
   }, [shelfBook]);
 
-  // Fetch community reviews
+  // Fetch community reviews and book details from Google Books
   useEffect(() => {
     if (!googleBooksId) return;
+
+    // Fetch Google Books info for description, cover, etc if not fully locally cached
+    fetch(`https://www.googleapis.com/books/v1/volumes/${googleBooksId}`)
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error("Failed to fetch Google Books data");
+      })
+      .then((data) => {
+        if (data.volumeInfo) {
+          setFetchedBook(data.volumeInfo);
+        }
+      })
+      .catch(console.error);
+
     setLoadingReviews(true);
     fetchBookReviewsAPI(googleBooksId)
       .then((res) => setCommunityReviews(res.data))
@@ -182,11 +198,14 @@ export function BookDetail() {
   // Pick the best available source for book metadata
   // (shelf book has full data; community reviews expose title/author/cover)
   const firstReview = communityReviews[0];
-  const title = shelfBook?.title ?? firstReview?.title ?? "Unknown Book";
-  const author = shelfBook?.author ?? firstReview?.author ?? "";
-  const coverUrl = shelfBook?.coverUrl ?? firstReview?.cover_url ?? null;
-  const description = shelfBook?.description ?? null;
-  const totalPages = shelfBook?.totalPages;
+  const fetchedCover = fetchedBook?.imageLinks?.thumbnail || fetchedBook?.imageLinks?.smallThumbnail;
+  const httpsCover = fetchedCover ? fetchedCover.replace("http:", "https:") : null;
+
+  const title = shelfBook?.title ?? fetchedBook?.title ?? firstReview?.title ?? "Unknown Book";
+  const author = shelfBook?.author ?? (fetchedBook?.authors?.[0]) ?? firstReview?.author ?? "";
+  const coverUrl = shelfBook?.coverUrl ?? httpsCover ?? firstReview?.cover_url ?? null;
+  const description = shelfBook?.description ?? fetchedBook?.description ?? null;
+  const totalPages = shelfBook?.totalPages ?? fetchedBook?.pageCount;
 
   // Average community rating
   const rated = communityReviews.filter((r) => r.rating > 0);
