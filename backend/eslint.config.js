@@ -2,7 +2,7 @@ import js from '@eslint/js';
 
 export default [
   {
-    ignores: ['node_modules/', 'dist/', 'coverage/']
+    ignores: ['node_modules/', 'dist/', 'coverage/', '**/__mocks__/**']
   },
   {
     files: ['**/*.js'],

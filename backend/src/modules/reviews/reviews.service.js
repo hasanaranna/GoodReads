@@ -6,7 +6,7 @@ import { pool } from '../../config/db.js';
 export async function updateReview(userId, userBookId, updates) {
   // Verify ownership and get book_id
   const ownership = await pool.query(
-    "SELECT id, book_id FROM user_books WHERE id = $1 AND user_id = $2",
+    'SELECT id, book_id FROM user_books WHERE id = $1 AND user_id = $2',
     [userBookId, userId]
   );
 
@@ -40,7 +40,7 @@ export async function updateReview(userId, userBookId, updates) {
   }
 
   if (setClauses.length === 0) {
-    const error = new Error("No valid fields to update. Provide 'rating' and/or 'review'.");
+    const error = new Error('No valid fields to update. Provide \'rating\' and/or \'review\'.');
     error.statusCode = 400;
     error.code = 'VALIDATION_ERROR';
     throw error;
