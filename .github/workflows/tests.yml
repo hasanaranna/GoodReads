@@ -202,4 +202,46 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/goodreads-frontend:latest
   
-  
+  # continuous deployment final step
+  deploy:
+    name: Deploy to DO Droplet
+    needs: build 
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Checkout the code first so GitHub has the docker-compose.yml file
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Securely copy the docker-compose.yml to your Droplet
+      - name: Copy docker-compose file
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "/root" # this should be in root directory
+
+      # 3. SSH into the server and run the commands
+      - name: Execute deployment commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            # Log in to the GitHub Container Registry
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Navigate to the folder where we just copied the compose file
+            cd /root
+            
+            # Pull the newly built images from GHCR
+            docker compose pull
+            
+            # Restart the containers with the new images
+            docker compose up -d
+            
+            # Clean up old images to prevent disk space issues
+            docker image prune -f
