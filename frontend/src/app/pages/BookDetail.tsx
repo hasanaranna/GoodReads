@@ -205,16 +205,16 @@ export function BookDetail() {
   const fetchedCover = fetchedBook?.imageLinks?.thumbnail || fetchedBook?.imageLinks?.smallThumbnail;
   const httpsCover = fetchedCover ? fetchedCover.replace("http:", "https:") : null;
 
-  const title = shelfBook?.title ?? fetchedBook?.title ?? firstReview?.title ?? "Unknown Book";
-  const author = shelfBook?.author ?? (fetchedBook?.authors?.[0]) ?? firstReview?.author ?? "";
-  const coverUrl = shelfBook?.coverUrl ?? httpsCover ?? firstReview?.cover_url ?? null;
-  const description = shelfBook?.description ?? fetchedBook?.description ?? null;
-  const totalPages = shelfBook?.totalPages ?? fetchedBook?.pageCount;
+  const title = shelfBook?.title ?? fetchedBook?.title ?? firstReview?.title ?? stateBook?.title ?? "Unknown Book";
+  const author = shelfBook?.author ?? (fetchedBook?.authors?.[0]) ?? firstReview?.author ?? stateBook?.author ?? "";
+  const coverUrl = shelfBook?.coverUrl ?? httpsCover ?? firstReview?.cover_url ?? stateBook?.coverUrl ?? null;
+  const description = shelfBook?.description ?? fetchedBook?.description ?? stateBook?.description ?? null;
+  const totalPages = shelfBook?.totalPages ?? fetchedBook?.pageCount ?? stateBook?.pageCount;
 
   // Average rating
   const rated = communityReviews.filter((r) => r.rating > 0);
   const communityAvg = rated.length > 0 ? rated.reduce((s, r) => s + r.rating, 0) / rated.length : 0;
-  const avgRating = communityAvg > 0 ? communityAvg : (fetchedBook?.averageRating ?? 0);
+  const avgRating = communityAvg > 0 ? communityAvg : (fetchedBook?.averageRating ?? stateBook?.averageRating ?? 0);
   const ratingCount = communityAvg > 0 ? communityReviews.length : (fetchedBook?.ratingsCount ?? 0);
 
   async function handleShelfChange(shelf: "want-to-read" | "currently-reading" | "read") {
