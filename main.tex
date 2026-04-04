@@ -1,0 +1,143 @@
+\documentclass[12pt, a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{hyperref}
+\usepackage[none]{hyphenat}
+\usepackage{microtype} % Improves spacing and justification
+\sloppy % Tells LaTeX to be less strict about wide spaces between words
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{1in}
+    
+    % Title Lines
+    {\Large Information System Design Sessional \par}
+    \vspace{0.5cm}
+    {\LARGE \textbf{Final Report} \par}
+    \vspace{1.5cm}
+    {\Huge \textbf{Goodreads} \par}
+    \vspace{0.5cm}
+    {\Large Group 3 \par}
+    
+    \vfill
+    
+    % Multiple Authors
+    {\large Rabiul Awal Jihad (2105011) \\}
+    {\large Tanvin Islam Abir (2105020) \\}
+    {\large Mahmud Hasan (2105027) \\}
+    {\large Tawhid Umar (2105028) \\}
+    {\large Fatin Sadab (2105029) \\}
+    {\large Safayat Saif (2105030)\par}
+    
+    \vfill
+    
+    % Date
+    {\large \today \par}
+    \vspace{0.5in}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\chapter{Introduction}
+
+The Goodreads project aims to provide a comprehensive platform for book lovers to track, rate, and discover new reading material. This documentation focuses specifically on the Book Tracking and Shelving module. This module acts as the core engine responsible for managing user libraries, reading states, and activity history. 
+
+To deliver a seamless user experience, the proposed system architecture leverages the Google Books API to handle robust book search queries and metadata retrieval. Concurrently, Supabase is utilized as the primary backend to ensure secure user authentication and persistent database management for all user-generated data.
+
+\vspace{0.5cm}
+
+The core features implemented and detailed within this system design include:
+
+\begin{itemize}
+    \item \textbf{Bookshelf Management:} Allows users to organize their personal libraries into distinct categories, specifically tracking books they are currently reading, have completed, or want to read in the future.
+    \item \textbf{Reading Progress:} Enables users to log page counts to track and update their ongoing progress through a specific book.
+    \item \textbf{Ratings \& Reviews:} Provides functionality for users to assign star ratings to books and publish, edit, or delete detailed written reviews.
+    \item \textbf{Activity Log:} Maintains a comprehensive history of user actions across the platform, allowing users to view their past interactions and reading history.
+\end{itemize}
+
+\vspace{0.5cm}
+\noindent \textbf{Project Scope Note:} Among the functionalities listed above, the \textbf{Bookshelf Management} feature is our specifically assigned feature that we will demonstrate for this evaluation.
+\chapter{BPMN Diagram}
+\chapter{Use Case Diagram}
+\chapter{Class Diagram}
+\chapter{Mock UI}
+\chapter{Collaboration Diagram}
+\chapter{Sequence Diagram}
+\chapter{State Diagram}
+\chapter{API Documentation}
+\chapter{Feature Implementation}
+
+\section{Feature Name and Description}
+% Provide the name of the feature (e.g., Bookshelf Management)
+% Provide a detailed description of the feature's functionality and purpose
+
+\section{Project Resources}
+\subsection{GitHub Repository}
+% Insert link to the GitHub repository/repositories here
+
+\subsection{Hosted Website}
+% Insert the link to the live hosted application here
+
+\section{Application Screenshots}
+% Use the figure environment to include screenshots of different application pages
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[width=\textwidth]{screenshot1.png}
+%     \caption{Description of the page}
+% \end{figure}
+
+\section{System Architecture}
+\subsection{Architecture Overview}
+% Describe the overall architecture used (e.g., Layered, Monolithic, Microservices, etc.)
+
+\subsection{Technologies and Frameworks}
+% List and describe the technologies used for:
+% - Frontend (e.g., React Native)
+% - Backend (e.g., Supabase)
+% - Database (e.g., PostgreSQL via Supabase)
+
+\section{Deployment and DevOps}
+\subsection{Hosting and Cloud Platforms}
+% Detail where the frontend, backend, and database are hosted
+% Specify the cloud platforms used (e.g., Vercel, Netlify, AWS, Supabase, etc.)
+
+\subsection{CI/CD and Containerization}
+% Describe the DevOps setup if applicable:
+% - Docker or containerization details
+% - CI/CD pipeline configuration (e.g., GitHub Actions)
+
+\section{Member Contributions}
+
+% Use a description or itemize environment to clearly attribute tasks to each member.
+% Ensure each member's specific role in the "Bookshelf Management" feature is highlighted.
+
+\begin{description}
+    \item[Member 1 (Name / ID):] 
+    % - Designed the UI for the Bookshelf view using [Technology/Framework]
+    % - Implemented the logic for switching between "Currently Reading," "Completed," and "Want to Read"
+    
+    \item[Member 2 (Name / ID):] 
+    % - Developed the backend API endpoints for shelf updates
+    % - Integrated Supabase database queries for retrieving user library data
+    
+    \item[Member 3 (Name / ID):] 
+    % - Integrated Google Books API for metadata retrieval within the bookshelf
+    % - Implemented search and filter functionality within the personal library
+    
+    \item[Member 4 (Name / ID):] 
+    % - Managed database schema design for book states and user associations
+    % - Implemented the "Reading Progress" tracking logic and percentage calculation
+    
+    \item[Fatin Sadab (2105029):] 
+    % - Set up the CI/CD pipeline and deployment on [Cloud Platform]
+    % - Conducted unit testing and debugging for the state transition logic
+    
+    \item[Member 6 (Name / ID):] 
+    % - Implemented the Activity Log tracking for bookshelf changes
+    % - Developed the Star Rating and Review submission system
+\end{description}
+\end{document}
