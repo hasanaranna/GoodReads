@@ -43,6 +43,10 @@ export function Footer() {
               ))}
             </ul>
           </div>
+          <div>
+            <div className="text-white mb-3 text-[16px]">Checking CI/CD</div>
+          </div>
+
           {/* Connect */}
           {/* <div>
             <div className="text-white mb-3 text-[15px]">Connect</div>
