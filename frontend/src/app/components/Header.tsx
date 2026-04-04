@@ -222,7 +222,7 @@ export function Header() {
 
   return (
     <header className="bg-[#f4f0e6] border-b border-[#d8d0bb]">
-      <div className="max-w-[1100px] mx-auto px-4 h-[64px] flex items-center gap-5">
+      <div className="max-w-[1100px] mx-auto px-4 h-16 flex items-center gap-3 sm:gap-5">
         {/* Logo */}
         <Link
           to={localStorage.getItem("access_token") ? "/mybooks" : "/"}
@@ -259,12 +259,9 @@ export function Header() {
         </nav>
 
         {/* Right side: Search + Icons */}
-        <div className="flex items-center gap-4 ml-auto text-[#382110] text-[15px]">
+        <div className="flex items-center flex-1 justify-end gap-2 md:gap-4 ml-auto text-[#382110] text-[15px]">
           {/* Search */}
-          <div
-            className="relative w-[400px] lg:w-[500px]"
-            style={{ marginRight: "8%" }}
-          >
+          <div className="relative flex-1 max-w-[400px] lg:max-w-[500px] mr-2 md:mr-8">
             <div
               className="flex items-center bg-[#ffffff] border border-[#c9bfb0] rounded-full w-full h-[48px] gap-2"
               style={{ paddingLeft: "15px", paddingRight: "15px" }}
