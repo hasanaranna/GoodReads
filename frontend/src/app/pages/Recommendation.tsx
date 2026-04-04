@@ -1,42 +1,550 @@
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router";
+import {
+    fetchRecommendations,
+    type RecommendedBook,
+    type RecommendationReason,
+    type RecommendationsResponse,
+    addBookToShelfAPI,
+    type ShelfBookData,
+} from "../services/api";
+
+// Types 
+
+type FilterTab = "all" | RecommendationReason;
+type Status = "idle" | "loading" | "success" | "error" | "empty";
+
+// Constants 
+
+const TABS: { id: FilterTab; label: string }[] = [
+    { id: "all", label: "Top Choices" },
+    { id: "cf", label: "Picked for You" },
+    { id: "genre", label: "By Genre" },
+    { id: "author", label: "By Author" },
+];
+
+const REASON_META: Record<
+    RecommendationReason,
+    { label: string; bg: string; text: string; border: string }
+> = {
+    cf: {
+        label: "Readers like you",
+        bg: "#edf7f5",
+        text: "#00635d",
+        border: "#b2dcd8",
+    },
+    genre: {
+        label: "Matches your genres",
+        bg: "#f7f3e9",
+        text: "#7b5e3a",
+        border: "#ddd0b3",
+    },
+    author: {
+        label: "Author you love",
+        bg: "#f3eef7",
+        text: "#5e3a7b",
+        border: "#cdb3dd",
+    },
+};
+
+const SECTION_HEADERS: Record<
+    RecommendationReason,
+    { title: string; subtitle: string }
+> = {
+    cf: {
+        title: "Picked for You",
+        subtitle: "Based on your ratings and readers who share your taste",
+    },
+    genre: {
+        title: "More in Your Genres",
+        subtitle: "Books in the categories you rate most highly",
+    },
+    author: {
+        title: "More from Your Authors",
+        subtitle: "Unread books by authors you've already enjoyed",
+    },
+};
+
+// Sub-components 
+
+function SkeletonCard() {
+    return (
+        <div className="flex gap-4 py-5 border-b border-[#e8e0d0]">
+            <div className="w-[60px] h-[90px] rounded bg-[#ece7da] flex-shrink-0 animate-pulse" />
+            <div className="flex-1 space-y-2 pt-1">
+                <div className="h-4 bg-[#ece7da] rounded w-2/3 animate-pulse" />
+                <div className="h-3 bg-[#ece7da] rounded w-1/3 animate-pulse" />
+                <div className="h-3 bg-[#ece7da] rounded w-full mt-3 animate-pulse" />
+                <div className="h-3 bg-[#ece7da] rounded w-5/6 animate-pulse" />
+                <div className="flex gap-2 mt-3">
+                    <div className="h-7 w-28 bg-[#ece7da] rounded animate-pulse" />
+                    <div className="h-7 w-20 bg-[#ece7da] rounded animate-pulse" />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function StarRating({ rating }: { rating: number }) {
+    const stars = Math.round(rating);
+    return (
+        <span className="text-sm" aria-label={`${stars} out of 5 stars`}>
+            <span className="text-[#e07d4f]">{"★".repeat(stars)}</span>
+            <span className="text-[#d4c5b0]">{"★".repeat(5 - stars)}</span>
+        </span>
+    );
+}
+
+function ReasonBadge({ reason }: { reason: RecommendationReason }) {
+    const m = REASON_META[reason];
+    return (
+        <span
+            className="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full border"
+            style={{ background: m.bg, color: m.text, borderColor: m.border }}
+        >
+            {m.label}
+        </span>
+    );
+}
+
+interface BookCardProps {
+    book: RecommendedBook;
+    onWantToRead: (bookId: string) => void;
+    shelvedIds: Set<string>;
+}
+
+function BookCard({ book, onWantToRead, shelvedIds }: BookCardProps) {
+    const shelved = shelvedIds.has(book.id);
+
+    return (
+        <article className="flex gap-4 py-5 border-b border-[#e8e0d0] group">
+            {/* Cover */}
+            <Link to={`/book/${book.googleBooksId}`} className="flex-shrink-0">
+                {book.coverUrl ? (
+                    <img
+                        src={book.coverUrl}
+                        alt={book.title}
+                        className="w-[60px] h-[90px] object-cover rounded shadow-sm group-hover:shadow transition-shadow"
+                    />
+                ) : (
+                    <div
+                        className="w-[60px] h-[90px] rounded flex items-center justify-center text-[#7b5e3a] text-xs text-center px-1 leading-tight shadow-sm"
+                        style={{ background: "#ece7da", fontFamily: "Georgia, serif" }}
+                    >
+                        {book.title}
+                    </div>
+                )}
+            </Link>
+
+            {/* Details */}
+            <div className="flex-1 min-w-0">
+                <div className="flex items-start gap-3 justify-between">
+                    <div className="min-w-0">
+                        <Link
+                            to={`/book/${book.googleBooksId}`}
+                            className="text-[#382110] font-semibold text-[15px] hover:underline leading-snug block"
+                            style={{ fontFamily: "Georgia, serif" }}
+                        >
+                            {book.title}
+                            {book.subtitle && (
+                                <span className="font-normal text-[13px] text-[#888]">
+                                    {" "}— {book.subtitle}
+                                </span>
+                            )}
+                        </Link>
+                        <p className="text-[13px] text-[#7b5e3a] mt-0.5">
+                            by <span className="text-[#00635d]">{book.author}</span>
+                        </p>
+                    </div>
+
+                    {/* Rating */}
+                    <div className="flex-shrink-0 flex flex-col items-end gap-0.5">
+                        {book.averageRating > 0 && (
+                            <>
+                                <StarRating rating={book.averageRating} />
+                                <span className="text-[11px] text-[#aaa]">
+                                    avg {book.averageRating.toFixed(2)}
+                                </span>
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                {/* Badges */}
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                    <ReasonBadge reason={book.reason} />
+                    {book.categories.slice(0, 3).map((cat) => (
+                        <span
+                            key={cat}
+                            className="inline-block text-[11px] text-[#888] bg-[#f4f0e6] border border-[#e0d8c8] px-2 py-0.5 rounded-full"
+                        >
+                            {cat}
+                        </span>
+                    ))}
+                </div>
+
+                {/* Description */}
+                {book.description && (
+                    <p className="text-[13px] text-[#555] mt-2 leading-relaxed line-clamp-2">
+                        {book.description}
+                    </p>
+                )}
+
+                {/* Actions */}
+                <div className="flex items-center gap-3 mt-3">
+                    {shelved ? (
+                        <span className="inline-flex items-center gap-1.5 text-[13px] text-[#00635d] font-medium">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Added to Want to Read
+                        </span>
+                    ) : (
+                        <button
+                            onClick={() => onWantToRead(book.id)}
+                            className="text-[13px] bg-[#409d69] hover:bg-[#2e8a57] active:bg-[#1f7047] text-white px-4 py-1.5 rounded font-medium transition-colors"
+                        >
+                            Want to Read
+                        </button>
+                    )}
+                    <Link
+                        to={`/book/${book.googleBooksId}`}
+                        className="text-[13px] text-[#00635d] hover:underline"
+                    >
+                        Details →
+                    </Link>
+                </div>
+            </div>
+        </article>
+    );
+}
+
+function SectionDivider({
+    reason,
+}: {
+    reason: RecommendationReason;
+}) {
+    const { title, subtitle } = SECTION_HEADERS[reason];
+    return (
+        <div className="mt-8 mb-0 border-b border-[#e8e0d0] pb-2">
+            <h2
+                className="text-[19px] font-bold text-[#382110]"
+                style={{ fontFamily: "Georgia, serif" }}
+            >
+                {title}
+            </h2>
+            <p className="text-[12px] text-[#999] mt-0.5">{subtitle}</p>
+        </div>
+    );
+}
+
+function ColdStartBanner() {
+    return (
+        <div className="bg-[#f7f3e9] border border-[#e0d8c8] rounded-lg p-4 mb-6 flex gap-3">
+            <span className="text-[#e07d4f] text-xl mt-0.5">📚</span>
+            <div>
+                <p className="text-[#382110] text-[14px] font-semibold">
+                    Rate more books for better recommendations
+                </p>
+                <p className="text-[#777] text-[13px] mt-0.5">
+                    These are our most popular picks. Rate at least 5 books and we'll
+                    personalise these for your taste.
+                </p>
+                <Link
+                    to="/mybooks"
+                    className="inline-block mt-2 text-[13px] text-[#00635d] hover:underline font-medium"
+                >
+                    Go rate some books →
+                </Link>
+            </div>
+        </div>
+    );
+}
+
+function EmptyState() {
+    return (
+        <div className="bg-[#f4f0e6] rounded-lg px-8 py-12 text-center mt-4">
+            <p className="text-[#382110] text-[18px] font-semibold mb-2" style={{ fontFamily: "Georgia, serif" }}>
+                Nothing to show here yet
+            </p>
+            <p className="text-[#888] text-[14px] mb-6 max-w-sm mx-auto">
+                Start rating books you've read and we'll find ones you'll love.
+            </p>
+            <Link
+                to="/mybooks"
+                className="inline-block bg-[#00635d] hover:bg-[#004d48] text-white text-[14px] px-6 py-2.5 rounded font-medium transition-colors"
+            >
+                Go to My Books
+            </Link>
+        </div>
+    );
+}
+
+function ErrorState({ onRetry }: { onRetry: () => void }) {
+    return (
+        <div className="bg-[#fff5f5] border border-[#f5c6c6] rounded-lg p-8 text-center mt-4">
+            <p className="text-[#c0392b] text-[15px] font-semibold mb-1">
+                Couldn't load recommendations
+            </p>
+            <p className="text-[#888] text-[13px] mb-4">
+                Something went wrong on our end. Please try again.
+            </p>
+            <button
+                onClick={onRetry}
+                className="bg-[#382110] hover:bg-[#5a3a1a] text-white text-[13px] px-5 py-2 rounded transition-colors"
+            >
+                Try again
+            </button>
+        </div>
+    );
+}
+
+// Main page 
 
 export function Recommendation() {
+    const [activeTab, setActiveTab] = useState<FilterTab>("all");
+    const [status, setStatus] = useState<Status>("idle");
+    const [books, setBooks] = useState<RecommendedBook[]>([]);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(false);
+    const [isColdStart, setIsColdStart] = useState(false);
+    const [shelvedIds, setShelvedIds] = useState<Set<string>>(new Set());
+
+    // Fetch 
+    const load = useCallback(
+        async (pageNum: number, tab: FilterTab, replace: boolean) => {
+            setStatus("loading");
+            try {
+                const result: RecommendationsResponse = await fetchRecommendations({
+                    page: pageNum,
+                    perPage: 10,
+                    reason: tab === "all" ? null : tab,
+                });
+
+                setIsColdStart(result.isColdStart);
+
+                if (result.books.length === 0 && pageNum === 1) {
+                    setStatus("empty");
+                    return;
+                }
+
+                setBooks((prev) => (replace ? result.books : [...prev, ...result.books]));
+                setHasMore(result.hasMore);
+                setStatus("success");
+            } catch {
+                setStatus("error");
+            }
+        },
+        []
+    );
+
+    // Reset + fetch when tab changes
+    useEffect(() => {
+        setPage(1);
+        setBooks([]);
+        load(1, activeTab, true);
+    }, [activeTab, load]);
+
+    function loadMore() {
+        const next = page + 1;
+        setPage(next);
+        load(next, activeTab, false);
+    }
+
+    function handleWantToRead(bookId: string) {
+        setShelvedIds((prev) => new Set(prev).add(bookId));
+        // Find the book and add to want-to-read shelf
+        const book = books.find(b => b.id === bookId);
+        if (book) {
+            const shelfData: ShelfBookData = {
+                google_books_id: book.googleBooksId,
+                title: book.title,
+                subtitle: book.subtitle || undefined,
+                author: book.author,
+                cover_url: book.coverUrl || undefined,
+                page_count: book.pageCount || undefined,
+                description: book.description || undefined,
+                published_date: book.publishedDate || undefined,
+                categories: book.categories,
+                average_rating: book.averageRating,
+            };
+            addBookToShelfAPI(shelfData, "want-to-read").catch(console.error);
+        }
+    }
+
+    // Group by reason for "all" tab 
+    const grouped = books.reduce<Record<string, RecommendedBook[]>>((acc, b) => {
+        (acc[b.reason] ??= []).push(b);
+        return acc;
+    }, {});
+
+    const reasonOrder: RecommendationReason[] = ["cf", "genre", "author"];
+
+    //  Render 
     return (
         <div className="max-w-[860px] mx-auto px-4 py-10">
             {/* Breadcrumb */}
-            <div className="text-[12px] mb-6 leading-relaxed">
-                <Link
-                    to="/mybooks"
-                    className="text-[#00635d] no-underline hover:underline"
-                >
+            <nav className="text-[12px] mb-6" aria-label="breadcrumb">
+                <Link to="/mybooks" className="text-[#00635d] hover:underline">
                     My Books
                 </Link>
-                <span className="text-[#00635d]"> &gt; Recommendations</span>
-            </div>
+                <span className="text-[#00635d]"> › Recommendations</span>
+            </nav>
 
-            {/* Page Header */}
-            <div className="mb-6">
+            {/* Header */}
+            <header className="mb-6">
                 <h1
-                    className="text-[32px] font-bold text-[#382110] mb-2"
+                    className="text-[32px] font-bold text-[#382110] mb-1"
                     style={{ fontFamily: "Georgia, serif" }}
                 >
                     Recommendations
                 </h1>
-                <p className="text-gray-600">
-                    Discover books recommended based on your reading history.
+                <p className="text-[14px] text-[#777]">
+                    Personalised picks based on your ratings and reading history.
                 </p>
+            </header>
+
+            {/* Cold-start banner */}
+            {isColdStart && (status === "success" || status === "empty") && <ColdStartBanner />}
+
+            {/* Filter tabs */}
+            <div
+                className="flex gap-0 border-b border-[#e8e0d0] mb-1 overflow-x-auto"
+                role="tablist"
+                aria-label="Recommendation filters"
+            >
+                {TABS.map((tab) => (
+                    <button
+                        key={tab.id}
+                        role="tab"
+                        aria-selected={activeTab === tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={[
+                            "px-4 py-2.5 text-[13px] font-medium whitespace-nowrap transition-colors border-b-2 -mb-px",
+                            activeTab === tab.id
+                                ? "border-[#382110] text-[#382110]"
+                                : "border-transparent text-[#888] hover:text-[#382110]",
+                        ].join(" ")}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
-            {/* Placeholder content */}
-            <div className="bg-[#f4f0e6] rounded-lg p-8 text-center">
-                <p className="text-gray-500 text-lg mb-4">
-                    Recommendation logic coming soon...
-                </p>
-                <p className="text-gray-400">
-                    We'll show you personalized book recommendations based on your ratings
-                    and reading preferences.
-                </p>
-            </div>
+            {/* States */}
+
+            {status === "error" && (
+                <ErrorState onRetry={() => load(1, activeTab, true)} />
+            )}
+
+            {/* Skeleton (first load) */}
+            {status === "loading" && books.length === 0 && (
+                <div>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                        <SkeletonCard key={i} />
+                    ))}
+                </div>
+            )}
+
+            {/* Book lists  */}
+
+            {status !== "error" && (
+                <>
+                    {/* Grouped view (All tab) */}
+                    {activeTab === "all" &&
+                        reasonOrder.map((reason) => {
+                            const group = grouped[reason];
+                            if (!group?.length) return null;
+                            return (
+                                <section key={reason} aria-labelledby={`section-${reason}`}>
+                                    {/* On cold start, show cf books but relabel as "Popular Picks" */}
+                                    {reason === "cf" && isColdStart ? (
+                                        <div className="mt-8 mb-0 border-b border-[#e8e0d0] pb-2">
+                                            <h2
+                                                className="text-[19px] font-bold text-[#382110]"
+                                                style={{ fontFamily: "Georgia, serif" }}
+                                            >
+                                                Popular Picks
+                                            </h2>
+                                            <p className="text-[12px] text-[#999] mt-0.5">
+                                                Most loved books across all readers
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <SectionDivider reason={reason} />
+                                    )}
+                                    {group.map((book) => (
+                                        <BookCard
+                                            key={book.id}
+                                            book={book}
+                                            onWantToRead={handleWantToRead}
+                                            shelvedIds={shelvedIds}
+                                        />
+                                    ))}
+                                </section>
+                            );
+                        })}
+
+                    {/* Flat view (filtered tabs) */}
+                    {activeTab !== "all" && (
+                        <>
+                            {isColdStart ? (
+                                <div className="bg-[#f4f0e6] rounded-lg px-8 py-12 text-center mt-4">
+                                    <p className="text-[#382110] text-[18px] font-semibold mb-2" style={{ fontFamily: "Georgia, serif" }}>
+                                        Not enough data yet
+                                    </p>
+                                    <p className="text-[#888] text-[14px] mb-6 max-w-sm mx-auto">
+                                        Rate at least 5 books and we'll find personalised picks based on readers who share your taste.
+                                    </p>
+                                    <Link
+                                        to="/mybooks"
+                                        className="inline-block bg-[#00635d] hover:bg-[#004d48] text-white text-[14px] px-6 py-2.5 rounded font-medium transition-colors"
+                                    >
+                                        Go rate some books
+                                    </Link>
+                                </div>
+                            ) : status === "empty" ? (
+                                <EmptyState />
+                            ) : (
+                                books.map((book) => (
+                                    <BookCard
+                                        key={book.id}
+                                        book={book}
+                                        onWantToRead={handleWantToRead}
+                                        shelvedIds={shelvedIds}
+                                    />
+                                ))
+                            )}
+                        </>
+                    )}
+
+                    {/* Loading more inline */}
+                    {status === "loading" && books.length > 0 && (
+                        <div className="py-6 text-center text-[13px] text-[#aaa]">
+                            Loading more…
+                        </div>
+                    )}
+
+                    {/* Load more button */}
+                    {status === "success" && hasMore && (
+                        <div className="text-center mt-8">
+                            <button
+                                onClick={loadMore}
+                                className="border border-[#c9b99a] text-[#7b5e3a] text-[14px] px-8 py-2.5 rounded hover:bg-[#f4f0e6] transition-colors"
+                            >
+                                Load more
+                            </button>
+                        </div>
+                    )}
+
+                    {/* All loaded */}
+                    {status === "success" && !hasMore && books.length > 0 && (
+                        <p className="text-center text-[12px] text-[#bbb] mt-8 pb-4">
+                            You've seen all recommendations for now.
+                        </p>
+                    )}
+                </>
+            )}
         </div>
     );
 }

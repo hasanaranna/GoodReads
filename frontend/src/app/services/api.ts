@@ -186,3 +186,63 @@ export async function fetchBookReviewsAPI(googleBooksId: string): Promise<{ succ
 
   return payload;
 }
+
+
+// ========== Recommendations API ==========
+
+
+export type RecommendationReason = "cf" | "genre" | "author";
+
+export interface RecommendedBook {
+  id: string;
+  googleBooksId: string;
+  title: string;
+  subtitle: string | null;
+  author: string;
+  coverUrl: string | null;
+  description: string | null;
+  pageCount: number | null;
+  publishedDate: string | null;
+  categories: string[];
+  averageRating: number;
+  score: number;            // 0-1  — model confidence
+  reason: RecommendationReason;
+}
+
+export interface RecommendationsResponse {
+  books: RecommendedBook[];
+  total: number;
+  hasMore: boolean;
+  page: number;
+  perPage: number;
+  isColdStart: boolean;
+}
+
+export interface RecommendationsParams {
+  page?: number;
+  perPage?: number;
+  reason?: RecommendationReason | null;
+}
+
+// API call 
+
+export async function fetchRecommendations(
+  params: RecommendationsParams = {}
+): Promise<RecommendationsResponse> {
+  const { page = 1, perPage = 10, reason = null } = params;
+
+  const query = new URLSearchParams({
+    page: String(page),
+    perPage: String(perPage),
+    ...(reason ? { reason } : {}),
+  });
+
+  const response = await authFetch(`/api/recommendations?${query}`);
+
+  if (!response.ok) {
+    throw new Error(`Recommendations API error: ${response.status}`);
+  }
+
+  const json = await response.json();
+  return json.data as RecommendationsResponse;
+}
