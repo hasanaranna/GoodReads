@@ -71,7 +71,7 @@ const SECTION_HEADERS: Record<
 
 function SkeletonCard() {
     return (
-        <div className="flex gap-4 py-5 border-b border-[#e8e0d0]">
+        <div className="flex border-b border-[#e8e0d0]" style={{ gap: "16px", paddingTop: "16px", paddingBottom: "16px" }}>
             <div className="w-[60px] h-[90px] rounded bg-[#ece7da] flex-shrink-0 animate-pulse" />
             <div className="flex-1 space-y-2 pt-1">
                 <div className="h-4 bg-[#ece7da] rounded w-2/3 animate-pulse" />
@@ -146,7 +146,7 @@ function BookCard({ book, onWantToRead, shelvedIds }: BookCardProps) {
     const shelved = shelvedIds.has(book.id);
 
     return (
-        <article className="flex gap-4 py-5 border-b border-[#e8e0d0] group">
+        <article className="flex border-b border-[#e8e0d0] group" style={{ gap: "16px", paddingTop: "16px", paddingBottom: "16px" }}>
             {/* Cover */}
             <Link to={`/book/${book.googleBooksId}`} className="flex-shrink-0">
                 {book.coverUrl ? (
@@ -248,7 +248,7 @@ function SectionDivider({
 }) {
     const { title, subtitle } = SECTION_HEADERS[reason];
     return (
-        <div className="mt-8 mb-0 border-b border-[#e8e0d0] pb-2">
+        <div className="border-b border-[#e8e0d0]" style={{ paddingTop: "24px", paddingBottom: "8px" }}>
             <h2
                 className="text-[19px] font-bold text-[#382110]"
                 style={{ fontFamily: "Georgia, serif" }}
@@ -285,7 +285,7 @@ function ColdStartBanner() {
 
 function EmptyState() {
     return (
-        <div className="bg-[#f4f0e6] rounded-lg px-8 py-12 text-center mt-4">
+        <div className="bg-[#f4f0e6] rounded-lg px-8 py-12 text-center" style={{ marginTop: "16px" }}>
             <p className="text-[#382110] text-[18px] font-semibold mb-2" style={{ fontFamily: "Georgia, serif" }}>
                 Nothing to show here yet
             </p>
@@ -304,7 +304,7 @@ function EmptyState() {
 
 function ErrorState({ onRetry }: { onRetry: () => void }) {
     return (
-        <div className="bg-[#fff5f5] border border-[#f5c6c6] rounded-lg p-8 text-center mt-4">
+        <div className="bg-[#fff5f5] border border-[#f5c6c6] rounded-lg p-8 text-center" style={{ marginTop: "16px" }}>
             <p className="text-[#c0392b] text-[15px] font-semibold mb-1">
                 Couldn't load recommendations
             </p>
@@ -429,9 +429,9 @@ export function Recommendation() {
 
     //  Render 
     return (
-        <div className="max-w-[860px] mx-auto px-4 py-10">
+        <div className="max-w-[860px] mx-auto px-4 py-5">
             {/* Breadcrumb */}
-            <nav className="text-[12px] mb-6" aria-label="breadcrumb">
+            <nav className="text-[12px] mb-4 leading-relaxed" aria-label="breadcrumb">
                 <Link to="/mybooks" className="text-[#00635d] hover:underline">
                     My Books
                 </Link>
@@ -439,7 +439,7 @@ export function Recommendation() {
             </nav>
 
             {/* Header */}
-            <header className="mb-6">
+            <header style={{ marginBottom: "16px" }}>
                 <h1
                     className="text-[32px] font-bold text-[#382110] mb-1"
                     style={{ fontFamily: "Georgia, serif" }}
@@ -453,14 +453,15 @@ export function Recommendation() {
 
             {/* Cold-start banner */}
             {isColdStart && (status === "success" || status === "empty") && (
-                <div className="mb-6">
+                <div style={{ marginBottom: "16px" }}>
                     <ColdStartBanner />
                 </div>
             )}
 
             {/* Filter tabs */}
             <div
-                className="flex gap-0 border-b border-[#e8e0d0] mb-1"
+                className="flex border-b border-[#e8e0d0]"
+                style={{ marginBottom: "8px", gap: 0 }}
                 role="tablist"
                 aria-label="Recommendation filters"
             >
@@ -483,6 +484,7 @@ export function Recommendation() {
             </div>
 
             {/* States */}
+            <div className="max-h-[600px] overflow-y-auto pr-4">
 
             {status === "error" && (
                 <ErrorState onRetry={() => load(1, activeTab, true)} />
@@ -510,7 +512,7 @@ export function Recommendation() {
                                 <section key={reason} aria-labelledby={`section-${reason}`}>
                                     {/* On cold start, show cf books but relabel as "Popular Picks" */}
                                     {reason === "cf" && isColdStart ? (
-                                        <div className="mt-8 mb-0 border-b border-[#e8e0d0] pb-2">
+                                        <div className="border-b border-[#e8e0d0]" style={{ paddingTop: "24px", paddingBottom: "8px" }}>
                                             <h2
                                                 className="text-[19px] font-bold text-[#382110]"
                                                 style={{ fontFamily: "Georgia, serif" }}
@@ -540,7 +542,7 @@ export function Recommendation() {
                     {activeTab !== "all" && (
                         <>
                             {isColdStart ? (
-                                <div className="bg-[#f4f0e6] rounded-lg px-8 py-12 text-center mt-4">
+                                <div className="bg-[#f4f0e6] rounded-lg px-8 py-12 text-center" style={{ marginTop: "16px" }}>
                                     <p className="text-[#382110] text-[18px] font-semibold mb-2" style={{ fontFamily: "Georgia, serif" }}>
                                         Not enough data yet
                                     </p>
@@ -578,7 +580,7 @@ export function Recommendation() {
 
                     {/* Load more button */}
                     {status === "success" && hasMore && (
-                        <div className="text-center mt-8">
+                        <div className="text-center" style={{ marginTop: "32px" }}>
                             <button
                                 onClick={loadMore}
                                 className="border border-[#c9b99a] text-[#7b5e3a] text-[14px] px-8 py-2.5 rounded hover:bg-[#f4f0e6] transition-colors"
@@ -590,12 +592,13 @@ export function Recommendation() {
 
                     {/* All loaded */}
                     {status === "success" && !hasMore && books.length > 0 && (
-                        <p className="text-center text-[12px] text-[#bbb] mt-8 pb-4">
+                        <p className="text-center text-[12px] text-[#bbb]" style={{ marginTop: "32px", paddingBottom: "16px" }}>
                             You've seen all recommendations for now.
                         </p>
                     )}
                 </>
             )}
+            </div>
         </div>
     );
 }
