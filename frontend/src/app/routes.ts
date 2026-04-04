@@ -5,6 +5,7 @@ import { MyBooks } from "./pages/MyBooks";
 import { EditReview } from "./pages/EditReview";
 import { InputProgress } from "./pages/InputProgress";
 import { Recommendation } from "./pages/Recommendation";
+import { BookDetail } from "./pages/BookDetail";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export const router = createBrowserRouter([
@@ -38,6 +39,10 @@ export const router = createBrowserRouter([
           {
             path: "recommendations",
             Component: Recommendation,
+          },
+          {
+            path: "book/:googleBooksId",
+            Component: BookDetail,
           },
         ],
       },

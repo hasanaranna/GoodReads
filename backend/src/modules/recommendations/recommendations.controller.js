@@ -3,6 +3,7 @@ import { successResponse, errorResponse } from '../../utils/apiResponse.js';
 
 export async function getRecommendationsHandler(req, res) {
   try {
+
     const userId = req.user.id;
     const page = Math.max(1, parseInt(req.query.page ?? 1, 10));
     const perPage = Math.min(20, parseInt(req.query.perPage ?? 10, 10));
