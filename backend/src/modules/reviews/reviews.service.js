@@ -6,7 +6,7 @@ import { pool } from '../../config/db.js';
 export async function updateReview(userId, userBookId, updates) {
   // Verify ownership
   const ownership = await pool.query(
-    'SELECT id FROM user_books WHERE id = $1 AND user_id = $2',
+    'SELECT id, book_id FROM user_books WHERE id = $1 AND user_id = $2',
     [userBookId, userId]
   );
 
