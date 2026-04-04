@@ -22,3 +22,20 @@ services:
       - ./backend/.env
     environment:
       - NODE_ENV=development
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    container_name: goodreads-db
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=goodreads
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data:z
+
+volumes:
+  db_data:
