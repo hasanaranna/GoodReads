@@ -30,7 +30,7 @@ jobs:
       - name: Create test .env file
         working-directory: ./backend
         run: |
-          cat > .env.test << EOF
+          cat > .env << 'EOF'
           NODE_ENV=test
           PORT=8080
           DB_HOST=localhost

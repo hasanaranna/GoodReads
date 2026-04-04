@@ -1,211 +1,194 @@
-/**
- * Unit tests for Login component
- * Tests user interactions, form validation, and API calls
- */
-
-import React, { useState } from 'react';
+import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
+import { Login } from '../app/pages/Login';
 
-// Mock component (demonstration)
-// In real project, import from src/app/pages/Login
-const Login = ({ onLogin }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+const mockNavigate = vi.fn();
+const mockSetUserName = vi.fn();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual<typeof import('react-router')>('react-router');
+  return { ...actual, useNavigate: () => mockNavigate };
+});
 
-    if (!email || !password) {
-      setError('Email and password required');
-      return;
-    }
+vi.mock('../app/context/BooksContext', () => ({
+  useBooks: () => ({
+    books: [],
+    loading: false,
+    error: null,
+    updateBook: vi.fn(),
+    addBook: vi.fn(),
+    removeBook: vi.fn(),
+    getBook: vi.fn(),
+    shelfCounts: { all: 0, read: 0, currentlyReading: 0, wantToRead: 0 },
+    userName: '',
+    setUserName: mockSetUserName,
+    refreshBooks: vi.fn(),
+    updateReview: vi.fn(),
+  }),
+}));
 
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setError('Invalid email format');
-      return;
-    }
+vi.mock('jwt-decode', () => ({
+  jwtDecode: () => ({ id: '1', name: 'Test User', username: 'testuser' }),
+}));
 
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
-
-      const data = await response.json();
-      onLogin(data.token);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        data-testid="email-input"
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        data-testid="password-input"
-      />
-      {error && <p data-testid="error-message">{error}</p>}
-      <button type="submit">Login</button>
-    </form>
+function renderLogin() {
+  return render(
+    <MemoryRouter>
+      <Login />
+    </MemoryRouter>,
   );
-};
+}
 
-describe('Login Component', () => {
+describe('Login page – Sign In mode', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
   });
 
-  describe('Form Rendering', () => {
-    it('should render email and password input fields', () => {
-      const { getByTestId } = render(<Login onLogin={vi.fn()} />);
+  it('should render username and password fields', () => {
+    renderLogin();
+    expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+  });
 
-      expect(getByTestId('email-input')).toBeInTheDocument();
-      expect(getByTestId('password-input')).toBeInTheDocument();
+  it('should render the Sign In button', () => {
+    renderLogin();
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+  });
+
+  it('should show error on failed login response', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      json: () => Promise.resolve({ error: { message: 'Invalid username or password.' } }),
     });
 
-    it('should render submit button', () => {
-      render(<Login onLogin={vi.fn()} />);
+    renderLogin();
 
-      const button = screen.getByRole('button', { name: /login/i });
-      expect(button).toBeInTheDocument();
-    });
+    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'baduser' } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'wrongpass' } });
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
-    it('should set input type to email for email field', () => {
-      const { getByTestId } = render(<Login onLogin={vi.fn()} />);
-
-      const emailInput = getByTestId('email-input');
-      expect(emailInput.type).toBe('email');
-    });
-
-    it('should set input type to password for password field', () => {
-      const { getByTestId } = render(<Login onLogin={vi.fn()} />);
-
-      const passwordInput = getByTestId('password-input');
-      expect(passwordInput.type).toBe('password');
+    await waitFor(() => {
+      expect(screen.getByText(/Invalid username or password/i)).toBeInTheDocument();
     });
   });
 
-  describe('Form Validation', () => {
-    it('should show error when email is empty', async () => {
-      const { getByTestId, queryByTestId } = render(<Login onLogin={vi.fn()} />);
-
-      const passwordInput = getByTestId('password-input');
-      const submitButton = screen.getByRole('button', { name: /login/i });
-
-      fireEvent.change(passwordInput, { target: { value: 'password123' } });
-      fireEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(queryByTestId('error-message')).toBeInTheDocument();
-      });
-    });
-
-    it('should show error when password is empty', async () => {
-      const { getByTestId, queryByTestId } = render(<Login onLogin={vi.fn()} />);
-
-      const emailInput = getByTestId('email-input');
-      const submitButton = screen.getByRole('button', { name: /login/i });
-
-      fireEvent.change(emailInput, { target: { value: 'user@example.com' } });
-      fireEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(queryByTestId('error-message')).toBeInTheDocument();
-      });
-    });
-
-    it('should show error for invalid email format', async () => {
-      const { getByTestId, container } = render(<Login onLogin={vi.fn()} />);
-
-      const emailInput = getByTestId('email-input') as HTMLInputElement;
-      const passwordInput = getByTestId('password-input') as HTMLInputElement;
-      const form = container.querySelector('form') as HTMLFormElement;
-
-      fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
-      fireEvent.change(passwordInput, { target: { value: 'password123' } });
-      fireEvent.submit(form);
-
-      // Wait for error message to appear
-      await waitFor(() => {
-        const errorElement = screen.getByTestId('error-message');
-        expect(errorElement).toBeInTheDocument();
-        expect(errorElement.textContent).toContain('Invalid');
-      });
-    });
-
-    it('should not show error for valid inputs', async () => {
-      global.fetch = vi.fn(() =>
+  it('should navigate to /mybooks on successful login', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () =>
         Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ token: 'test-token' })
-        })
-      );
+          access_token: 'fake.jwt.token',
+          user: { name: 'Test User', username: 'testuser' },
+        }),
+    });
 
-      const { getByTestId, queryByTestId } = render(<Login onLogin={vi.fn()} />);
+    renderLogin();
 
-      fireEvent.change(getByTestId('email-input'), {
-        target: { value: 'user@example.com' }
-      });
-      fireEvent.change(getByTestId('password-input'), {
-        target: { value: 'password123' }
-      });
-      fireEvent.click(screen.getByRole('button', { name: /login/i }));
+    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'testuser' } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
-      await waitFor(() => {
-        expect(queryByTestId('error-message')).not.toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/mybooks', { replace: true });
     });
   });
 
-  describe('User Interactions', () => {
-    it('should update email input on user typing', () => {
-      const { getByTestId } = render(<Login onLogin={vi.fn()} />);
-
-      const emailInput = getByTestId('email-input') as HTMLInputElement;
-      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-
-      expect(emailInput.value).toBe('test@example.com');
+  it('should store access_token in localStorage on login', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          access_token: 'stored-token',
+          user: { name: 'User' },
+        }),
     });
 
-    it('should update password input on user typing', () => {
-      const { getByTestId } = render(<Login onLogin={vi.fn()} />);
+    renderLogin();
 
-      const passwordInput = getByTestId('password-input') as HTMLInputElement;
-      fireEvent.change(passwordInput, { target: { value: 'mypassword' } });
+    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'user' } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
-      expect(passwordInput.value).toBe('mypassword');
+    await waitFor(() => {
+      expect(localStorage.getItem('access_token')).toBe('stored-token');
     });
+  });
 
-    it('should prevent form submission with invalid data', async () => {
-      const mockFetch = vi.fn();
-      global.fetch = mockFetch;
+  it('should show network error when fetch throws', async () => {
+    global.fetch = vi.fn().mockRejectedValueOnce(new Error('Network failure'));
 
-      const { getByTestId } = render(<Login onLogin={vi.fn()} />);
+    renderLogin();
 
-      fireEvent.click(screen.getByRole('button', { name: /login/i }));
+    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'user' } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
-      await waitFor(() => {
-        expect(mockFetch).not.toHaveBeenCalled();
-      });
+    await waitFor(() => {
+      expect(screen.getByText(/network error/i)).toBeInTheDocument();
     });
   });
 });
 
+describe('Login page – Sign Up mode', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+  });
+
+  function switchToSignUp() {
+    renderLogin();
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
+  }
+
+  it('should show registration fields after clicking Sign up', () => {
+    switchToSignUp();
+    expect(screen.getByLabelText(/your name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument();
+  });
+
+  it('should show error when passwords do not match', async () => {
+    switchToSignUp();
+
+    fireEvent.change(screen.getByLabelText(/your name/i), { target: { value: 'Test' } });
+    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'newuser' } });
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'a@b.com' } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'mismatch' } });
+    fireEvent.change(screen.getByLabelText(/date of birth/i), { target: { value: '2000-01-01' } });
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should navigate to /mybooks on successful registration', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          access_token: 'new.jwt.token',
+          user: { name: 'New User', username: 'newuser' },
+        }),
+    });
+
+    switchToSignUp();
+
+    fireEvent.change(screen.getByLabelText(/your name/i), { target: { value: 'New User' } });
+    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'newuser' } });
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'new@example.com' } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText(/date of birth/i), { target: { value: '2000-01-01' } });
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/mybooks', { replace: true });
+    });
+  });
+});

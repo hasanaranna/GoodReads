@@ -1,60 +1,13 @@
-/**
- * Unit tests for books search service
- * Tests input validation, normalization, and error handling
- */
-
 import { describe, it, expect } from '@jest/globals';
-
-// Mock the constants since we can't easily import them
-const ALLOWED_SORTS = ['relevance', 'newest'];
-const DEFAULT_LIMIT = 10;
-const DEFAULT_PAGE = 1;
-const DEFAULT_SORT = 'relevance';
-const MAX_LIMIT = 40;
-const MIN_LIMIT = 1;
-const MIN_PAGE = 1;
-
-function toPositiveInteger(value, fallback, min, max) {
-  const parsed = Number.parseInt(value, 10);
-
-  if (!Number.isInteger(parsed)) {
-    return fallback;
-  }
-
-  if (parsed < min) {
-    return min;
-  }
-
-  if (typeof max === 'number' && parsed > max) {
-    return max;
-  }
-
-  return parsed;
-}
-
-function normalizeInput({ q, genre, sort, page, limit }) {
-  const query = typeof q === 'string' ? q.trim() : '';
-  if (!query) {
-    const error = new Error("Query parameter 'q' is required.");
-    error.statusCode = 400;
-    error.code = 'INVALID_QUERY';
-    throw error;
-  }
-
-  const normalizedSort =
-    typeof sort === 'string' && ALLOWED_SORTS.includes(sort.toLowerCase())
-      ? sort.toLowerCase()
-      : DEFAULT_SORT;
-
-  return {
-    q: query,
-    sort: normalizedSort,
-    page: toPositiveInteger(page, DEFAULT_PAGE, MIN_PAGE),
-    limit: toPositiveInteger(limit, DEFAULT_LIMIT, MIN_LIMIT, MAX_LIMIT),
-    genre:
-      typeof genre === 'string' && genre.trim() ? genre.trim() : undefined
-  };
-}
+import { normalizeInput, toPositiveInteger } from '../../src/modules/books/books.service.js';
+import {
+  DEFAULT_LIMIT,
+  DEFAULT_PAGE,
+  DEFAULT_SORT,
+  MAX_LIMIT,
+  MIN_LIMIT,
+  MIN_PAGE
+} from '../../src/constants/search.constants.js';
 
 describe('normalizeInput', () => {
   it('should normalize valid search query', () => {
@@ -87,6 +40,11 @@ describe('normalizeInput', () => {
     expect(result.sort).toBe(DEFAULT_SORT);
   });
 
+  it('should accept "newest" as a valid sort', () => {
+    const result = normalizeInput({ q: 'test', sort: 'newest' });
+    expect(result.sort).toBe('newest');
+  });
+
   it('should clamp limit to max value', () => {
     const result = normalizeInput({ q: 'test', limit: '999' });
     expect(result.limit).toBe(MAX_LIMIT);
@@ -117,6 +75,15 @@ describe('normalizeInput', () => {
     const result = normalizeInput({ q: 'test', genre: '   ' });
     expect(result.genre).toBeUndefined();
   });
+
+  it('should set error statusCode to 400 and code to INVALID_QUERY', () => {
+    try {
+      normalizeInput({ q: '' });
+    } catch (err) {
+      expect(err.statusCode).toBe(400);
+      expect(err.code).toBe('INVALID_QUERY');
+    }
+  });
 });
 
 describe('toPositiveInteger', () => {
@@ -138,5 +105,13 @@ describe('toPositiveInteger', () => {
 
   it('should handle undefined max gracefully', () => {
     expect(toPositiveInteger('999', 10, 1, undefined)).toBe(999);
+  });
+
+  it('should return fallback for empty string', () => {
+    expect(toPositiveInteger('', 10, 1, 100)).toBe(10);
+  });
+
+  it('should return fallback for null', () => {
+    expect(toPositiveInteger(null, 5, 1, 100)).toBe(5);
   });
 });

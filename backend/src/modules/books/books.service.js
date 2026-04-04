@@ -10,7 +10,7 @@ import {
 import { formatBook } from '../../utils/formatBook.js';
 import { searchGoogleBooks } from './googleBooks.client.js';
 
-function toPositiveInteger(value, fallback, min, max) {
+export function toPositiveInteger(value, fallback, min, max) {
   const parsed = Number.parseInt(value, 10);
 
   if (!Number.isInteger(parsed)) {
@@ -28,7 +28,7 @@ function toPositiveInteger(value, fallback, min, max) {
   return parsed;
 }
 
-function normalizeInput({ q, genre, sort, page, limit }) {
+export function normalizeInput({ q, genre, sort, page, limit }) {
   const query = typeof q === 'string' ? q.trim() : '';
   if (!query) {
     const error = new Error("Query parameter 'q' is required.");
