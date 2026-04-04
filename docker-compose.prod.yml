@@ -3,7 +3,7 @@ services:
     image: ghcr.io/hasanaranna/goodreads-frontend:latest
     container_name: goodreads-frontend
     ports:
-      - "5173:5173"
+      - "80:80"
     environment:
       - NODE_ENV=production
 

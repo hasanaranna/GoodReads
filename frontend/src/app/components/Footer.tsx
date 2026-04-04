@@ -44,7 +44,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <div className="text-white mb-3 text-[16px]">Checking CI/CD 2</div>
+            <div className="text-white mb-3 text-[16px]">Checking CI/CD 3</div>
           </div>
 
           {/* Connect */}
