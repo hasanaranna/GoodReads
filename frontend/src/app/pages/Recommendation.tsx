@@ -86,11 +86,38 @@ function SkeletonCard() {
 }
 
 function StarRating({ rating }: { rating: number }) {
-    const stars = Math.round(rating);
+    const stars = 5;
+    // Round to nearest 0.1
+    const rounded = Math.round(rating * 10) / 10;
+
     return (
-        <span className="text-sm" aria-label={`${stars} out of 5 stars`}>
-            <span className="text-[#e07d4f]">{"★".repeat(stars)}</span>
-            <span className="text-[#d4c5b0]">{"★".repeat(5 - stars)}</span>
+        <span className="inline-flex gap-0.5" aria-label={`${rounded} out of 5 stars`}>
+            {Array.from({ length: stars }, (_, i) => {
+                const fill = Math.min(1, Math.max(0, rounded - i)); // 0 to 1 for this star
+                const pct = Math.round(fill * 100);
+                const id = `star-${i}-${pct}`;
+
+                return (
+                    <svg key={i} width="14" height="14" viewBox="0 0 24 24">
+                        <defs>
+                            <clipPath id={id}>
+                                <rect x="0" y="0" width={`${pct}%`} height="24" />
+                            </clipPath>
+                        </defs>
+                        {/* Empty star */}
+                        <path
+                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                            fill="#d4c5b0"
+                        />
+                        {/* Filled portion */}
+                        <path
+                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                            fill="#e07d4f"
+                            clipPath={`url(#${id})`}
+                        />
+                    </svg>
+                );
+            })}
         </span>
     );
 }
@@ -157,8 +184,8 @@ function BookCard({ book, onWantToRead, shelvedIds }: BookCardProps) {
                         </p>
                     </div>
 
-                    {/* Rating */}
-                    <div className="flex-shrink-0 flex flex-col items-end gap-0.5">
+                    {/* Rating & Action */}
+                    <div className="flex-shrink-0 flex flex-col items-end gap-2">
                         {book.averageRating > 0 && (
                             <>
                                 <StarRating rating={book.averageRating} />
@@ -166,6 +193,20 @@ function BookCard({ book, onWantToRead, shelvedIds }: BookCardProps) {
                                     avg {book.averageRating.toFixed(2)}
                                 </span>
                             </>
+                        )}
+                        {shelved ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] text-[#00635d] font-medium">
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M5 13l4 4L19 7" />
+                                </svg>
+                            </span>
+                        ) : (
+                            <button
+                                onClick={() => onWantToRead(book.id)}
+                                className="text-[12px] bg-[#409d69] hover:bg-[#2e8a57] active:bg-[#1f7047] text-white px-3 py-1 rounded font-medium transition-colors whitespace-nowrap"
+                            >
+                                Want to Read
+                            </button>
                         )}
                     </div>
                 </div>
@@ -189,31 +230,6 @@ function BookCard({ book, onWantToRead, shelvedIds }: BookCardProps) {
                         {book.description}
                     </p>
                 )}
-
-                {/* Actions */}
-                <div className="flex items-center gap-3 mt-3">
-                    {shelved ? (
-                        <span className="inline-flex items-center gap-1.5 text-[13px] text-[#00635d] font-medium">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Added to Want to Read
-                        </span>
-                    ) : (
-                        <button
-                            onClick={() => onWantToRead(book.id)}
-                            className="text-[13px] bg-[#409d69] hover:bg-[#2e8a57] active:bg-[#1f7047] text-white px-4 py-1.5 rounded font-medium transition-colors"
-                        >
-                            Want to Read
-                        </button>
-                    )}
-                    <Link
-                        to={`/book/${book.googleBooksId}`}
-                        className="text-[13px] text-[#00635d] hover:underline"
-                    >
-                        Details →
-                    </Link>
-                </div>
             </div>
         </article>
     );
@@ -240,8 +256,7 @@ function SectionDivider({
 
 function ColdStartBanner() {
     return (
-        <div className="bg-[#f7f3e9] border border-[#e0d8c8] rounded-lg p-4 mb-6 flex gap-3">
-            <span className="text-[#e07d4f] text-xl mt-0.5">📚</span>
+        <div className="bg-[#f7f3e9] border border-[#e0d8c8] rounded-lg p-4 mb-6 flex gap-3">            <span className="text-[#e07d4f] text-xl mt-0.5">📚</span>
             <div>
                 <p className="text-[#382110] text-[14px] font-semibold">
                     Rate more books for better recommendations
@@ -256,6 +271,7 @@ function ColdStartBanner() {
                 >
                     Go rate some books →
                 </Link>
+
             </div>
         </div>
     );
@@ -405,11 +421,15 @@ export function Recommendation() {
             </header>
 
             {/* Cold-start banner */}
-            {isColdStart && (status === "success" || status === "empty") && <ColdStartBanner />}
+            {isColdStart && (status === "success" || status === "empty") && (
+                <div className="mb-6">
+                    <ColdStartBanner />
+                </div>
+            )}
 
             {/* Filter tabs */}
             <div
-                className="flex gap-0 border-b border-[#e8e0d0] mb-1 overflow-x-auto"
+                className="flex gap-0 border-b border-[#e8e0d0] mb-1"
                 role="tablist"
                 aria-label="Recommendation filters"
             >
