@@ -1,0 +1,20 @@
+services:
+  frontend:
+    image: ghcr.io/hasanaranna/goodreads-frontend:latest
+    container_name: goodreads-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=production
+
+  backend:
+    image: ghcr.io/hasanaranna/goodreads-backend:latest
+    container_name: goodreads-backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - /root/backend.env
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - db
