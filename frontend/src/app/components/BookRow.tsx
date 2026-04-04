@@ -30,24 +30,31 @@ export function BookRow({
   const [showShelfMenu, setShowShelfMenu] = useState(false);
 
   const progress = (() => {
-    if (typeof book.completionPercentage === "number") {
-      return Math.min(Math.max(book.completionPercentage, 0), 100);
-    }
-
     if (book.totalPages && book.totalPages > 0) {
       return Math.min(
         100,
-        Math.round(((book.pagesCompleted || 0) / book.totalPages) * 100),
+        Math.floor(((book.pagesCompleted || 0) / book.totalPages) * 100),
       );
+    }
+
+    if (typeof book.completionPercentage === "number") {
+      return Math.floor(Math.min(Math.max(book.completionPercentage, 0), 100));
     }
 
     return null;
   })();
 
-  const showProgress = progress !== null || (book.pagesCompleted || 0) > 0;
+  const showProgress = book.shelf === "currently-reading";
 
   async function handleShelfChange(newShelf: string) {
-    await updateBook(book.id, { shelf: newShelf as Book["shelf"] });
+    const updates: Partial<Book> = { shelf: newShelf as Book["shelf"] };
+    if (
+      newShelf === "currently-reading" &&
+      book.shelf !== "currently-reading"
+    ) {
+      updates.pagesCompleted = 0;
+    }
+    await updateBook(book.id, updates);
     setShowShelfMenu(false);
   }
 
@@ -126,8 +133,8 @@ export function BookRow({
           </div>
         </Link> */}
         <div className="text-[17px] text-[#382110] hover:underline leading-snug">
-            {book.title}
-          </div>
+          {book.title}
+        </div>
         <div className="text-[14px] text-gray-600 mt-1">{book.author}</div>
       </div>
 

@@ -43,13 +43,15 @@ export function Login() {
         const data = await response.json();
 
         if (!response.ok) {
-          setErrorMessage(data.error?.message || "Login failed. Please try again.");
+          setErrorMessage(
+            data.error?.message || "Login failed. Please try again.",
+          );
           return;
         }
 
         if (data.access_token) {
           localStorage.setItem("access_token", data.access_token);
-          
+
           try {
             const decoded = jwtDecode<JwtPayload>(data.access_token);
             if (data.user?.name) {
@@ -68,7 +70,7 @@ export function Login() {
             setUserName("User");
           }
         }
-        navigate("/mybooks");
+        navigate("/mybooks", { replace: true });
       } catch (error) {
         setErrorMessage("Network error. Could not connect to the server.");
       }
@@ -98,7 +100,8 @@ export function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        let msg = data.error?.message || "Registration failed. Please try again.";
+        let msg =
+          data.error?.message || "Registration failed. Please try again.";
         if (data.error?.details && data.error.details.length > 0) {
           msg += " " + data.error.details.map((d: any) => d.message).join(" ");
         }
@@ -109,7 +112,7 @@ export function Login() {
       // Successful registration
       if (data.access_token) {
         localStorage.setItem("access_token", data.access_token);
-        
+
         try {
           const decoded = jwtDecode<JwtPayload>(data.access_token);
           if (data.user?.name) {
@@ -128,7 +131,7 @@ export function Login() {
           setUserName(name || "User");
         }
       }
-      navigate("/mybooks");
+      navigate("/mybooks", { replace: true });
     } catch (error) {
       setErrorMessage("Network error. Could not connect to the server.");
     }
@@ -138,19 +141,25 @@ export function Login() {
     <div className="flex justify-center py-20 px-4 min-h-[80vh] bg-[#ffffff]">
       <div style={{ width: "400px" }}>
         <div className="text-center mb-10">
-          <h1 
-            className="text-[32px] text-[#382110] font-bold mb-2 cursor-default" 
+          <h1
+            className="text-[32px] text-[#382110] font-bold mb-2 cursor-default"
             style={{ fontFamily: "Lora, serif" }}
           >
             goodreads
           </h1>
-          <p className="text-[15px] text-gray-600" style={{ fontFamily: "Georgia, serif" }}>
+          <p
+            className="text-[15px] text-gray-600"
+            style={{ fontFamily: "Georgia, serif" }}
+          >
             {isLogin ? "Sign in to your account" : "Create an account"}
           </p>
         </div>
-        
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          <div 
+
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: "24px" }}
+        >
+          <div
             className="bg-[#f4f0e6] border border-[#d8d0bb] rounded-md flex flex-col gap-6"
             style={{ padding: "24px", boxSizing: "border-box", gap: "20px" }}
           >
@@ -203,7 +212,7 @@ export function Login() {
                 />
               </div>
             )}
-            
+
             <div className="flex flex-col gap-1.5 w-full">
               <label className="text-[14px] font-semibold text-[#382110]">
                 Password
@@ -250,7 +259,7 @@ export function Login() {
               </div>
             )}
           </div>
-          
+
           <div className="pt-2" style={{ marginBottom: "20px" }}>
             <button
               type="submit"
@@ -261,10 +270,10 @@ export function Login() {
             </button>
           </div>
         </form>
-        
+
         <div className="mt-10 pt-5 text-center text-[14px] text-gray-600">
           {isLogin ? "Not a member yet?" : "Already have an account?"}{" "}
-          <button 
+          <button
             type="button"
             onClick={() => {
               setIsLogin(!isLogin);

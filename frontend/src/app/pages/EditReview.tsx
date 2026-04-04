@@ -90,7 +90,11 @@ export function EditReview() {
     setIsSaving(true);
     try {
       if (shelf !== book!.shelf) {
-        await updateBook(book!.id, { shelf });
+        const shelfUpdates: Partial<Book> = { shelf };
+        if (shelf === "currently-reading") {
+          shelfUpdates.pagesCompleted = 0;
+        }
+        await updateBook(book!.id, shelfUpdates);
       }
       await updateReview(book!.id, { rating, review: reviewText });
       navigate("/mybooks");
@@ -110,19 +114,22 @@ export function EditReview() {
 
   // Filter out current user's review from community reviews
   const otherReviews = communityReviews.filter(
-    (r) => r.user_book_id !== book.id
+    (r) => r.user_book_id !== book.id,
   );
 
   return (
     <div className="max-w-[860px] mx-auto px-4 py-5">
       {/* Breadcrumb */}
       <div className="text-[12px] mb-4 leading-relaxed">
-        <Link
+        {/* <Link
           to={`/book/${book.id}/progress`}
           className="text-[#00635d] no-underline hover:underline"
         >
           {book.title}
-        </Link>
+        </Link> */}
+        <span className="text-[#00635d]">
+          {book.title}
+        </span>
         <span className="text-[#00635d]"> &gt; Review &gt; Edit</span>
       </div>
 
@@ -136,9 +143,7 @@ export function EditReview() {
         <div>
           <div className="text-[14px] text-[#382110] leading-snug mb-1">
             {book.title}
-            {book.subtitle && (
-              <span>: {book.subtitle}</span>
-            )}
+            {book.subtitle && <span>: {book.subtitle}</span>}
           </div>
           <div className="text-[13px] text-gray-600">
             by{" "}
@@ -192,11 +197,10 @@ export function EditReview() {
               {Object.entries(SHELF_LABELS).map(([key, label]) => (
                 <button
                   key={key}
-                  className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f4f0e6] ${
-                    shelf === key
+                  className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f4f0e6] ${shelf === key
                       ? "font-semibold text-[#382110]"
                       : "text-[#382110]"
-                  }`}
+                    }`}
                   onClick={() => {
                     setShelf(key as Book["shelf"]);
                     setShowShelfMenu(false);
@@ -408,7 +412,8 @@ export function EditReview() {
             Community Reviews
           </h2>
           <span className="text-[13px] text-gray-500">
-            {communityReviews.length} {communityReviews.length === 1 ? "review" : "reviews"}
+            {communityReviews.length}{" "}
+            {communityReviews.length === 1 ? "review" : "reviews"}
           </span>
         </div>
 
@@ -457,11 +462,15 @@ export function EditReview() {
                           : ""}
                       </span>
                       <span className="text-[11px] text-gray-400">
-                        · {new Date(review.date_added).toLocaleDateString("en-US", {
+                        ·{" "}
+                        {new Date(review.date_added).toLocaleDateString(
+                          "en-US",
+                          {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
-                          })}
+                          },
+                        )}
                       </span>
                     </div>
                   </div>

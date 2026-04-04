@@ -1,12 +1,12 @@
 import { pool } from '../../config/db.js';
 
 /**
- * Update review and/or rating for a user_book.
+ * Update review and/or rating for a user_book and recalculate book's average rating.
  */
 export async function updateReview(userId, userBookId, updates) {
-  // Verify ownership
+  // Verify ownership and get book_id
   const ownership = await pool.query(
-    'SELECT id, book_id FROM user_books WHERE id = $1 AND user_id = $2',
+    "SELECT id, book_id FROM user_books WHERE id = $1 AND user_id = $2",
     [userBookId, userId]
   );
 
@@ -16,6 +16,8 @@ export async function updateReview(userId, userBookId, updates) {
     error.code = 'NOT_FOUND';
     throw error;
   }
+
+  const bookId = ownership.rows[0].book_id;
 
   const setClauses = [];
   const params = [];
@@ -53,6 +55,27 @@ export async function updateReview(userId, userBookId, updates) {
      RETURNING id AS user_book_id, shelf, rating, review, pages_completed, date_added, date_read`,
     params
   );
+
+  // Update book's average rating if rating was changed
+  if (updates.rating !== undefined) {
+    const avgRatingResult = await pool.query(
+      `SELECT AVG(rating) as avg_rating, COUNT(*) as rating_count
+       FROM user_books
+       WHERE book_id = $1 AND rating > 0`,
+      [bookId]
+    );
+
+    const avgRating = avgRatingResult.rows[0].avg_rating
+      ? parseFloat(avgRatingResult.rows[0].avg_rating).toFixed(2)
+      : null;
+
+    await pool.query(
+      `UPDATE books
+       SET average_rating = $1
+       WHERE id = $2`,
+      [avgRating, bookId]
+    );
+  }
 
   return result.rows[0];
 }
