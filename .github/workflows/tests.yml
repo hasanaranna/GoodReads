@@ -158,73 +158,73 @@ jobs:
             })
 
   # Continuous deployment build step
-  build:
-    needs: [backend-tests, frontend-tests, lint]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && success()
+  # build:
+  #   needs: [backend-tests, frontend-tests, lint]
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push' && success()
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      # 1. Log in to the GitHub Container Registry
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }} # Automatically uses GitHub username
-          password: ${{ secrets.GITHUB_TOKEN }} # Automatically generated token
+  #     # 1. Log in to the GitHub Container Registry
+  #     - name: Log in to GitHub Container Registry
+  #       uses: docker/login-action@v3
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }} # Automatically uses GitHub username
+  #         password: ${{ secrets.GITHUB_TOKEN }} # Automatically generated token
 
-      # 2. Build and push the Backend Image
-      - name: Build and push Backend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/goodreads-backend:latest
+  #     # 2. Build and push the Backend Image
+  #     - name: Build and push Backend
+  #       uses: docker/build-push-action@v5
+  #       with:
+  #         context: ./backend
+  #         push: true
+  #         tags: ghcr.io/${{ github.repository_owner }}/goodreads-backend:latest
 
-      # 3. Build and push the Frontend Image 
-      - name: Build and push Frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/goodreads-frontend:latest
+  #     # 3. Build and push the Frontend Image 
+  #     - name: Build and push Frontend
+  #       uses: docker/build-push-action@v5
+  #       with:
+  #         context: ./frontend
+  #         push: true
+  #         tags: ghcr.io/${{ github.repository_owner }}/goodreads-frontend:latest
   
   # continuous deployment final step
-  deploy:
-    name: Deploy to DO Droplet
-    needs: build 
-    runs-on: ubuntu-latest
+  # deploy:
+  #   name: Deploy to DO Droplet
+  #   needs: build 
+  #   runs-on: ubuntu-latest
     
-    steps:
-      # 1. Checkout the code first so GitHub has the docker-compose.yml file
-      - name: Checkout code
-        uses: actions/checkout@v4
+  #   steps:
+  #     # 1. Checkout the code first so GitHub has the docker-compose.yml file
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      # 2. Securely copy the docker-compose.yml to your Droplet
-      - name: Copy docker-compose file
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          key: ${{ secrets.DO_SSH_KEY }}
-          source: "docker-compose.prod.yml"
-          target: "/root" # this should be in root directory
+  #     # 2. Securely copy the docker-compose.yml to your Droplet
+  #     - name: Copy docker-compose file
+  #       uses: appleboy/scp-action@v0.1.7
+  #       with:
+  #         host: ${{ secrets.DO_HOST }}
+  #         username: ${{ secrets.DO_USERNAME }}
+  #         key: ${{ secrets.DO_SSH_KEY }}
+  #         source: "docker-compose.prod.yml"
+  #         target: "/root" # this should be in root directory
 
-      # 3. SSH into the server and run the commands
-      - name: Execute deployment commands
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          key: ${{ secrets.DO_SSH_KEY }}
-          script: |
-            echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            cd /root
-            docker-compose -f docker-compose.prod.yml pull
-            docker-compose -f docker-compose.prod.yml up -d
-            docker image prune -f
+  #     # 3. SSH into the server and run the commands
+  #     - name: Execute deployment commands
+  #       uses: appleboy/ssh-action@v1.0.3
+  #       with:
+  #         host: ${{ secrets.DO_HOST }}
+  #         username: ${{ secrets.DO_USERNAME }}
+  #         key: ${{ secrets.DO_SSH_KEY }}
+  #         script: |
+  #           echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+  #           cd /root
+  #           docker-compose -f docker-compose.prod.yml pull
+  #           docker-compose -f docker-compose.prod.yml up -d
+  #           docker image prune -f
 
   # Merge to main notification
   notify-merge:
