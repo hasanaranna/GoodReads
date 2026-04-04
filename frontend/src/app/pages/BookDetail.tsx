@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router";
+import { useParams, Link, useNavigate, useLocation } from "react-router";
 import { User, BookOpen, ChevronDown } from "lucide-react";
 import { useBooks } from "../context/BooksContext";
 import { StarRating } from "../components/StarRating";
-import { fetchBookReviewsAPI, PublicReview, addBookToShelfAPI, ShelfBookData } from "../services/api";
+import { fetchBookReviewsAPI, PublicReview, addBookToShelfAPI, ShelfBookData, RecommendedBook } from "../services/api";
 import type { Book } from "../data/initialBooks";
 
 const SHELF_LABELS: Record<string, string> = {
@@ -150,6 +150,10 @@ export function BookDetail() {
   const { googleBooksId } = useParams<{ googleBooksId: string }>();
   const { books, getBook, updateBook, updateReview, addBook } = useBooks();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Pick up book info from navigation state from recommendations
+  const stateBook = location.state?.book as RecommendedBook | undefined;
 
   // Find the book in the user's shelf by googleBooksId
   const shelfBook = books.find((b) => b.googleBooksId === googleBooksId);
@@ -161,6 +165,8 @@ export function BookDetail() {
   const [isSavingShelf, setIsSavingShelf] = useState(false);
   const [showFullDesc, setShowFullDesc] = useState(false);
 
+  const [fetchedBook, setFetchedBook] = useState<any>(null);
+
   // If book is on shelf, keep rating/shelf in sync
   useEffect(() => {
     if (shelfBook) {
@@ -169,9 +175,23 @@ export function BookDetail() {
     }
   }, [shelfBook]);
 
-  // Fetch community reviews
+  // Fetch community reviews and book details from Google Books
   useEffect(() => {
     if (!googleBooksId) return;
+
+    // Fetch Google Books info for description, cover, etc if not fully locally cached
+    fetch(`https://www.googleapis.com/books/v1/volumes/${googleBooksId}`)
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error("Failed to fetch Google Books data");
+      })
+      .then((data) => {
+        if (data.volumeInfo) {
+          setFetchedBook(data.volumeInfo);
+        }
+      })
+      .catch(console.error);
+
     setLoadingReviews(true);
     fetchBookReviewsAPI(googleBooksId)
       .then((res) => setCommunityReviews(res.data))
@@ -182,15 +202,20 @@ export function BookDetail() {
   // Pick the best available source for book metadata
   // (shelf book has full data; community reviews expose title/author/cover)
   const firstReview = communityReviews[0];
-  const title = shelfBook?.title ?? firstReview?.title ?? "Unknown Book";
-  const author = shelfBook?.author ?? firstReview?.author ?? "";
-  const coverUrl = shelfBook?.coverUrl ?? firstReview?.cover_url ?? null;
-  const description = shelfBook?.description ?? null;
-  const totalPages = shelfBook?.totalPages;
+  const fetchedCover = fetchedBook?.imageLinks?.thumbnail || fetchedBook?.imageLinks?.smallThumbnail;
+  const httpsCover = fetchedCover ? fetchedCover.replace("http:", "https:") : null;
 
-  // Average community rating
+  const title = shelfBook?.title ?? fetchedBook?.title ?? firstReview?.title ?? stateBook?.title ?? "Unknown Book";
+  const author = shelfBook?.author ?? (fetchedBook?.authors?.[0]) ?? firstReview?.author ?? stateBook?.author ?? "";
+  const coverUrl = shelfBook?.coverUrl ?? httpsCover ?? firstReview?.cover_url ?? stateBook?.coverUrl ?? null;
+  const description = shelfBook?.description ?? fetchedBook?.description ?? stateBook?.description ?? null;
+  const totalPages = shelfBook?.totalPages ?? fetchedBook?.pageCount ?? stateBook?.pageCount;
+
+  // Average rating
   const rated = communityReviews.filter((r) => r.rating > 0);
-  const avgRating = rated.length > 0 ? rated.reduce((s, r) => s + r.rating, 0) / rated.length : 0;
+  const communityAvg = rated.length > 0 ? rated.reduce((s, r) => s + r.rating, 0) / rated.length : 0;
+  const avgRating = communityAvg > 0 ? communityAvg : (fetchedBook?.averageRating ?? stateBook?.averageRating ?? 0);
+  const ratingCount = communityAvg > 0 ? communityReviews.length : (fetchedBook?.ratingsCount ?? 0);
 
   async function handleShelfChange(shelf: "want-to-read" | "currently-reading" | "read") {
     setIsSavingShelf(true);
@@ -239,7 +264,8 @@ export function BookDetail() {
     }
   }
 
-  const desc = description ?? "";
+  const descRaw = description ?? "";
+  const desc = descRaw.replace(/<[^>]+>/g, "");
   const isLongDesc = desc.length > 500;
   const displayDesc = isLongDesc && !showFullDesc ? desc.slice(0, 500) + "…" : desc;
 
@@ -294,7 +320,7 @@ export function BookDetail() {
             <div className="flex items-center gap-2 mb-4">
               <FractionalStars rating={avgRating} />
               <span className="text-[12px] text-gray-500">
-                {avgRating.toFixed(2)} avg · {communityReviews.length} rating{communityReviews.length !== 1 ? "s" : ""}
+                {avgRating.toFixed(2)} avg · {ratingCount} rating{ratingCount !== 1 ? "s" : ""}
               </span>
             </div>
           )}

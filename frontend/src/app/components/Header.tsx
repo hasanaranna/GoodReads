@@ -325,35 +325,37 @@ export function Header() {
                           key={book.id}
                           className="group flex items-start gap-4 px-4 py-3.5 hover:bg-[#faf7f0] transition-colors duration-150"
                         >
-                          {/* Cover */}
-                          <div className="relative flex-shrink-0">
-                            <img
-                              src={localBook.coverUrl}
-                              alt={localBook.title}
-                              className="w-11 h-16 object-cover rounded shadow-sm ring-1 ring-black/10"
-                            />
-                          </div>
-
-                          {/* Info */}
-                          <div className="min-w-0 flex-1 flex flex-col justify-between h-16">
-                            <div>
-                              <p className="text-[15px] font-medium leading-snug text-[#1c1208] line-clamp-2">
-                                {localBook.title}
-                              </p>
-                              <p className="text-[13px] mt-0.5 text-[#8b7355] truncate">
-                                {localBook.author}
-                              </p>
+                          <Link to={`/book/${localBook.googleBooksId}`} className="flex items-start gap-4 flex-1 min-w-0" onClick={() => { setSearchQuery(""); setShowResults(false); }}>
+                            {/* Cover */}
+                            <div className="relative flex-shrink-0">
+                              <img
+                                src={localBook.coverUrl}
+                                alt={localBook.title}
+                                className="w-11 h-16 object-cover rounded shadow-sm ring-1 ring-black/10"
+                              />
                             </div>
 
-                            {/* Add button */}
+                            {/* Info */}
+                            <div className="min-w-0 flex-1 flex flex-col justify-between h-16">
+                              <div>
+                                <p className="text-[15px] font-medium leading-snug text-[#1c1208] line-clamp-2 hover:underline">
+                                  {localBook.title}
+                                </p>
+                                <p className="text-[13px] mt-0.5 text-[#8b7355] truncate">
+                                  {localBook.author}
+                                </p>
+                              </div>
+                            </div>
+                          </Link>
+
+                          {/* Add button */}
+                          <div className="flex-shrink-0 self-center">
                             <button
                               onMouseDown={() => handleAddBook(book)}
                               className="self-start mt-1.5 inline-flex items-center gap-1 text-[13px] font-medium text-[#00635d] border border-[#00635d]/50 bg-[#00635d]/5 hover:bg-[#00635d] hover:text-white px-2.5 py-0.5 rounded-full transition-all duration-150 cursor-pointer"
                             >
-                              <span className="text-[14px] leading-none">
-                                +
-                              </span>
-                              Add book
+                              <span className="text-[14px] leading-none">+</span>
+                              Add
                             </button>
                           </div>
                         </div>
