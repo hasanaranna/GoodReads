@@ -140,12 +140,12 @@ function BookCard({ book, onWantToRead, shelvedIds }: BookCardProps) {
         <article className="flex border-b border-[#e8e0d0] group cursor-pointer hover:bg-[#faf7f0] transition-colors" style={{ gap: "16px", paddingTop: "16px", paddingBottom: "16px" }}
         onClick={(e) => {
             if ((e.target as HTMLElement).closest('select')) return;
-            navigate(`/book/${book.googleBooksId}`);
+            navigate(`/book/${book.googleBooksId}`, { state: { book } });
         }}>
             {/* Cover */}
             <Link 
                 to={`/book/${book.googleBooksId}`} 
-                onClick={(e) => { e.preventDefault(); navigate(`/book/${book.googleBooksId}`); }}
+                onClick={(e) => { e.preventDefault(); navigate(`/book/${book.googleBooksId}`, { state: { book } }); }}
                 className="flex-shrink-0 no-underline text-inherit"
             >
                 {book.coverUrl ? (
@@ -170,7 +170,7 @@ function BookCard({ book, onWantToRead, shelvedIds }: BookCardProps) {
                     <div className="min-w-0">
                         <Link
                             to={`/book/${book.googleBooksId}`}
-                            onClick={(e) => { e.preventDefault(); navigate(`/book/${book.googleBooksId}`); }}
+                            onClick={(e) => { e.preventDefault(); navigate(`/book/${book.googleBooksId}`, { state: { book } }); }}
                             className="no-underline text-[#382110] font-semibold text-[15px] hover:underline leading-snug block"
                             style={{ fontFamily: "Georgia, serif" }}
                         >
