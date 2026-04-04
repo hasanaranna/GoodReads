@@ -146,21 +146,19 @@ export function MyBooks() {
           <span className="text-[#ccc]">|</span>
           <button
             onClick={() => setViewMode("list")}
-            className={`outline-none border-none bg-transparent shadow-none ${
-              viewMode === "list"
+            className={`outline-none border-none bg-transparent shadow-none ${viewMode === "list"
                 ? "text-[#382110]"
                 : "text-[#aaa] hover:text-[#382110]"
-            }`}
+              }`}
           >
             <List size="1.35em" />
           </button>
           <button
             onClick={() => setViewMode("grid")}
-            className={`outline-none border-none bg-transparent shadow-none ${
-              viewMode === "grid"
+            className={`outline-none border-none bg-transparent shadow-none ${viewMode === "grid"
                 ? "text-[#382110]"
                 : "text-[#aaa] hover:text-[#382110]"
-            }`}
+              }`}
           >
             <LayoutGrid size="1.35em" />
           </button>
@@ -189,11 +187,10 @@ export function MyBooks() {
                   <button
                     key={s}
                     onClick={() => setSortBy(s)}
-                    className={`outline-none border-none bg-transparent shadow-none capitalize hover:underline ${
-                      sortBy === s
+                    className={`outline-none border-none bg-transparent shadow-none capitalize hover:underline ${sortBy === s
                         ? "text-[#382110] underline"
                         : "text-[#00635d]"
-                    }`}
+                      }`}
                   >
                     {s === "dateAdded" ? "Date Added" : s}
                   </button>
@@ -216,11 +213,10 @@ export function MyBooks() {
                 <button
                   key={p}
                   onClick={() => setCurrentPage(p)}
-                  className={`px-1 hover:underline ${
-                    currentPage === p
+                  className={`px-1 hover:underline ${currentPage === p
                       ? "text-[#382110] underline"
                       : "text-[#00635d]"
-                  }`}
+                    }`}
                 >
                   {p}
                 </button>
@@ -253,7 +249,7 @@ export function MyBooks() {
                 <div className="w-[170px] shrink-0">Rating / Shelf</div>
                 <div className="hidden md:block w-[150px] shrink-0">
                   Date Added / Read
-              </div>
+                </div>
                 <div className="flex-1">Review</div>
               </div>
 
@@ -317,11 +313,10 @@ export function MyBooks() {
                 <button
                   key={p}
                   onClick={() => setCurrentPage(p)}
-                  className={`px-1 hover:underline ${
-                    currentPage === p
+                  className={`px-1 hover:underline ${currentPage === p
                       ? "text-[#382110] underline"
                       : "text-[#00635d]"
-                  }`}
+                    }`}
                 >
                   {p}
                 </button>

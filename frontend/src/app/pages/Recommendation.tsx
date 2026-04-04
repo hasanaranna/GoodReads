@@ -8,6 +8,8 @@ import {
     addBookToShelfAPI,
     type ShelfBookData,
 } from "../services/api";
+import { useBooks } from "../context/BooksContext";
+import type { Book } from "../data/initialBooks";
 
 // Types 
 
@@ -136,7 +138,7 @@ function ReasonBadge({ reason }: { reason: RecommendationReason }) {
 
 interface BookCardProps {
     book: RecommendedBook;
-    onWantToRead: (bookId: string) => void;
+    onWantToRead: (bookId: string, shelf: 'want-to-read' | 'read' | 'currently-reading') => void;
     shelvedIds: Set<string>;
 }
 
@@ -195,18 +197,22 @@ function BookCard({ book, onWantToRead, shelvedIds }: BookCardProps) {
                             </>
                         )}
                         {shelved ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] text-[#00635d] font-medium">
+                            <span className="inline-flex items-center gap-1 text-[14px] text-[#00635d] font-medium">
                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M5 13l4 4L19 7" />
                                 </svg>
+                                Added
                             </span>
                         ) : (
-                            <button
-                                onClick={() => onWantToRead(book.id)}
-                                className="text-[12px] bg-[#409d69] hover:bg-[#2e8a57] active:bg-[#1f7047] text-white px-3 py-1 rounded font-medium transition-colors whitespace-nowrap"
+                            <select
+                                onChange={(e) => onWantToRead(book.id, e.target.value as 'want-to-read' | 'read' | 'currently-reading')}
+                                className="text-[13px] border border-[#ccc] px-2 py-1 bg-[#f4f0e6] text-[#382110] outline-none cursor-pointer hover:bg-[#e8e0d0] transition-colors"                                defaultValue=""
                             >
-                                Want to Read
-                            </button>
+                                <option value="" disabled>Add to shelf</option>
+                                <option value="want-to-read">Want to Read</option>
+                                <option value="currently-reading">Currently Reading</option>
+                                <option value="read">Read</option>
+                            </select>
                         )}
                     </div>
                 </div>
@@ -325,6 +331,7 @@ export function Recommendation() {
     const [hasMore, setHasMore] = useState(false);
     const [isColdStart, setIsColdStart] = useState(false);
     const [shelvedIds, setShelvedIds] = useState<Set<string>>(new Set());
+    const { addBook } = useBooks();
 
     // Fetch 
     const load = useCallback(
@@ -367,11 +374,33 @@ export function Recommendation() {
         load(next, activeTab, false);
     }
 
-    function handleWantToRead(bookId: string) {
+    function handleWantToRead(bookId: string, shelf: 'want-to-read' | 'read' | 'currently-reading') {
         setShelvedIds((prev) => new Set(prev).add(bookId));
         // Find the book and add to want-to-read shelf
         const book = books.find(b => b.id === bookId);
         if (book) {
+            // Create temporary Book object for optimistic update
+            const tempBook: Book = {
+                id: `temp-${book.id}`, // Temporary ID, will be replaced by real one
+                bookId: book.googleBooksId, // Use googleBooksId as bookId for now
+                googleBooksId: book.googleBooksId,
+                title: book.title,
+                subtitle: book.subtitle || undefined,
+                author: book.author,
+                coverUrl: book.coverUrl || "https://placehold.co/120x180?text=No+Cover",
+                rating: 0, // No user rating yet
+                shelf: shelf,
+                dateAdded: new Date().toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                }),
+                review: "",
+                pagesCompleted: 0,
+                totalPages: book.pageCount || undefined,
+                description: book.description || undefined,
+            };
+
             const shelfData: ShelfBookData = {
                 google_books_id: book.googleBooksId,
                 title: book.title,
@@ -384,7 +413,9 @@ export function Recommendation() {
                 categories: book.categories,
                 average_rating: book.averageRating,
             };
-            addBookToShelfAPI(shelfData, "want-to-read").catch(console.error);
+
+            // Use BooksContext's addBook method for proper state management
+            addBook(tempBook, shelfData).catch(console.error);
         }
     }
 
