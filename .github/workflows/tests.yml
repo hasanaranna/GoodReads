@@ -10,6 +10,7 @@ permissions:
   contents: read
   pull-requests: write
   issues: write
+  packages: write
 
 jobs:
   # Backend tests
@@ -166,3 +167,39 @@ jobs:
       - name: Notify successful merge to main
         run: |
           echo "✅ Code successfully merged to main branch with all tests passing"
+
+  # Continuous deployment build step
+  build:
+    needs: [backend-tests, frontend-tests, lint]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && success()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 1. Log in to the GitHub Container Registry
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }} # Automatically uses GitHub username
+          password: ${{ secrets.GITHUB_TOKEN }} # Automatically generated token
+
+      # 2. Build and push the Backend Image
+      - name: Build and push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/goodreads-backend:latest
+
+      # 3. Build and push the Frontend Image 
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/goodreads-frontend:latest
+  
+  

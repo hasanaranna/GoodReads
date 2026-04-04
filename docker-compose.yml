@@ -1,6 +1,7 @@
 services:
   frontend:
     build: ./frontend
+    image: ghcr.io/hasanaranna/goodreads-frontend:latest
     container_name: goodreads-frontend
     ports:
       - "5173:5173"
@@ -12,6 +13,7 @@ services:
 
   backend:
     build: ./backend
+    image: ghcr.io/hasanaranna/goodreads-backend:latest
     container_name: goodreads-backend
     ports:
       - "8080:8080"
