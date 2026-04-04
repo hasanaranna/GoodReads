@@ -5,10 +5,10 @@ import {
   DEFAULT_SORT,
   MAX_LIMIT,
   MIN_LIMIT,
-  MIN_PAGE,
-} from "../../constants/search.constants.js";
-import { formatBook } from "../../utils/formatBook.js";
-import { searchGoogleBooks } from "./googleBooks.client.js";
+  MIN_PAGE
+} from '../../constants/search.constants.js';
+import { formatBook } from '../../utils/formatBook.js';
+import { searchGoogleBooks } from './googleBooks.client.js';
 
 function toPositiveInteger(value, fallback, min, max) {
   const parsed = Number.parseInt(value, 10);
@@ -21,7 +21,7 @@ function toPositiveInteger(value, fallback, min, max) {
     return min;
   }
 
-  if (typeof max === "number" && parsed > max) {
+  if (typeof max === 'number' && parsed > max) {
     return max;
   }
 
@@ -29,16 +29,16 @@ function toPositiveInteger(value, fallback, min, max) {
 }
 
 function normalizeInput({ q, genre, sort, page, limit }) {
-  const query = typeof q === "string" ? q.trim() : "";
+  const query = typeof q === 'string' ? q.trim() : '';
   if (!query) {
     const error = new Error("Query parameter 'q' is required.");
     error.statusCode = 400;
-    error.code = "INVALID_QUERY";
+    error.code = 'INVALID_QUERY';
     throw error;
   }
 
   const normalizedSort =
-    typeof sort === "string" && ALLOWED_SORTS.includes(sort.toLowerCase())
+    typeof sort === 'string' && ALLOWED_SORTS.includes(sort.toLowerCase())
       ? sort.toLowerCase()
       : DEFAULT_SORT;
 
@@ -47,7 +47,7 @@ function normalizeInput({ q, genre, sort, page, limit }) {
     sort: normalizedSort,
     page: toPositiveInteger(page, DEFAULT_PAGE, MIN_PAGE),
     limit: toPositiveInteger(limit, DEFAULT_LIMIT, MIN_LIMIT, MAX_LIMIT),
-    genre: typeof genre === "string" && genre.trim() ? genre.trim() : undefined,
+    genre: typeof genre === 'string' && genre.trim() ? genre.trim() : undefined
   };
 }
 
@@ -74,7 +74,7 @@ function applyGenreHintFilter(books, genre) {
     }
 
     return categories.some((category) =>
-      category.toLowerCase().includes(loweredGenre),
+      category.toLowerCase().includes(loweredGenre)
     );
   });
 }
@@ -90,13 +90,13 @@ export async function searchBooks(params) {
     query,
     orderBy: sort,
     startIndex,
-    maxResults: limit,
+    maxResults: limit
   });
 
   const items = Array.isArray(rawResponse?.items) ? rawResponse.items : [];
   const normalizedBooks = applyGenreHintFilter(
     items.map((item) => formatBook(item)),
-    genre,
+    genre
   );
 
   const totalItems = Number.isInteger(rawResponse?.totalItems)
@@ -112,12 +112,12 @@ export async function searchBooks(params) {
       totalItems,
       totalPages: totalItems > 0 ? Math.ceil(totalItems / limit) : 0,
       hasNextPage: startIndex + limit < totalItems,
-      hasPreviousPage: page > 1,
+      hasPreviousPage: page > 1
     },
     query: {
       q,
       genre: genre || null,
-      sort,
-    },
+      sort
+    }
   };
 }

@@ -17,29 +17,29 @@ export function formatBook(item = {}) {
   return {
     id: item.id || null,
     googleBooksId: item.id || null,
-    title: volumeInfo.title || "Untitled",
+    title: volumeInfo.title || 'Untitled',
     subtitle: volumeInfo.subtitle || null,
     authors: Array.isArray(volumeInfo.authors) ? volumeInfo.authors : [],
     description: volumeInfo.description || null,
     publisher: volumeInfo.publisher || null,
     publishedDate: volumeInfo.publishedDate || null,
     pageCount:
-      typeof volumeInfo.pageCount === "number" ? volumeInfo.pageCount : null,
+      typeof volumeInfo.pageCount === 'number' ? volumeInfo.pageCount : null,
     categories: Array.isArray(volumeInfo.categories)
       ? volumeInfo.categories
       : [],
     averageRating:
-      typeof volumeInfo.averageRating === "number"
+      typeof volumeInfo.averageRating === 'number'
         ? volumeInfo.averageRating
         : null,
     ratingsCount:
-      typeof volumeInfo.ratingsCount === "number" ? volumeInfo.ratingsCount : 0,
+      typeof volumeInfo.ratingsCount === 'number' ? volumeInfo.ratingsCount : 0,
     language: volumeInfo.language || null,
     maturityRating: volumeInfo.maturityRating || null,
     coverImage: pickCoverImage(volumeInfo.imageLinks),
     previewLink: volumeInfo.previewLink || null,
     infoLink: volumeInfo.infoLink || null,
     canonicalVolumeLink: volumeInfo.canonicalVolumeLink || null,
-    ebookAvailable: Boolean(saleInfo.isEbook),
+    ebookAvailable: Boolean(saleInfo.isEbook)
   };
 }

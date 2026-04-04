@@ -26,3 +26,24 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Test and Coverage
+**/coverage/
+**/.nyc_output/
+**/__tests__/**/*.coverage
+**/__tests__/**/*.snap
+**/*.test.snap
+
+# IDE Test Artifacts
+.vscode/test-*.json
+*.swp
+*.swo
+*~
+
+# Tutorial and Documentation Files (Local Development Only)
+TESTING.md
+TESTING_QUICKSTART.md
+TESTING_EXAMPLES.md
+TESTING_IMPLEMENTATION.md
+TESTING_FINAL_SUMMARY.md
+CODEBASE_BEGINNER_GUIDE.md

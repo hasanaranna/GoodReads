@@ -5,11 +5,11 @@ import {
   DEFAULT_SORT,
   MAX_LIMIT,
   MIN_LIMIT,
-  MIN_PAGE,
-} from "../constants/search.constants.js";
+  MIN_PAGE
+} from '../constants/search.constants.js';
 
 function parsePositiveInteger(value, fallback) {
-  if (value === undefined || value === null || value === "") {
+  if (value === undefined || value === null || value === '') {
     return fallback;
   }
 
@@ -22,7 +22,7 @@ function parsePositiveInteger(value, fallback) {
 }
 
 function isGenreValid(genre) {
-  if (typeof genre !== "string") {
+  if (typeof genre !== 'string') {
     return false;
   }
 
@@ -35,13 +35,13 @@ function isGenreValid(genre) {
 }
 
 export function validateSearchQuery(req, res, next) {
-  const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
+  const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
   const sort =
-    typeof req.query.sort === "string"
+    typeof req.query.sort === 'string'
       ? req.query.sort.trim().toLowerCase()
       : DEFAULT_SORT;
   const genre =
-    typeof req.query.genre === "string" ? req.query.genre.trim() : undefined;
+    typeof req.query.genre === 'string' ? req.query.genre.trim() : undefined;
 
   const page = parsePositiveInteger(req.query.page, DEFAULT_PAGE);
   const limit = parsePositiveInteger(req.query.limit, DEFAULT_LIMIT);
@@ -50,9 +50,9 @@ export function validateSearchQuery(req, res, next) {
     return res.status(400).json({
       success: false,
       error: {
-        code: "INVALID_QUERY",
-        message: "Query parameter 'q' is required.",
-      },
+        code: 'INVALID_QUERY',
+        message: "Query parameter 'q' is required."
+      }
     });
   }
 
@@ -60,9 +60,9 @@ export function validateSearchQuery(req, res, next) {
     return res.status(400).json({
       success: false,
       error: {
-        code: "INVALID_PAGE",
-        message: `Query parameter 'page' must be an integer >= ${MIN_PAGE}.`,
-      },
+        code: 'INVALID_PAGE',
+        message: `Query parameter 'page' must be an integer >= ${MIN_PAGE}.`
+      }
     });
   }
 
@@ -70,9 +70,9 @@ export function validateSearchQuery(req, res, next) {
     return res.status(400).json({
       success: false,
       error: {
-        code: "INVALID_LIMIT",
-        message: `Query parameter 'limit' must be between ${MIN_LIMIT} and ${MAX_LIMIT}.`,
-      },
+        code: 'INVALID_LIMIT',
+        message: `Query parameter 'limit' must be between ${MIN_LIMIT} and ${MAX_LIMIT}.`
+      }
     });
   }
 
@@ -80,11 +80,11 @@ export function validateSearchQuery(req, res, next) {
     return res.status(400).json({
       success: false,
       error: {
-        code: "INVALID_SORT",
+        code: 'INVALID_SORT',
         message: `Query parameter 'sort' must be one of: ${ALLOWED_SORTS.join(
-          ", ",
-        )}.`,
-      },
+          ', '
+        )}.`
+      }
     });
   }
 
@@ -92,10 +92,10 @@ export function validateSearchQuery(req, res, next) {
     return res.status(400).json({
       success: false,
       error: {
-        code: "INVALID_GENRE",
+        code: 'INVALID_GENRE',
         message:
-          "Query parameter 'genre' must be 2-60 characters and contain only letters, numbers, spaces, and basic punctuation.",
-      },
+          "Query parameter 'genre' must be 2-60 characters and contain only letters, numbers, spaces, and basic punctuation."
+      }
     });
   }
 
@@ -104,7 +104,7 @@ export function validateSearchQuery(req, res, next) {
     sort,
     page,
     limit,
-    genre: genre || undefined,
+    genre: genre || undefined
   };
 
   return next();
