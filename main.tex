@@ -95,15 +95,18 @@ The core features implemented and detailed within this system design include:
 % Describe the overall architecture used (e.g., Layered, Monolithic, Microservices, etc.)
 
 \subsection{Technologies and Frameworks}
-% List and describe the technologies used for:
-% - Frontend (e.g., React Native)
-% - Backend (e.g., Supabase)
-% - Database (e.g., PostgreSQL via Supabase)
+\begin{itemize}
+    \item \textbf{Frontend:} Developed using React, providing a responsive and interactive user interface that adapts seamlessly across devices.
+    \item \textbf{Backend:} Implemented in Node.js, handling API endpoints, authentication logic, and integration with the database.
+    \item \textbf{Database:} Managed through Supabase, offering a hosted PostgreSQL instance that simplifies data storage, querying, and real-time updates.
+\end{itemize}
 
 \section{Deployment and DevOps}
 \subsection{Hosting and Cloud Platforms}
-% Detail where the frontend, backend, and database are hosted
-% Specify the cloud platforms used (e.g., Vercel, Netlify, AWS, Supabase, etc.)
+
+The entire application, including both the frontend and backend, is hosted on a single DigitalOcean droplet, ensuring a streamlined deployment process.
+The database is managed through Supabase, which provides a fully hosted PostgreSQL instance and simplifies connection handling. 
+No additional cloud services were required, keeping the deployment straightforward and centralized.
 
 \subsection{CI/CD and Containerization}
 % Describe the DevOps setup if applicable:
@@ -128,9 +131,12 @@ The core features implemented and detailed within this system design include:
     % - Integrated Google Books API for metadata retrieval within the bookshelf
     % - Implemented search and filter functionality within the personal library
     
-    \item[Member 4 (Name / ID):] 
-    % - Managed database schema design for book states and user associations
-    % - Implemented the "Reading Progress" tracking logic and percentage calculation
+    \item[Mirza Tawhid Umar Tonmoy (2105028):] 
+    - Developed secure authentication APIs, including login, registration, logout, and JWT-based token refresh.  
+    - Completed and refined the CI/CD pipeline, building on the skeleton provided by Roll 28.  
+    - Configured the database, initially with PostgreSQL in Docker, later migrating to Supabase and handling connection setup.  
+    - Deployed the full application on DigitalOcean, including droplet configuration and hosting.  
+    - Enhanced UI responsiveness across devices, improving the overall user experience.
     
     \item[Fatin Sadab (2105029):] 
     % - Set up the CI/CD pipeline and deployment on [Cloud Platform]
