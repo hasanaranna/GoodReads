@@ -207,9 +207,11 @@ export function BookDetail() {
   const description = shelfBook?.description ?? fetchedBook?.description ?? null;
   const totalPages = shelfBook?.totalPages ?? fetchedBook?.pageCount;
 
-  // Average community rating
+  // Average rating
   const rated = communityReviews.filter((r) => r.rating > 0);
-  const avgRating = rated.length > 0 ? rated.reduce((s, r) => s + r.rating, 0) / rated.length : 0;
+  const communityAvg = rated.length > 0 ? rated.reduce((s, r) => s + r.rating, 0) / rated.length : 0;
+  const avgRating = communityAvg > 0 ? communityAvg : (fetchedBook?.averageRating ?? 0);
+  const ratingCount = communityAvg > 0 ? communityReviews.length : (fetchedBook?.ratingsCount ?? 0);
 
   async function handleShelfChange(shelf: "want-to-read" | "currently-reading" | "read") {
     setIsSavingShelf(true);
@@ -313,7 +315,7 @@ export function BookDetail() {
             <div className="flex items-center gap-2 mb-4">
               <FractionalStars rating={avgRating} />
               <span className="text-[12px] text-gray-500">
-                {avgRating.toFixed(2)} avg · {communityReviews.length} rating{communityReviews.length !== 1 ? "s" : ""}
+                {avgRating.toFixed(2)} avg · {ratingCount} rating{ratingCount !== 1 ? "s" : ""}
               </span>
             </div>
           )}
