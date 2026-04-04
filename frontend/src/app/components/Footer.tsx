@@ -43,9 +43,9 @@ export function Footer() {
               ))}
             </ul>
           </div>
-          <div>
+          {/* <div>
             <div className="text-white mb-3 text-[16px]">Checking CI/CD final</div>
-          </div>
+          </div> */}
 
           {/* Connect */}
           {/* <div>

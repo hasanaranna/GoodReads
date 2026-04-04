@@ -1,5 +1,5 @@
-# Stage 1 - Build
-FROM node:20-alpine AS builder
+# Use official Node.js image
+FROM node:20-alpine
 
 # Set working directory inside container
 WORKDIR /app
@@ -13,10 +13,8 @@ RUN npm install --legacy-peer-deps
 # Copy the rest of your code
 COPY . .
 
-RUN npm run build
+# Expose port 5173
+EXPOSE 5173
 
-# Stage 2 - Serve
-FROM nginx:alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Start the development server by default (can be overridden)
+CMD ["npm", "run", "dev"]
