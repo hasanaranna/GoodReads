@@ -4,10 +4,10 @@ import {
   addBookToShelf,
   updateUserBook,
   removeUserBook,
-  getUserBook,
-} from "./shelves.service.js";
+  getUserBook
+} from './shelves.service.js';
 
-const VALID_SHELVES = ["want-to-read", "currently-reading", "read"];
+const VALID_SHELVES = ['want-to-read', 'currently-reading', 'read'];
 
 export async function listBooksController(req, res, next) {
   try {
@@ -18,9 +18,9 @@ export async function listBooksController(req, res, next) {
       return res.status(400).json({
         success: false,
         error: {
-          code: "INVALID_SHELF",
-          message: `Shelf must be one of: ${VALID_SHELVES.join(", ")}.`,
-        },
+          code: 'INVALID_SHELF',
+          message: `Shelf must be one of: ${VALID_SHELVES.join(', ')}.`
+        }
       });
     }
 
@@ -30,7 +30,7 @@ export async function listBooksController(req, res, next) {
     return res.status(200).json({
       success: true,
       data: books,
-      shelfCounts,
+      shelfCounts
     });
   } catch (error) {
     return next(error);
@@ -44,20 +44,20 @@ export async function addBookController(req, res, next) {
 
     // Validation
     const errors = [];
-    if (!google_books_id) errors.push("google_books_id is required.");
-    if (!title) errors.push("title is required.");
-    if (!author) errors.push("author is required.");
+    if (!google_books_id) errors.push('google_books_id is required.');
+    if (!title) errors.push('title is required.');
+    if (!author) errors.push('author is required.');
     if (!shelf || !VALID_SHELVES.includes(shelf)) {
-      errors.push(`shelf must be one of: ${VALID_SHELVES.join(", ")}.`);
+      errors.push(`shelf must be one of: ${VALID_SHELVES.join(', ')}.`);
     }
 
     if (errors.length > 0) {
       return res.status(400).json({
         success: false,
         error: {
-          code: "VALIDATION_ERROR",
-          message: errors.join(" "),
-        },
+          code: 'VALIDATION_ERROR',
+          message: errors.join(' ')
+        }
       });
     }
 
@@ -71,14 +71,14 @@ export async function addBookController(req, res, next) {
       description,
       published_date,
       categories,
-      average_rating,
+      average_rating
     };
 
     const result = await addBookToShelf(userId, bookData, shelf);
 
     return res.status(201).json({
       success: true,
-      data: result,
+      data: result
     });
   } catch (error) {
     return next(error);
@@ -96,9 +96,9 @@ export async function updateBookController(req, res, next) {
       return res.status(400).json({
         success: false,
         error: {
-          code: "INVALID_SHELF",
-          message: `Shelf must be one of: ${VALID_SHELVES.join(", ")}.`,
-        },
+          code: 'INVALID_SHELF',
+          message: `Shelf must be one of: ${VALID_SHELVES.join(', ')}.`
+        }
       });
     }
 
@@ -109,9 +109,9 @@ export async function updateBookController(req, res, next) {
       return res.status(400).json({
         success: false,
         error: {
-          code: "VALIDATION_ERROR",
-          message: "pages_completed must be a non-negative integer.",
-        },
+          code: 'VALIDATION_ERROR',
+          message: 'pages_completed must be a non-negative integer.'
+        }
       });
     }
 
@@ -123,9 +123,9 @@ export async function updateBookController(req, res, next) {
       return res.status(400).json({
         success: false,
         error: {
-          code: "VALIDATION_ERROR",
-          message: "date_read must be a valid ISO date string or null.",
-        },
+          code: 'VALIDATION_ERROR',
+          message: 'date_read must be a valid ISO date string or null.'
+        }
       });
     }
 
@@ -138,7 +138,7 @@ export async function updateBookController(req, res, next) {
 
     return res.status(200).json({
       success: true,
-      data: result,
+      data: result
     });
   } catch (error) {
     return next(error);
@@ -167,7 +167,7 @@ export async function getBookController(req, res, next) {
 
     return res.status(200).json({
       success: true,
-      data: result,
+      data: result
     });
   } catch (error) {
     return next(error);

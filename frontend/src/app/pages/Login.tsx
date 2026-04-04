@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { jwtDecode } from "jwt-decode";
 import { API_BASE_URL } from "../../config";
@@ -170,10 +170,14 @@ export function Login() {
             )}
             {!isLogin && (
               <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-[14px] font-semibold text-[#382110]">
+                <label
+                  htmlFor="login-name"
+                  className="text-[14px] font-semibold text-[#382110]"
+                >
                   Your Name
                 </label>
                 <input
+                  id="login-name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -184,10 +188,14 @@ export function Login() {
               </div>
             )}
             <div className="flex flex-col gap-1.5 w-full">
-              <label className="text-[14px] font-semibold text-[#382110]">
+              <label
+                htmlFor="login-username"
+                className="text-[14px] font-semibold text-[#382110]"
+              >
                 Username
               </label>
               <input
+                id="login-username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -199,10 +207,14 @@ export function Login() {
 
             {!isLogin && (
               <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-[14px] font-semibold text-[#382110]">
+                <label
+                  htmlFor="login-email"
+                  className="text-[14px] font-semibold text-[#382110]"
+                >
                   Email address
                 </label>
                 <input
+                  id="login-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -214,10 +226,14 @@ export function Login() {
             )}
 
             <div className="flex flex-col gap-1.5 w-full">
-              <label className="text-[14px] font-semibold text-[#382110]">
+              <label
+                htmlFor="login-password"
+                className="text-[14px] font-semibold text-[#382110]"
+              >
                 Password
               </label>
               <input
+                id="login-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -229,10 +245,14 @@ export function Login() {
 
             {!isLogin && (
               <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-[14px] font-semibold text-[#382110]">
+                <label
+                  htmlFor="login-confirm-password"
+                  className="text-[14px] font-semibold text-[#382110]"
+                >
                   Confirm password
                 </label>
                 <input
+                  id="login-confirm-password"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -245,10 +265,14 @@ export function Login() {
 
             {!isLogin && (
               <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-[14px] font-semibold text-[#382110]">
+                <label
+                  htmlFor="login-dob"
+                  className="text-[14px] font-semibold text-[#382110]"
+                >
                   Date of birth
                 </label>
                 <input
+                  id="login-dob"
                   type="date"
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}

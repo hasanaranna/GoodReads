@@ -1,6 +1,6 @@
-export const ALLOWED_SORTS = ["relevance", "newest"];
+export const ALLOWED_SORTS = ['relevance', 'newest'];
 
-export const DEFAULT_SORT = "relevance";
+export const DEFAULT_SORT = 'relevance';
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_LIMIT = 10;
 

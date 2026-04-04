@@ -1,4 +1,4 @@
-import { pool } from "../../config/db.js";
+import { pool } from '../../config/db.js';
 
 /**
  * Update review and/or rating for a user_book and recalculate book's average rating.
@@ -6,14 +6,14 @@ import { pool } from "../../config/db.js";
 export async function updateReview(userId, userBookId, updates) {
   // Verify ownership and get book_id
   const ownership = await pool.query(
-    "SELECT id, book_id FROM user_books WHERE id = $1 AND user_id = $2",
+    'SELECT id, book_id FROM user_books WHERE id = $1 AND user_id = $2',
     [userBookId, userId]
   );
 
   if (ownership.rows.length === 0) {
-    const error = new Error("Book not found on your shelf.");
+    const error = new Error('Book not found on your shelf.');
     error.statusCode = 404;
-    error.code = "NOT_FOUND";
+    error.code = 'NOT_FOUND';
     throw error;
   }
 
@@ -25,9 +25,9 @@ export async function updateReview(userId, userBookId, updates) {
 
   if (updates.rating !== undefined) {
     if (!Number.isInteger(updates.rating) || updates.rating < 0 || updates.rating > 5) {
-      const error = new Error("Rating must be an integer between 0 and 5.");
+      const error = new Error('Rating must be an integer between 0 and 5.');
       error.statusCode = 400;
-      error.code = "VALIDATION_ERROR";
+      error.code = 'VALIDATION_ERROR';
       throw error;
     }
     setClauses.push(`rating = $${paramIndex++}`);
@@ -40,9 +40,9 @@ export async function updateReview(userId, userBookId, updates) {
   }
 
   if (setClauses.length === 0) {
-    const error = new Error("No valid fields to update. Provide 'rating' and/or 'review'.");
+    const error = new Error('No valid fields to update. Provide \'rating\' and/or \'review\'.');
     error.statusCode = 400;
-    error.code = "VALIDATION_ERROR";
+    error.code = 'VALIDATION_ERROR';
     throw error;
   }
 
@@ -50,7 +50,7 @@ export async function updateReview(userId, userBookId, updates) {
 
   const result = await pool.query(
     `UPDATE user_books
-     SET ${setClauses.join(", ")}
+     SET ${setClauses.join(', ')}
      WHERE id = $${paramIndex++} AND user_id = $${paramIndex}
      RETURNING id AS user_book_id, shelf, rating, review, pages_completed, date_added, date_read`,
     params
@@ -111,9 +111,9 @@ export async function getReview(userId, userBookId) {
   );
 
   if (result.rows.length === 0) {
-    const error = new Error("Book not found on your shelf.");
+    const error = new Error('Book not found on your shelf.');
     error.statusCode = 404;
-    error.code = "NOT_FOUND";
+    error.code = 'NOT_FOUND';
     throw error;
   }
 

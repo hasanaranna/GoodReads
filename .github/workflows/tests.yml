@@ -1,0 +1,168 @@
+name: CI/CD Pipeline - Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  # Backend tests
+  backend-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: Create test .env file
+        working-directory: ./backend
+        run: |
+          cat > .env << 'EOF'
+          NODE_ENV=test
+          PORT=8080
+          DB_HOST=localhost
+          DB_PORT=5432
+          DB_NAME=goodreads_test
+          DB_USER=postgres
+          DB_PASSWORD=postgres
+          JWT_ACCESS_SECRET=test-secret-key-do-not-use-in-production
+          JWT_REFRESH_SECRET=test-refresh-secret-key
+          GOOGLE_BOOKS_API_KEY=test-key
+          EOF
+
+      - name: Run backend tests
+        working-directory: ./backend
+        run: npm test -- --coverage
+
+      - name: Upload backend coverage reports
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          files: ./backend/coverage/coverage-final.json
+          flags: backend
+          name: backend-coverage
+
+  # Frontend tests
+  frontend-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm install --legacy-peer-deps
+
+      - name: Run frontend unit tests
+        working-directory: ./frontend
+        run: npm test -- --coverage --run
+
+      - name: Run frontend build
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Upload frontend coverage reports
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          files: ./frontend/coverage/coverage-final.json
+          flags: frontend
+          name: frontend-coverage
+
+  # Linting
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: Run backend linting
+        working-directory: ./backend
+        run: npm run lint
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm install --legacy-peer-deps
+
+      - name: Run frontend linting
+        working-directory: ./frontend
+        run: npm run lint
+
+  # Test results aggregation
+  test-results:
+    needs: [backend-tests, frontend-tests, lint]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          if [ "${{ needs.backend-tests.result }}" = "failure" ] || \
+             [ "${{ needs.frontend-tests.result }}" = "failure" ] || \
+             [ "${{ needs.lint.result }}" = "failure" ]; then
+            echo "❌ Some tests or linting checks failed"
+            exit 1
+          else
+            echo "✅ All tests and linting checks passed"
+          fi
+
+      - name: Comment PR (optional)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ All tests passed! This PR is ready for review.'
+            })
+
+  # Merge to main notification
+  notify-merge:
+    needs: [backend-tests, frontend-tests, lint]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && success()
+
+    steps:
+      - name: Notify successful merge to main
+        run: |
+          echo "✅ Code successfully merged to main branch with all tests passing"

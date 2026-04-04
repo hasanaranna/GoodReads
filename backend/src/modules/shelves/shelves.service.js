@@ -1,4 +1,4 @@
-import { pool } from "../../config/db.js";
+import { pool } from '../../config/db.js';
 
 function addProgressMetadata(row) {
   const totalPages = Number.isInteger(row.page_count) && row.page_count > 0 ? row.page_count : null;
@@ -10,7 +10,7 @@ function addProgressMetadata(row) {
     pages_completed: pagesCompleted,
     completion_percentage: totalPages
       ? Math.round((pagesCompleted / totalPages) * 100)
-      : null,
+      : null
   };
 }
 
@@ -20,7 +20,7 @@ function addProgressMetadata(row) {
  */
 async function findOrCreateBook(bookData) {
   const existing = await pool.query(
-    "SELECT id FROM books WHERE google_books_id = $1",
+    'SELECT id FROM books WHERE google_books_id = $1',
     [bookData.google_books_id]
   );
 
@@ -42,7 +42,7 @@ async function findOrCreateBook(bookData) {
       bookData.description || null,
       bookData.published_date || null,
       bookData.categories || null,
-      bookData.average_rating || null,
+      bookData.average_rating || null
     ]
   );
 
@@ -80,11 +80,11 @@ export async function getUserBooks(userId, shelf) {
   const params = [userId];
 
   if (shelf) {
-    query += " AND ub.shelf = $2";
+    query += ' AND ub.shelf = $2';
     params.push(shelf);
   }
 
-  query += " ORDER BY ub.date_added DESC";
+  query += ' ORDER BY ub.date_added DESC';
 
   const result = await pool.query(query, params);
   return result.rows.map(addProgressMetadata);
@@ -110,7 +110,7 @@ export async function getShelfCounts(userId) {
     all: parseInt(row.all, 10),
     wantToRead: parseInt(row.want_to_read, 10),
     currentlyReading: parseInt(row.currently_reading, 10),
-    read: parseInt(row.read, 10),
+    read: parseInt(row.read, 10)
   };
 }
 
@@ -123,14 +123,14 @@ export async function addBookToShelf(userId, bookData, shelf) {
 
   // Check if user already has this book
   const existing = await pool.query(
-    "SELECT id FROM user_books WHERE user_id = $1 AND book_id = $2",
+    'SELECT id FROM user_books WHERE user_id = $1 AND book_id = $2',
     [userId, bookId]
   );
 
   if (existing.rows.length > 0) {
-    const error = new Error("Book is already on your shelf.");
+    const error = new Error('Book is already on your shelf.');
     error.statusCode = 409;
-    error.code = "CONFLICT";
+    error.code = 'CONFLICT';
     throw error;
   }
 
@@ -163,7 +163,7 @@ export async function addBookToShelf(userId, bookData, shelf) {
     categories: bookData.categories || null,
     average_rating: bookData.average_rating || null,
     completion_percentage:
-      Number.isInteger(bookData.page_count) && bookData.page_count > 0 ? 0 : null,
+      Number.isInteger(bookData.page_count) && bookData.page_count > 0 ? 0 : null
   };
 }
 
@@ -186,9 +186,9 @@ export async function updateUserBook(userId, userBookId, updates) {
   );
 
   if (ownership.rows.length === 0) {
-    const error = new Error("Book not found on your shelf.");
+    const error = new Error('Book not found on your shelf.');
     error.statusCode = 404;
-    error.code = "NOT_FOUND";
+    error.code = 'NOT_FOUND';
     throw error;
   }
 
@@ -201,9 +201,9 @@ export async function updateUserBook(userId, userBookId, updates) {
       !Number.isInteger(normalizedUpdates.pages_completed) ||
       normalizedUpdates.pages_completed < 0
     ) {
-      const error = new Error("pages_completed must be a non-negative integer.");
+      const error = new Error('pages_completed must be a non-negative integer.');
       error.statusCode = 400;
-      error.code = "VALIDATION_ERROR";
+      error.code = 'VALIDATION_ERROR';
       throw error;
     }
 
@@ -215,12 +215,12 @@ export async function updateUserBook(userId, userBookId, updates) {
 
       if (normalizedUpdates.shelf === undefined) {
         if (normalizedUpdates.pages_completed >= existing.page_count) {
-          normalizedUpdates.shelf = "read";
+          normalizedUpdates.shelf = 'read';
         } else if (
           normalizedUpdates.pages_completed > 0 &&
-          existing.shelf === "want-to-read"
+          existing.shelf === 'want-to-read'
         ) {
-          normalizedUpdates.shelf = "currently-reading";
+          normalizedUpdates.shelf = 'currently-reading';
         }
       }
 
@@ -234,7 +234,7 @@ export async function updateUserBook(userId, userBookId, updates) {
     }
   }
 
-  if (normalizedUpdates.shelf === "read") {
+  if (normalizedUpdates.shelf === 'read') {
     if (hasPageCount && normalizedUpdates.pages_completed === undefined) {
       normalizedUpdates.pages_completed = existing.page_count;
     }
@@ -245,7 +245,7 @@ export async function updateUserBook(userId, userBookId, updates) {
 
   if (
     normalizedUpdates.shelf !== undefined &&
-    normalizedUpdates.shelf !== "read" &&
+    normalizedUpdates.shelf !== 'read' &&
     normalizedUpdates.date_read === undefined &&
     existing.date_read
   ) {
@@ -272,9 +272,9 @@ export async function updateUserBook(userId, userBookId, updates) {
   }
 
   if (setClauses.length === 0) {
-    const error = new Error("No valid fields to update.");
+    const error = new Error('No valid fields to update.');
     error.statusCode = 400;
-    error.code = "VALIDATION_ERROR";
+    error.code = 'VALIDATION_ERROR';
     throw error;
   }
 
@@ -282,7 +282,7 @@ export async function updateUserBook(userId, userBookId, updates) {
 
   const result = await pool.query(
     `UPDATE user_books ub
-     SET ${setClauses.join(", ")}
+     SET ${setClauses.join(', ')}
      FROM books b
      WHERE ub.id = $${paramIndex++} AND ub.user_id = $${paramIndex} AND b.id = ub.book_id
      RETURNING
@@ -305,14 +305,14 @@ export async function updateUserBook(userId, userBookId, updates) {
  */
 export async function removeUserBook(userId, userBookId) {
   const result = await pool.query(
-    "DELETE FROM user_books WHERE id = $1 AND user_id = $2 RETURNING id",
+    'DELETE FROM user_books WHERE id = $1 AND user_id = $2 RETURNING id',
     [userBookId, userId]
   );
 
   if (result.rows.length === 0) {
-    const error = new Error("Book not found on your shelf.");
+    const error = new Error('Book not found on your shelf.');
     error.statusCode = 404;
-    error.code = "NOT_FOUND";
+    error.code = 'NOT_FOUND';
     throw error;
   }
 
@@ -350,9 +350,9 @@ export async function getUserBook(userId, userBookId) {
   );
 
   if (result.rows.length === 0) {
-    const error = new Error("Book not found on your shelf.");
+    const error = new Error('Book not found on your shelf.');
     error.statusCode = 404;
-    error.code = "NOT_FOUND";
+    error.code = 'NOT_FOUND';
     throw error;
   }
 
