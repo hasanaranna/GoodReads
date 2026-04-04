@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router";
+import { useParams, Link, useNavigate, useLocation } from "react-router";
 import { User, BookOpen, ChevronDown } from "lucide-react";
 import { useBooks } from "../context/BooksContext";
 import { StarRating } from "../components/StarRating";
-import { fetchBookReviewsAPI, PublicReview, addBookToShelfAPI, ShelfBookData } from "../services/api";
+import { fetchBookReviewsAPI, PublicReview, addBookToShelfAPI, ShelfBookData, RecommendedBook } from "../services/api";
 import type { Book } from "../data/initialBooks";
 
 const SHELF_LABELS: Record<string, string> = {
@@ -150,6 +150,10 @@ export function BookDetail() {
   const { googleBooksId } = useParams<{ googleBooksId: string }>();
   const { books, getBook, updateBook, updateReview, addBook } = useBooks();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Pick up book info from navigation state from recommendations
+  const stateBook = location.state?.book as RecommendedBook | undefined;
 
   // Find the book in the user's shelf by googleBooksId
   const shelfBook = books.find((b) => b.googleBooksId === googleBooksId);
