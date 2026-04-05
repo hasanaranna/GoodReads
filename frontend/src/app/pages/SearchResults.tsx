@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useBooks } from "../context/BooksContext";
 import { API_BASE_URL } from "../../config";
-import { ShelfBookData } from "../services/api";
-import { Book } from "../data/initialBooks";
 import { Sidebar } from "../components/Sidebar";
 import { StarRating } from "../components/StarRating";
 
@@ -11,7 +9,6 @@ const SEARCH_PAGE_LIMIT = 40;
 const DESCRIPTION_PREVIEW_LENGTH = 180;
 
 type Shelf = "want-to-read" | "currently-reading" | "read";
-type ShelfSelection = Shelf | "";
 
 interface BackendSearchBook {
   id: string;
@@ -26,56 +23,11 @@ interface BackendSearchBook {
   categories?: string[];
 }
 
-function toLibraryBook(
-  book: BackendSearchBook,
-  shelf: Shelf,
-): { localBook: Book; shelfData: ShelfBookData } {
-  const dateAdded = new Date().toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-
-  const normalizedRating =
-    typeof book.averageRating === "number" ? Math.round(book.averageRating) : 0;
-
-  const author =
-    Array.isArray(book.authors) && book.authors.length > 0
-      ? book.authors[0]
-      : "Unknown Author";
-
-  const localBook: Book = {
-    id: `temp-gb-${book.id}`,
-    bookId: "",
-    googleBooksId: book.id,
-    title: book.title || "Untitled",
-    subtitle: book.subtitle || undefined,
-    author,
-    coverUrl: book.coverImage || "https://placehold.co/120x180?text=No+Cover",
-    rating: Math.max(0, Math.min(5, normalizedRating)),
-    shelf,
-    dateAdded,
-    review: "",
-    totalPages: book.pageCount || undefined,
-    pagesCompleted: 0,
-    description: book.description || undefined,
-  };
-
-  const shelfData: ShelfBookData = {
-    google_books_id: book.id,
-    title: book.title || "Untitled",
-    subtitle: book.subtitle,
-    author,
-    cover_url: book.coverImage || undefined,
-    page_count: book.pageCount || undefined,
-    description: book.description || undefined,
-    published_date: book.publishedDate || undefined,
-    categories: book.categories || undefined,
-    average_rating: book.averageRating || undefined,
-  };
-
-  return { localBook, shelfData };
-}
+const SHELF_LABELS: Record<Shelf, string> = {
+  read: "Read",
+  "currently-reading": "Currently Reading",
+  "want-to-read": "Want to Read",
+};
 
 function stripHtml(value?: string) {
   return (value || "").replace(/<[^>]+>/g, "").trim();
@@ -84,15 +36,11 @@ function stripHtml(value?: string) {
 export function SearchResults() {
   const [searchParams] = useSearchParams();
   const query = (searchParams.get("q") || "").trim();
-  const { books, addBook } = useBooks();
+  const { books } = useBooks();
 
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [results, setResults] = useState<BackendSearchBook[]>([]);
-  const [selectedShelves, setSelectedShelves] = useState<Record<string, ShelfSelection>>(
-    {},
-  );
-  const [addingIds, setAddingIds] = useState<Set<string>>(new Set());
 
   const existingGoogleIds = useMemo(
     () => new Set(books.map((book) => book.googleBooksId)),
@@ -168,37 +116,6 @@ export function SearchResults() {
     return () => controller.abort();
   }, [query]);
 
-  function getSelectedShelf(bookId: string): ShelfSelection {
-    return selectedShelves[bookId] || "";
-  }
-
-  function setSelectedShelf(bookId: string, shelf: Shelf) {
-    setSelectedShelves((prev) => ({ ...prev, [bookId]: shelf }));
-  }
-
-  async function handleAddBook(book: BackendSearchBook) {
-    if (existingGoogleIds.has(book.id)) {
-      return;
-    }
-
-    const shelf = getSelectedShelf(book.id);
-    if (!shelf) {
-      return;
-    }
-    const { localBook, shelfData } = toLibraryBook(book, shelf);
-
-    setAddingIds((prev) => new Set(prev).add(book.id));
-    try {
-      await addBook(localBook, shelfData);
-    } finally {
-      setAddingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(book.id);
-        return next;
-      });
-    }
-  }
-
   return (
     <div className="max-w-[1320px] mx-auto px-2 md:px-4 py-7">
       <div
@@ -243,7 +160,6 @@ export function SearchResults() {
             </div>
             <div className="w-[170px] shrink-0">Rating / Shelf</div>
             <div className="flex-1">Description</div>
-            <div className="w-[120px] shrink-0 text-right">Action</div>
           </div>
 
           <div className="max-h-[600px] overflow-y-auto pr-2">
@@ -285,11 +201,7 @@ export function SearchResults() {
                     ? `${cleanDescription.slice(0, DESCRIPTION_PREVIEW_LENGTH)}...`
                     : cleanDescription
                   : "No description available.";
-                const isAdded = existingGoogleIds.has(book.id);
-                const isAdding = addingIds.has(book.id);
-                const currentShelf =
-                  existingShelfByGoogleId[book.id] || getSelectedShelf(book.id);
-                const isSelectable = !isAdded && !isAdding;
+                const currentShelf = existingShelfByGoogleId[book.id] || null;
 
                 return (
                   <div
@@ -328,36 +240,13 @@ export function SearchResults() {
                         showCount
                         size="sm"
                       />
-                      <select
-                        value={currentShelf}
-                        onChange={(e) =>
-                          setSelectedShelf(book.id, e.target.value as Shelf)
-                        }
-                        disabled={!isSelectable}
-                        className="w-[140px] text-[13px] text-[#382110] border border-[#ccc] rounded px-3 py-1.5 bg-[#f4f0e6] hover:bg-[#e8e2d0] disabled:opacity-60"
-                      >
-                        <option value="" disabled>
-                          Choose shelf
-                        </option>
-                        <option value="want-to-read">Want to Read</option>
-                        <option value="currently-reading">Currently Reading</option>
-                        <option value="read">Read</option>
-                      </select>
+                      <div className="w-[140px] text-center text-[13px] text-[#382110] border border-[#ccc] rounded px-3 py-1.5 bg-[#f4f0e6]">
+                        {currentShelf ? SHELF_LABELS[currentShelf] : "Not in shelf"}
+                      </div>
                     </div>
 
                     <div className="flex-1 min-w-0 text-[14px] text-gray-700" style={{ padding: "18px 0" }}>
                       <span>{shortDescription}</span>
-                    </div>
-
-                    <div className="w-[120px] shrink-0 flex justify-end" style={{ padding: "18px 0" }}>
-                      <button
-                        type="button"
-                        onClick={() => void handleAddBook(book)}
-                        disabled={isAdded || isAdding || !currentShelf}
-                        className="text-[13px] font-semibold text-[#00635d] hover:underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
-                      >
-                        {isAdded ? "In My Books" : isAdding ? "Adding..." : "Add"}
-                      </button>
                     </div>
                   </div>
                 );
