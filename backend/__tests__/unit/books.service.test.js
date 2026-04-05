@@ -19,7 +19,7 @@ describe('normalizeInput', () => {
       sort: 'relevance',
       page: 1,
       limit: 10,
-      genre: undefined
+      searchType: 'title'
     });
   });
 
@@ -66,14 +66,19 @@ describe('normalizeInput', () => {
     expect(result.limit).toBe(DEFAULT_LIMIT);
   });
 
-  it('should normalize genre when provided', () => {
-    const result = normalizeInput({ q: 'test', genre: '  fiction  ' });
-    expect(result.genre).toBe('fiction');
+  it('should default searchType to title when not provided', () => {
+    const result = normalizeInput({ q: 'test' });
+    expect(result.searchType).toBe('title');
   });
 
-  it('should set genre to undefined when empty string', () => {
-    const result = normalizeInput({ q: 'test', genre: '   ' });
-    expect(result.genre).toBeUndefined();
+  it('should accept author as a valid searchType', () => {
+    const result = normalizeInput({ q: 'test', searchType: 'author' });
+    expect(result.searchType).toBe('author');
+  });
+
+  it('should default searchType when invalid value provided', () => {
+    const result = normalizeInput({ q: 'test', searchType: 'invalid' });
+    expect(result.searchType).toBe('title');
   });
 
   it('should set error statusCode to 400 and code to INVALID_QUERY', () => {
