@@ -11,6 +11,7 @@ const SEARCH_PAGE_LIMIT = 40;
 const DESCRIPTION_PREVIEW_LENGTH = 180;
 
 type Shelf = "want-to-read" | "currently-reading" | "read";
+type ShelfSelection = Shelf | "";
 
 interface BackendSearchBook {
   id: string;
@@ -88,13 +89,22 @@ export function SearchResults() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [results, setResults] = useState<BackendSearchBook[]>([]);
-  const [selectedShelves, setSelectedShelves] = useState<Record<string, Shelf>>(
+  const [selectedShelves, setSelectedShelves] = useState<Record<string, ShelfSelection>>(
     {},
   );
   const [addingIds, setAddingIds] = useState<Set<string>>(new Set());
 
   const existingGoogleIds = useMemo(
     () => new Set(books.map((book) => book.googleBooksId)),
+    [books],
+  );
+
+  const existingShelfByGoogleId = useMemo(
+    () =>
+      books.reduce<Record<string, Shelf>>((acc, book) => {
+        acc[book.googleBooksId] = book.shelf;
+        return acc;
+      }, {}),
     [books],
   );
 
@@ -158,8 +168,8 @@ export function SearchResults() {
     return () => controller.abort();
   }, [query]);
 
-  function getSelectedShelf(bookId: string): Shelf {
-    return selectedShelves[bookId] || "want-to-read";
+  function getSelectedShelf(bookId: string): ShelfSelection {
+    return selectedShelves[bookId] || "";
   }
 
   function setSelectedShelf(bookId: string, shelf: Shelf) {
@@ -172,6 +182,9 @@ export function SearchResults() {
     }
 
     const shelf = getSelectedShelf(book.id);
+    if (!shelf) {
+      return;
+    }
     const { localBook, shelfData } = toLibraryBook(book, shelf);
 
     setAddingIds((prev) => new Set(prev).add(book.id));
@@ -274,6 +287,9 @@ export function SearchResults() {
                   : "No description available.";
                 const isAdded = existingGoogleIds.has(book.id);
                 const isAdding = addingIds.has(book.id);
+                const currentShelf =
+                  existingShelfByGoogleId[book.id] || getSelectedShelf(book.id);
+                const isSelectable = !isAdded && !isAdding;
 
                 return (
                   <div
@@ -313,13 +329,16 @@ export function SearchResults() {
                         size="sm"
                       />
                       <select
-                        value={getSelectedShelf(book.id)}
+                        value={currentShelf}
                         onChange={(e) =>
                           setSelectedShelf(book.id, e.target.value as Shelf)
                         }
-                        disabled={isAdded || isAdding}
+                        disabled={!isSelectable}
                         className="w-[140px] text-[13px] text-[#382110] border border-[#ccc] rounded px-3 py-1.5 bg-[#f4f0e6] hover:bg-[#e8e2d0] disabled:opacity-60"
                       >
+                        <option value="" disabled>
+                          Choose shelf
+                        </option>
                         <option value="want-to-read">Want to Read</option>
                         <option value="currently-reading">Currently Reading</option>
                         <option value="read">Read</option>
@@ -334,7 +353,7 @@ export function SearchResults() {
                       <button
                         type="button"
                         onClick={() => void handleAddBook(book)}
-                        disabled={isAdded || isAdding}
+                        disabled={isAdded || isAdding || !currentShelf}
                         className="text-[13px] font-semibold text-[#00635d] hover:underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
                       >
                         {isAdded ? "In My Books" : isAdding ? "Adding..." : "Add"}
