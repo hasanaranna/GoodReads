@@ -91,6 +91,7 @@ export function Header() {
   const [searchError, setSearchError] = useState("");
   const [results, setResults] = useState<BackendSearchBook[]>([]);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [searchLimit, setSearchLimit] = useState(SEARCH_LIMIT);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const { books, addBook, userName, setUserName } = useBooks();
 
@@ -102,6 +103,7 @@ export function Header() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery.trim());
+      setSearchLimit(SEARCH_LIMIT);
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
@@ -125,7 +127,7 @@ export function Header() {
         q: debouncedSearchQuery,
         sort: "relevance",
         page: "1",
-        limit: String(SEARCH_LIMIT),
+        limit: String(searchLimit),
       });
 
       try {
@@ -165,7 +167,7 @@ export function Header() {
     runSearch();
 
     return () => controller.abort();
-  }, [debouncedSearchQuery]);
+  }, [debouncedSearchQuery, searchLimit]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -194,6 +196,7 @@ export function Header() {
 
     setSearchQuery("");
     setDebouncedSearchQuery("");
+    setSearchLimit(SEARCH_LIMIT);
     setResults([]);
     setShowResults(false);
   }
@@ -278,18 +281,19 @@ export function Header() {
                 onBlur={() => setTimeout(() => setShowResults(false), 200)}
                 className="flex-1 appearance-none outline-none border-0 shadow-none text-[15px] text-gray-700 bg-transparent"
               />
-              {searchQuery ? (
-                <X
-                  size={16}
-                  className="text-gray-400 cursor-pointer"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setDebouncedSearchQuery("");
-                    setResults([]);
-                    setSearchError("");
-                  }}
-                />
-              ) : (
+                {searchQuery ? (
+                  <X
+                    size={16}
+                    className="text-gray-400 cursor-pointer"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setDebouncedSearchQuery("");
+                      setSearchLimit(SEARCH_LIMIT);
+                      setResults([]);
+                      setSearchError("");
+                    }}
+                  />
+                ) : (
                 <Search size={16} className="text-gray-400" />
               )}
             </div>
@@ -325,7 +329,7 @@ export function Header() {
                           key={book.id}
                           className="group flex items-start gap-4 px-4 py-3.5 hover:bg-[#faf7f0] transition-colors duration-150"
                         >
-                          <Link to={`/book/${localBook.googleBooksId}`} className="flex items-start gap-4 flex-1 min-w-0" onClick={() => { setSearchQuery(""); setShowResults(false); }}>
+                          <Link to={`/book/${localBook.googleBooksId}`} className="flex items-start gap-4 flex-1 min-w-0" onClick={() => { setSearchQuery(""); setShowResults(false); setSearchLimit(SEARCH_LIMIT); }}>
                             {/* Cover */}
                             <div className="relative flex-shrink-0">
                               <img
@@ -361,6 +365,21 @@ export function Header() {
                         </div>
                       );
                     })}
+                  </div>
+                )}
+                
+                {!isSearching && !searchError && visibleResults.length > 0 && searchLimit === SEARCH_LIMIT && (
+                  <div className="border-t border-[#f0ebe0] bg-[#faf7f0]">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault(); // keep focus on input if possible
+                        setSearchLimit(40);
+                      }}
+                      className="w-full text-center py-2.5 text-[14px] font-medium text-[#00635d] hover:bg-[#f0ebe0] transition-colors"
+                    >
+                      Show all {searchQuery} results
+                    </button>
                   </div>
                 )}
               </div>
