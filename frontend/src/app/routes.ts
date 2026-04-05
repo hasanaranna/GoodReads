@@ -6,6 +6,7 @@ import { EditReview } from "./pages/EditReview";
 import { InputProgress } from "./pages/InputProgress";
 import { Recommendation } from "./pages/Recommendation";
 import { BookDetail } from "./pages/BookDetail";
+import { SearchResults } from "./pages/SearchResults";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export const router = createBrowserRouter([
@@ -16,6 +17,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         Component: Login,
+      },
+      {
+        path: "search",
+        Component: SearchResults,
       },
       {
         Component: ProtectedRoute,
