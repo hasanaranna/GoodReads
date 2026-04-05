@@ -293,7 +293,7 @@ export function SearchResults() {
                   : "No description available.";
                 const isAdded = existingGoogleIds.has(book.id);
                 const isAdding = addingIds.has(book.id);
-                const currentShelf = existingShelfByGoogleId[book.id] || null;
+                const existingShelf = existingShelfByGoogleId[book.id] || null;
                 const selectedShelf = getSelectedShelf(book.id);
 
                 return (
@@ -333,9 +333,9 @@ export function SearchResults() {
                         showCount
                         size="sm"
                       />
-                      {currentShelf ? (
+                      {existingShelf ? (
                         <div className="w-[140px] text-center text-[13px] text-[#382110] border border-[#ccc] rounded px-3 py-1.5 bg-[#f4f0e6]">
-                          {SHELF_LABELS[currentShelf]}
+                          {SHELF_LABELS[existingShelf]}
                         </div>
                       ) : (
                         <select
@@ -359,7 +359,7 @@ export function SearchResults() {
                     </div>
 
                     <div className="w-[120px] shrink-0 flex justify-end" style={{ padding: "18px 0" }}>
-                      {currentShelf ? (
+                      {existingShelf ? (
                         <span className="text-[13px] text-gray-500">Added</span>
                       ) : (
                         <button
