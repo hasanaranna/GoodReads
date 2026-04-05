@@ -2,16 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useBooks } from "../context/BooksContext";
 import { API_BASE_URL } from "../../config";
-import { ShelfBookData } from "../services/api";
-import { Book } from "../data/initialBooks";
 import { Sidebar } from "../components/Sidebar";
 import { StarRating } from "../components/StarRating";
+import { ShelfBookData } from "../services/api";
+import { Book } from "../data/initialBooks";
 
 const SEARCH_PAGE_LIMIT = 40;
 const DESCRIPTION_PREVIEW_LENGTH = 180;
 
 type Shelf = "want-to-read" | "currently-reading" | "read";
-type ShelfSelection = Shelf | "";
 
 interface BackendSearchBook {
   id: string;
@@ -25,6 +24,12 @@ interface BackendSearchBook {
   publishedDate?: string;
   categories?: string[];
 }
+
+const SHELF_LABELS: Record<Shelf, string> = {
+  read: "Read",
+  "currently-reading": "Currently Reading",
+  "want-to-read": "Want to Read",
+};
 
 function toLibraryBook(
   book: BackendSearchBook,
@@ -90,9 +95,6 @@ export function SearchResults() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [results, setResults] = useState<BackendSearchBook[]>([]);
-  const [selectedShelves, setSelectedShelves] = useState<Record<string, ShelfSelection>>(
-    {},
-  );
   const [addingIds, setAddingIds] = useState<Set<string>>(new Set());
 
   const existingGoogleIds = useMemo(
@@ -170,23 +172,11 @@ export function SearchResults() {
     return () => controller.abort();
   }, [query, searchType]);
 
-  function getSelectedShelf(bookId: string): ShelfSelection {
-    return selectedShelves[bookId] || "";
-  }
-
-  function setSelectedShelf(bookId: string, shelf: Shelf) {
-    setSelectedShelves((prev) => ({ ...prev, [bookId]: shelf }));
-  }
-
-  async function handleAddBook(book: BackendSearchBook) {
+  async function handleAddBook(book: BackendSearchBook, shelf: Shelf) {
     if (existingGoogleIds.has(book.id)) {
       return;
     }
 
-    const shelf = getSelectedShelf(book.id);
-    if (!shelf) {
-      return;
-    }
     const { localBook, shelfData } = toLibraryBook(book, shelf);
 
     setAddingIds((prev) => new Set(prev).add(book.id));
@@ -245,7 +235,6 @@ export function SearchResults() {
             </div>
             <div className="w-[170px] shrink-0">Rating / Shelf</div>
             <div className="flex-1">Description</div>
-            <div className="w-[120px] shrink-0 text-right">Action</div>
           </div>
 
           <div className="max-h-[600px] overflow-y-auto pr-2">
@@ -289,9 +278,7 @@ export function SearchResults() {
                   : "No description available.";
                 const isAdded = existingGoogleIds.has(book.id);
                 const isAdding = addingIds.has(book.id);
-                const currentShelf =
-                  existingShelfByGoogleId[book.id] || getSelectedShelf(book.id);
-                const isSelectable = !isAdded && !isAdding;
+                const existingShelf = existingShelfByGoogleId[book.id] || null;
 
                 return (
                   <div
@@ -330,36 +317,32 @@ export function SearchResults() {
                         showCount
                         size="sm"
                       />
-                      <select
-                        value={currentShelf}
-                        onChange={(e) =>
-                          setSelectedShelf(book.id, e.target.value as Shelf)
-                        }
-                        disabled={!isSelectable}
-                        className="w-[140px] text-[13px] text-[#382110] border border-[#ccc] rounded px-3 py-1.5 bg-[#f4f0e6] hover:bg-[#e8e2d0] disabled:opacity-60"
-                      >
-                        <option value="" disabled>
-                          Choose shelf
-                        </option>
-                        <option value="want-to-read">Want to Read</option>
-                        <option value="currently-reading">Currently Reading</option>
-                        <option value="read">Read</option>
-                      </select>
+                      {existingShelf ? (
+                        <div className="w-[140px] text-center text-[13px] text-[#382110] border border-[#ccc] rounded px-3 py-1.5 bg-[#f4f0e6]">
+                          {SHELF_LABELS[existingShelf]}
+                        </div>
+                      ) : (
+                        <select
+                          value=""
+                          onChange={(e) => {
+                            const nextShelf = e.target.value as Shelf | "";
+                            if (nextShelf) {
+                              void handleAddBook(book, nextShelf);
+                            }
+                          }}
+                          disabled={isAdding}
+                          className="w-[140px] text-[13px] text-[#382110] border border-[#ccc] rounded px-3 py-1.5 bg-[#f4f0e6] hover:bg-[#e8e2d0] disabled:opacity-60"
+                        >
+                          <option value="">Choose shelf</option>
+                          <option value="want-to-read">Want to Read</option>
+                          <option value="currently-reading">Currently Reading</option>
+                          <option value="read">Read</option>
+                        </select>
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0 text-[14px] text-gray-700" style={{ padding: "18px 0" }}>
                       <span>{shortDescription}</span>
-                    </div>
-
-                    <div className="w-[120px] shrink-0 flex justify-end" style={{ padding: "18px 0" }}>
-                      <button
-                        type="button"
-                        onClick={() => void handleAddBook(book)}
-                        disabled={isAdded || isAdding || !currentShelf}
-                        className="text-[13px] font-semibold text-[#00635d] hover:underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
-                      >
-                        {isAdded ? "In My Books" : isAdding ? "Adding..." : "Add"}
-                      </button>
                     </div>
                   </div>
                 );
