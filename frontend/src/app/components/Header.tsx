@@ -91,6 +91,7 @@ export function Header() {
   const [searchError, setSearchError] = useState("");
   const [results, setResults] = useState<BackendSearchBook[]>([]);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [searchLimit, setSearchLimit] = useState(SEARCH_LIMIT);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const { books, addBook, userName, setUserName } = useBooks();
 
@@ -102,6 +103,7 @@ export function Header() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery.trim());
+      setSearchLimit(SEARCH_LIMIT);
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
@@ -125,7 +127,7 @@ export function Header() {
         q: debouncedSearchQuery,
         sort: "relevance",
         page: "1",
-        limit: String(SEARCH_LIMIT),
+        limit: String(searchLimit),
       });
 
       try {
@@ -165,7 +167,7 @@ export function Header() {
     runSearch();
 
     return () => controller.abort();
-  }, [debouncedSearchQuery]);
+  }, [debouncedSearchQuery, searchLimit]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
