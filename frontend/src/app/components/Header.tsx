@@ -411,7 +411,7 @@ export function Header() {
                         if (!query) {
                           return;
                         }
-                        navigate(`/search?q=${encodeURIComponent(query)}`);
+                        navigate(`/search?q=${encodeURIComponent(query)}&searchType=${searchType}`);
                         setShowResults(false);
                       }}
                       className="w-full text-center py-2.5 text-[14px] font-medium text-[#00635d] hover:bg-[#f0ebe0] transition-colors"
