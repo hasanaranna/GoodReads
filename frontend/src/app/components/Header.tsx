@@ -106,7 +106,6 @@ export function Header() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery.trim());
-      setSearchLimit(SEARCH_LIMIT);
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
@@ -200,7 +199,6 @@ export function Header() {
 
     setSearchQuery("");
     setDebouncedSearchQuery("");
-    setSearchLimit(SEARCH_LIMIT);
     setResults([]);
     setShowResults(false);
   }
@@ -324,7 +322,6 @@ export function Header() {
                     onClick={() => {
                       setSearchQuery("");
                       setDebouncedSearchQuery("");
-                      setSearchLimit(SEARCH_LIMIT);
                       setResults([]);
                       setSearchError("");
                     }}
@@ -365,7 +362,7 @@ export function Header() {
                           key={book.id}
                           className="group flex items-start gap-4 px-4 py-3.5 hover:bg-[#faf7f0] transition-colors duration-150"
                         >
-                          <Link to={`/book/${localBook.googleBooksId}`} className="flex items-start gap-4 flex-1 min-w-0" onClick={() => { setSearchQuery(""); setShowResults(false); setSearchLimit(SEARCH_LIMIT); }}>
+                          <Link to={`/book/${localBook.googleBooksId}`} className="flex items-start gap-4 flex-1 min-w-0" onClick={() => { setSearchQuery(""); setShowResults(false); }}>
                             {/* Cover */}
                             <div className="relative flex-shrink-0">
                               <img
@@ -404,13 +401,18 @@ export function Header() {
                   </div>
                 )}
                 
-                {!isSearching && !searchError && visibleResults.length > 0 && searchLimit === SEARCH_LIMIT && (
+                {!isSearching && !searchError && visibleResults.length > 0 && (
                   <div className="border-t border-[#f0ebe0] bg-[#faf7f0]">
                     <button
                       type="button"
                       onMouseDown={(e) => {
-                        e.preventDefault(); // keep focus on input if possible
-                        setSearchLimit(40);
+                        e.preventDefault();
+                        const query = searchQuery.trim();
+                        if (!query) {
+                          return;
+                        }
+                        navigate(`/search?q=${encodeURIComponent(query)}`);
+                        setShowResults(false);
                       }}
                       className="w-full text-center py-2.5 text-[14px] font-medium text-[#00635d] hover:bg-[#f0ebe0] transition-colors"
                     >

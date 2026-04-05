@@ -269,6 +269,9 @@ export function BookDetail() {
   const isLongDesc = desc.length > 500;
   const displayDesc = isLongDesc && !showFullDesc ? desc.slice(0, 500) + "…" : desc;
 
+  const myReviewText = (shelfBook?.review || "").trim();
+  const hasMyReview = myReviewText.length > 0 || userRating > 0;
+
   const otherReviews = communityReviews.filter((r) =>
     shelfBook ? r.user_book_id !== shelfBook.id : true
   );
@@ -381,6 +384,41 @@ export function BookDetail() {
             >
               {showFullDesc ? "Show less" : "Read more"}
             </button>
+          )}
+        </div>
+      )}
+
+      {/* ── My Review ─────────────────────────────────────────────────── */}
+      {shelfBook && (
+        <div className="border-b border-[#ddd]" style={{ paddingTop: "16px", paddingBottom: "16px" }}>
+          <div className="flex items-center justify-between mb-2 gap-3">
+            <h2 className="text-[15px] font-semibold text-[#382110]">My review</h2>
+            <Link
+              to={`/book/${shelfBook.id}/review`}
+              className="no-underline text-[12px] border border-[#aaa] px-3 py-1.5 bg-[#ffffff] hover:bg-[#f4f0e6] text-[#382110] rounded"
+            >
+              {hasMyReview ? "Edit my review" : "Write a review"}
+            </Link>
+          </div>
+
+          {hasMyReview ? (
+            <>
+              <div className="mb-2">
+                <span className="text-[12px] text-[#6b5d4a]">My rating:</span>
+                <span className="text-[13px] text-[#382110] ml-1">
+                  {userRating > 0 ? `${userRating}/5` : "No rating"}
+                </span>
+              </div>
+              {myReviewText ? (
+                <p className="text-[14px] text-[#555] leading-relaxed whitespace-pre-wrap">
+                  {myReviewText}
+                </p>
+              ) : (
+                <p className="text-[13px] text-gray-500">You haven’t written a review yet.</p>
+              )}
+            </>
+          ) : (
+            <p className="text-[13px] text-gray-500">You haven’t written a review yet.</p>
           )}
         </div>
       )}
