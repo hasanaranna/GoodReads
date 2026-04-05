@@ -4,6 +4,8 @@ import { useBooks } from "../context/BooksContext";
 import { API_BASE_URL } from "../../config";
 import { ShelfBookData } from "../services/api";
 import { Book } from "../data/initialBooks";
+import { Sidebar } from "../components/Sidebar";
+import { StarRating } from "../components/StarRating";
 
 const SEARCH_PAGE_LIMIT = 40;
 const DESCRIPTION_PREVIEW_LENGTH = 180;
@@ -185,43 +187,85 @@ export function SearchResults() {
   }
 
   return (
-    <div className="max-w-[1100px] mx-auto px-4 py-8">
-      <h1 className="text-[26px] font-semibold text-[#382110]">Search results</h1>
-      <p className="text-[15px] text-[#6b5d4a] mt-1">Query: “{query || "-"}”</p>
+    <div className="max-w-[1320px] mx-auto px-2 md:px-4 py-7">
+      <div
+        className="text-[15px] text-[#382110] mb-4"
+        style={{ marginTop: "24px" }}
+      >
+        <Link
+          to="/mybooks"
+          className="no-underline text-[#382110] hover:underline"
+        >
+          My Books
+        </Link>
+        <span className="text-gray-500 ml-1">&gt;&gt; Search results</span>
+      </div>
 
-      {query.length < 2 && (
-        <p className="mt-6 text-[15px] text-gray-500">
-          Enter at least 2 characters in search.
-        </p>
-      )}
+      <div className="flex items-start" style={{ gap: "48px" }}>
+        <Sidebar />
 
-      {isSearching && (
-        <p className="mt-6 text-[15px] text-gray-500">Searching books...</p>
-      )}
+        <div className="flex-1 min-w-0">
+          <div
+            className="flex items-center justify-between mb-4"
+            style={{ marginTop: "24px" }}
+          >
+            <div>
+              <h1
+                className="text-[#382110] text-[26px] leading-tight"
+                style={{ fontFamily: "Georgia, serif" }}
+              >
+                Search results
+              </h1>
+              <p className="text-[14px] text-gray-500 mt-1">for “{query || "-"}”</p>
+            </div>
+            <div className="text-[14px] text-gray-500">
+              {results.length} result{results.length !== 1 ? "s" : ""}
+            </div>
+          </div>
 
-      {!isSearching && searchError && (
-        <p className="mt-6 text-[15px] text-[#b42318]">{searchError}</p>
-      )}
+          <div className="flex items-center gap-4 py-3 border-b-2 border-[#382110] text-[14px] text-gray-500">
+            <div className="w-[84px] shrink-0" />
+            <div className="w-[350px] shrink-0" style={{ margin: "0 18px" }}>
+              Title
+            </div>
+            <div className="w-[170px] shrink-0">Rating / Shelf</div>
+            <div className="flex-1">Description</div>
+            <div className="w-[120px] shrink-0 text-right">Action</div>
+          </div>
 
-      {!isSearching && !searchError && query.length >= 2 && (
-        <>
-          <p className="mt-4 text-[14px] text-[#6b5d4a]">
-            {results.length} result{results.length !== 1 ? "s" : ""} found
-          </p>
+          <div className="max-h-[600px] overflow-y-auto pr-2">
+            {query.length < 2 && (
+              <div className="py-14 text-center text-gray-400 text-[16px]">
+                Enter at least 2 characters in search.
+              </div>
+            )}
 
-          {results.length === 0 ? (
-            <p className="mt-4 text-[15px] text-gray-500">No books found.</p>
-          ) : (
-            <div className="mt-5 border border-[#ddd] rounded-md overflow-hidden bg-white">
-              {results.map((book) => {
+            {query.length >= 2 && isSearching && (
+              <div className="py-14 text-center text-gray-400 text-[16px]">
+                Searching books...
+              </div>
+            )}
+
+            {query.length >= 2 && !isSearching && searchError && (
+              <div className="py-14 text-center text-[#b42318] text-[15px]">
+                {searchError}
+              </div>
+            )}
+
+            {query.length >= 2 && !isSearching && !searchError && results.length === 0 && (
+              <div className="py-14 text-center text-gray-400 text-[16px]">
+                No books found.
+              </div>
+            )}
+
+            {query.length >= 2 &&
+              !isSearching &&
+              !searchError &&
+              results.map((book) => {
                 const author =
                   Array.isArray(book.authors) && book.authors.length > 0
                     ? book.authors[0]
                     : "Unknown Author";
-                const ratingText =
-                  typeof book.averageRating === "number"
-                    ? `${book.averageRating.toFixed(1)} / 5`
-                    : "No rating";
                 const cleanDescription = stripHtml(book.description);
                 const shortDescription = cleanDescription
                   ? cleanDescription.length > DESCRIPTION_PREVIEW_LENGTH
@@ -234,43 +278,64 @@ export function SearchResults() {
                 return (
                   <div
                     key={book.id}
-                    className="flex gap-4 px-4 py-3 border-b border-[#f0ebe0] last:border-b-0 hover:bg-[#faf7f0]"
+                    className={`flex items-start gap-4 py-5 mb-2 border-b border-[#e8e0d0] ${
+                      isAdded ? "bg-[#fafaf8]" : "bg-[#ffffff] hover:bg-[#fafaf8]"
+                    } transition-colors`}
                   >
-                    <img
-                      src={book.coverImage || "https://placehold.co/120x180?text=No+Cover"}
-                      alt={book.title || "Book cover"}
-                      className="w-12 h-16 object-cover rounded shadow-sm ring-1 ring-black/10"
-                    />
-                    <div className="min-w-0 flex-1">
+                    <Link to={`/book/${book.id}`} className="shrink-0">
+                      <img
+                        src={book.coverImage || "https://placehold.co/120x180?text=No+Cover"}
+                        alt={book.title || "Book cover"}
+                        className="w-[84px] h-[120px] object-cover shadow hover:shadow-md transition-shadow"
+                      />
+                    </Link>
+
+                    <div className="w-[300px] shrink-0" style={{ margin: "8px 18px" }}>
                       <Link to={`/book/${book.id}`} className="no-underline">
-                        <p className="text-[15px] font-medium text-[#1c1208] leading-snug hover:underline">
+                        <div className="text-[17px] text-[#382110] hover:underline leading-snug">
                           {book.title || "Untitled"}
-                        </p>
+                        </div>
                       </Link>
-                      <p className="text-[13px] text-[#8b7355] mt-0.5">{author}</p>
-                      <p className="text-[12px] text-gray-500 mt-1">Rating: {ratingText}</p>
-                      <p className="text-[13px] text-[#4a4a4a] mt-1 leading-relaxed">
-                        {shortDescription}
-                      </p>
+                      <div className="text-[14px] text-gray-600 mt-1">{author}</div>
                     </div>
-                    <div className="flex items-center gap-2 self-start">
+
+                    <div
+                      className="w-[170px] shrink-0 flex flex-col items-center gap-3"
+                      style={{ padding: "18px 0" }}
+                    >
+                      <StarRating
+                        rating={
+                          typeof book.averageRating === "number"
+                            ? Math.max(0, Math.min(5, Math.round(book.averageRating)))
+                            : 0
+                        }
+                        showCount
+                        size="sm"
+                      />
                       <select
                         value={getSelectedShelf(book.id)}
                         onChange={(e) =>
                           setSelectedShelf(book.id, e.target.value as Shelf)
                         }
                         disabled={isAdded || isAdding}
-                        className="text-[12px] border border-[#c9bfb0] rounded px-2 py-1 bg-white text-[#382110]"
+                        className="w-[140px] text-[13px] text-[#382110] border border-[#ccc] rounded px-3 py-1.5 bg-[#f4f0e6] hover:bg-[#e8e2d0] disabled:opacity-60"
                       >
                         <option value="want-to-read">Want to Read</option>
                         <option value="currently-reading">Currently Reading</option>
                         <option value="read">Read</option>
                       </select>
+                    </div>
+
+                    <div className="flex-1 min-w-0 text-[14px] text-gray-700" style={{ padding: "18px 0" }}>
+                      <span>{shortDescription}</span>
+                    </div>
+
+                    <div className="w-[120px] shrink-0 flex justify-end" style={{ padding: "18px 0" }}>
                       <button
                         type="button"
                         onClick={() => void handleAddBook(book)}
                         disabled={isAdded || isAdding}
-                        className="text-[12px] border border-[#00635d]/50 rounded px-2.5 py-1 text-[#00635d] hover:bg-[#00635d] hover:text-white disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="text-[13px] font-semibold text-[#00635d] hover:underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
                       >
                         {isAdded ? "In My Books" : isAdding ? "Adding..." : "Add"}
                       </button>
@@ -278,10 +343,9 @@ export function SearchResults() {
                   </div>
                 );
               })}
-            </div>
-          )}
-        </>
-      )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
