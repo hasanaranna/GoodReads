@@ -10,6 +10,9 @@ import {
 import { formatBook } from '../../utils/formatBook.js';
 import { searchGoogleBooks } from './googleBooks.client.js';
 
+const ALLOWED_SEARCH_TYPES = ['title', 'author'];
+const DEFAULT_SEARCH_TYPE = 'title';
+
 export function toPositiveInteger(value, fallback, min, max) {
   const parsed = Number.parseInt(value, 10);
 
@@ -28,7 +31,7 @@ export function toPositiveInteger(value, fallback, min, max) {
   return parsed;
 }
 
-export function normalizeInput({ q, genre, sort, page, limit }) {
+export function normalizeInput({ q, sort, page, limit, searchType }) {
   const query = typeof q === 'string' ? q.trim() : '';
   if (!query) {
     const error = new Error("Query parameter 'q' is required.");
@@ -42,49 +45,41 @@ export function normalizeInput({ q, genre, sort, page, limit }) {
       ? sort.toLowerCase()
       : DEFAULT_SORT;
 
+  const normalizedSearchType =
+    typeof searchType === 'string' &&
+    ALLOWED_SEARCH_TYPES.includes(searchType.toLowerCase())
+      ? searchType.toLowerCase()
+      : DEFAULT_SEARCH_TYPE;
+
   return {
     q: query,
     sort: normalizedSort,
     page: toPositiveInteger(page, DEFAULT_PAGE, MIN_PAGE),
     limit: toPositiveInteger(limit, DEFAULT_LIMIT, MIN_LIMIT, MAX_LIMIT),
-    genre: typeof genre === 'string' && genre.trim() ? genre.trim() : undefined
+    searchType: normalizedSearchType
   };
 }
 
-function buildGoogleQuery({ q, genre }) {
-  if (!genre) {
-    return q;
+/**
+ * Build a Google Books query using the appropriate prefix
+ * based on the searchType:
+ *   - title  → intitle:<q>
+ *   - author → inauthor:<q>
+ *   - both   → intitle:<q>+inauthor:<q>
+ */
+function buildGoogleQuery({ q, searchType }) {
+  if (searchType === 'author') {
+    return `inauthor:${q}`;
   }
-
-  // Add genre as a subject hint while keeping the original query term.
-  return `${q} subject:${genre}`;
-}
-
-function applyGenreHintFilter(books, genre) {
-  if (!genre) {
-    return books;
-  }
-
-  const loweredGenre = genre.toLowerCase();
-
-  return books.filter((book) => {
-    const categories = Array.isArray(book.categories) ? book.categories : [];
-    if (!categories.length) {
-      return true;
-    }
-
-    return categories.some((category) =>
-      category.toLowerCase().includes(loweredGenre)
-    );
-  });
+  return `intitle:${q}`;
 }
 
 export async function searchBooks(params) {
   const normalizedInput = normalizeInput(params);
-  const { q, sort, page, limit, genre } = normalizedInput;
+  const { q, sort, page, limit, searchType } = normalizedInput;
 
   const startIndex = (page - 1) * limit;
-  const query = buildGoogleQuery({ q, genre });
+  const query = buildGoogleQuery({ q, searchType });
 
   const rawResponse = await searchGoogleBooks({
     query,
@@ -94,10 +89,7 @@ export async function searchBooks(params) {
   });
 
   const items = Array.isArray(rawResponse?.items) ? rawResponse.items : [];
-  const normalizedBooks = applyGenreHintFilter(
-    items.map((item) => formatBook(item)),
-    genre
-  );
+  const normalizedBooks = items.map((item) => formatBook(item));
 
   const totalItems = Number.isInteger(rawResponse?.totalItems)
     ? rawResponse.totalItems
@@ -116,7 +108,7 @@ export async function searchBooks(params) {
     },
     query: {
       q,
-      genre: genre || null,
+      searchType,
       sort
     }
   };

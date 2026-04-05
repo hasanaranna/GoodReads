@@ -8,6 +8,9 @@ import {
   MIN_PAGE
 } from '../constants/search.constants.js';
 
+const ALLOWED_SEARCH_TYPES = ['title', 'author'];
+const DEFAULT_SEARCH_TYPE = 'title';
+
 function parsePositiveInteger(value, fallback) {
   if (value === undefined || value === null || value === '') {
     return fallback;
@@ -21,27 +24,16 @@ function parsePositiveInteger(value, fallback) {
   return parsed;
 }
 
-function isGenreValid(genre) {
-  if (typeof genre !== 'string') {
-    return false;
-  }
-
-  const trimmed = genre.trim();
-  if (trimmed.length < 2 || trimmed.length > 60) {
-    return false;
-  }
-
-  return /^[a-zA-Z0-9\s\-&,.'/:]+$/.test(trimmed);
-}
-
 export function validateSearchQuery(req, res, next) {
   const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
   const sort =
     typeof req.query.sort === 'string'
       ? req.query.sort.trim().toLowerCase()
       : DEFAULT_SORT;
-  const genre =
-    typeof req.query.genre === 'string' ? req.query.genre.trim() : undefined;
+  const searchType =
+    typeof req.query.searchType === 'string'
+      ? req.query.searchType.trim().toLowerCase()
+      : DEFAULT_SEARCH_TYPE;
 
   const page = parsePositiveInteger(req.query.page, DEFAULT_PAGE);
   const limit = parsePositiveInteger(req.query.limit, DEFAULT_LIMIT);
@@ -88,13 +80,14 @@ export function validateSearchQuery(req, res, next) {
     });
   }
 
-  if (genre && !isGenreValid(genre)) {
+  if (!ALLOWED_SEARCH_TYPES.includes(searchType)) {
     return res.status(400).json({
       success: false,
       error: {
-        code: 'INVALID_GENRE',
-        message:
-          "Query parameter 'genre' must be 2-60 characters and contain only letters, numbers, spaces, and basic punctuation."
+        code: 'INVALID_SEARCH_TYPE',
+        message: `Query parameter 'searchType' must be one of: ${ALLOWED_SEARCH_TYPES.join(
+          ', '
+        )}.`
       }
     });
   }
@@ -104,7 +97,7 @@ export function validateSearchQuery(req, res, next) {
     sort,
     page,
     limit,
-    genre: genre || undefined
+    searchType
   };
 
   return next();
