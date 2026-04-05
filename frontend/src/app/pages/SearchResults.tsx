@@ -201,6 +201,7 @@ export function SearchResults() {
                     ? `${cleanDescription.slice(0, DESCRIPTION_PREVIEW_LENGTH)}...`
                     : cleanDescription
                   : "No description available.";
+                const isAdded = existingGoogleIds.has(book.id);
                 const currentShelf = existingShelfByGoogleId[book.id] || null;
 
                 return (
