@@ -89,6 +89,7 @@ function stripHtml(value?: string) {
 export function SearchResults() {
   const [searchParams] = useSearchParams();
   const query = (searchParams.get("q") || "").trim();
+  const searchType = searchParams.get("searchType") || "title";
   const { books, addBook } = useBooks();
 
   const [isSearching, setIsSearching] = useState(false);
@@ -129,6 +130,7 @@ export function SearchResults() {
         sort: "relevance",
         page: "1",
         limit: String(SEARCH_PAGE_LIMIT),
+        searchType,
       });
 
       try {
@@ -168,7 +170,7 @@ export function SearchResults() {
     runSearch();
 
     return () => controller.abort();
-  }, [query]);
+  }, [query, searchType]);
 
   async function handleAddBook(book: BackendSearchBook, shelf: Shelf) {
     if (existingGoogleIds.has(book.id)) {

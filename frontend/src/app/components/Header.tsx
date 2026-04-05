@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from "react";
+
+type SearchType = "title" | "author";
 import {
   Bell,
   MessageSquare,
@@ -91,6 +93,8 @@ export function Header() {
   const [searchError, setSearchError] = useState("");
   const [results, setResults] = useState<BackendSearchBook[]>([]);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [searchLimit, setSearchLimit] = useState(SEARCH_LIMIT);
+  const [searchType, setSearchType] = useState<SearchType>("title");
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const { books, addBook, userName, setUserName } = useBooks();
 
@@ -125,7 +129,8 @@ export function Header() {
         q: debouncedSearchQuery,
         sort: "relevance",
         page: "1",
-        limit: String(SEARCH_LIMIT),
+        limit: String(searchLimit),
+        searchType,
       });
 
       try {
@@ -165,7 +170,7 @@ export function Header() {
     runSearch();
 
     return () => controller.abort();
-  }, [debouncedSearchQuery]);
+  }, [debouncedSearchQuery, searchLimit, searchType]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -266,9 +271,41 @@ export function Header() {
               className="flex items-center bg-[#ffffff] border border-[#c9bfb0] rounded-full w-full h-[48px] gap-2"
               style={{ paddingLeft: "15px", paddingRight: "15px" }}
             >
+              {/* Search type toggle */}
+              <div
+                className="flex items-center shrink-0 rounded-full p-[2px]"
+                style={{ background: "#ece6d8" }}
+              >
+                {(["title", "author"] as SearchType[]).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      setSearchType(type);
+                    }}
+                    className="relative px-2 py-[3px] text-[11px] font-semibold rounded-full transition-all duration-200 leading-none cursor-pointer select-none"
+                    style={{
+                      background: searchType === type ? "#fff" : "transparent",
+                      color: searchType === type ? "#382110" : "#8b7355",
+                      boxShadow:
+                        searchType === type
+                          ? "0 1px 3px rgba(0,0,0,0.1)"
+                          : "none",
+                    }}
+                  >
+                    {type === "title" ? "Title" : "Author"}
+                  </button>
+                ))}
+              </div>
+
               <input
                 type="text"
-                placeholder="Search books, authors..."
+                placeholder={
+                  searchType === "title"
+                    ? "Search by title..."
+                    : "Search by author..."
+                }
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -374,7 +411,7 @@ export function Header() {
                         if (!query) {
                           return;
                         }
-                        navigate(`/search?q=${encodeURIComponent(query)}`);
+                        navigate(`/search?q=${encodeURIComponent(query)}&searchType=${searchType}`);
                         setShowResults(false);
                       }}
                       className="w-full text-center py-2.5 text-[14px] font-medium text-[#00635d] hover:bg-[#f0ebe0] transition-colors"
